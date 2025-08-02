@@ -77,9 +77,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.blowpay_mobile"
+    namespace "com.rdx.BillsByBlowmoney"
     defaultConfig {
-        applicationId "com.blowpay_mobile"
+        applicationId "com.rdx.BillsByBlowmoney"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -1,0 +1,84 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
+  Image,
+  Alert,
+} from 'react-native';
+import {styles} from './style';
+import {ScreenView} from '../../../global/wrappers';
+import {BLACK, WHITE} from '../../../global/theme';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {CustomButton} from '../../../global/components';
+import LocalAuthentication from 'react-native-local-auth';
+import useBiometricAuth from '../../../hooks/biometric.hook';
+import { create } from 'twrnc';
+import { useGetVitualAcc } from '../../../hooks/virtual.hook';
+
+const Biometric = props => {
+  const navigation = props.navigation;
+  const {navigateHome, createKey, } = useBiometricAuth();
+  const {data} = useGetVitualAcc();
+
+  const activate =  ()=>{
+     createKey()
+     navigateHome();
+  }
+  
+  return (
+    <ScreenView style={styles.container} light color={WHITE}>
+      <ScrollView style={styles.viewContainer}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.btn}
+            activeOpacity={0.65}
+            onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={13} color={BLACK} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.view1}>
+          <View style={styles.v1}>
+            <Text style={styles.text1}>Enable Biometrics Access</Text>
+            <Text style={styles.text11}>
+              Login quickly and securely with the fingerprint or face ID stored
+              on this device.
+            </Text>
+          </View>
+
+          <View style={styles.v2}>
+            {Platform.OS === 'ios' ? (
+              <Image
+                source={require('../../../../assets/icons/face-scan.png')}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            ) : (
+              <Image
+                source={require('../../../../assets/icons/finger-print.png')}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+
+          <CustomButton
+            onPress={activate}
+            style={styles.btn1}
+            text={'Confirm Biometric'}
+          />
+          <CustomButton
+            onPress={navigateHome}
+            style={styles.btn3}
+            textStyle={{color:'black'}}
+            text={'Cancel'}
+          />
+        </View>
+      </ScrollView>
+    </ScreenView>
+  );
+};
+
+export default Biometric;

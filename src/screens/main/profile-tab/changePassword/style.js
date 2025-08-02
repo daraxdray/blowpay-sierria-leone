@@ -1,0 +1,140 @@
+import {Platform, StyleSheet} from 'react-native';
+import {
+  BLACK,
+  GREY,
+  GREY_LIGHT2,
+  HEIGHT,
+  MILK,
+  SECONDARY_COLOR,
+  SEMI_PRIMARY_COLOR,
+  WHITE,
+  WIDTH,
+} from '../../../../global/theme';
+import {
+  open_sans_bold,
+  satoshi,
+  satoshi_bold,
+  satoshi_medium,
+} from '../../../../constants/data/fonts';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    height: HEIGHT,
+    backgroundColor: WHITE,
+    width: WIDTH,
+    alignSelf: 'center',
+    alignItems: 'center',
+  },
+  viewContainer: {
+    width: WIDTH * 0.95,
+    alignSelf: 'center',
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  view1: {
+    width: '100%',
+    marginTop: 10,
+    flex: 1,
+  },
+  header: {
+    width: '100%',
+    marginTop: 15,
+  },
+  btn: {
+    padding: 10,
+    backgroundColor: GREY_LIGHT2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 50,
+    width: 45,
+    height: 45,
+  },
+  v1: {
+    marginTop: 20,
+    marginBottom: 7,
+    width: '100%',
+  },
+  text1: {
+    fontSize: 20,
+    fontFamily: satoshi_bold,
+    color: BLACK,
+    marginBottom: 5,
+  },
+  text11: {
+    fontSize: 12.5,
+    fontFamily: satoshi_medium,
+    color: '#A5A5A5',
+    marginBottom: 5,
+  },
+  v2: {
+    marginVertical: 20,
+  },
+  inputCont1: {},
+  input1: {},
+  v3: {
+    width: '100%',
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btn1: {
+    marginVertical: 20,
+  },
+  text12: {
+    fontSize: 12,
+    color: SEMI_PRIMARY_COLOR,
+    fontFamily: satoshi_bold,
+  },
+  rowView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 7,
+  },
+  text13: {
+    fontSize: 12,
+    fontFamily: satoshi_medium,
+    color: GREY,
+    marginBottom: 5,
+    lineHeight: 20,
+  },
+  icon: {
+    width: 15,
+    height: 15,
+    marginRight: 10,
+    marginTop: -5,
+  },
+  consPass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderWidth: 0.7,
+    borderColor: GREY,
+    borderRadius: 50,
+    marginRight: 15,
+    marginBottom: 10,
+    justifyContent: 'center',
+  },
+  wrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 10,
+    flexWrap: 'wrap',
+  },
+  text15: {
+    fontSize: 12,
+    color: BLACK,
+    fontFamily: satoshi_bold,
+    marginTop: 15,
+  },
+  text14: {
+    fontSize: 12,
+    color: GREY,
+    fontFamily: satoshi_medium,
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginRight: 5,
+  },
+});

@@ -1,0 +1,11 @@
+export const SET_USER = "SET_USER";
+export const UPDATE_USER = "UPDATE_USER";
+export const CLEAR_USER = "CLEAR_USER";
+export const SET_LOADING = "SET_LOADING";
+export const SET_HANDSHAKE = "SET_HANDSHAKE";
+export const SET_TOKEN = "SET_TOKEN";
+export const SET_STATE = "SET_STATE";
+export const LOGIN_SUCCESS = "LOGIN_SUCCESS";
+export const LOGOUT = "LOGOUT";
+export const SESSION_TIMEOUT = "SESSION_TIMEOUT";
+export const SESSION_TIMEIN = "SESSION_TIMEIN";

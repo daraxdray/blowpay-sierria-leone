@@ -1,0 +1,31 @@
+import {Platform, StyleSheet} from 'react-native';
+import {HEIGHT, MILK, WHITE, WIDTH} from '../../../../../../global/theme';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    height: HEIGHT,
+    backgroundColor: MILK,
+    width: WIDTH,
+    alignSelf: 'center',
+    alignItems: 'center',
+  },
+  viewContainer: {
+    width: WIDTH,
+    alignSelf: 'center',
+    flex: 1,
+    marginTop: 5,
+  },
+  view1: {
+    width: '100%',
+    paddingHorizontal: 30,
+    marginTop: 30,
+    flex: 1,
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 30,
+  },
+  container: {
+    flex: 1,
+  },
+});
