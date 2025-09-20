@@ -2,75 +2,54 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   TextInput,
   FlatList,
-  ActivityIndicator,
   TouchableWithoutFeedback,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {CustomButton} from '../../global/components';
-import {PanGestureHandler} from 'react-native-gesture-handler';
-import { useBpBillerProvider, useNbBillerProvider} from '../../hooks/billing.hook';
+import {useBpBillerProvider} from '../../hooks/billing.hook';
 import Loader from './Loader';
-import Toast from 'react-native-toast-message';
 
-const ElectModal = ({closeModal, proceed, selectCompany, activeCompany}) => {
+const ElectModal = ({
+  closeModal,
+  proceed,
+  selectCompany,
+  activeCompany,
+  country,
+}) => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [searchText, setSearchText] = useState('');
   const [formattedCompanies, setformattedCompanies] = useState([]);
   const billerId = 'UTILITYBILLS';
   const {data, isLoading, error} = useBpBillerProvider(billerId);
 
-  const handleSwipeDown = ({nativeEvent}) => {
-    if (nativeEvent.translationY > 50) {
-      closeModal();
+  useEffect(() => {
+    console.log('country:', country);
+    console.log('raw hook data:', data);
+    if (country === 'Sierra Leone') {
+      console.log('⚡ Sierra Leone detected → forcing EDSA');
+      setformattedCompanies([{ID: 'EDSA', NAME: 'EDSA'}]);
     }
-  };
-  
-  useEffect(()=>{
+    if (data?.data && country !== 'Sierra Leone') {
+      const formatResponse = response => {
+        return Object.keys(response)
+          .filter(key => response[key] === true)
+          .map(key => ({
+            ID: key,
+            NAME: key,
+          }));
+      };
 
-    if(data?.data){
-      console.log('Data fetched:', data?.data);
-      //NELOBYTE FORMATTER
-  // const formatResponse = (response) => {
-  //   const companies = response?.ELECTRIC_COMPANY;
-  //   return Object.keys(companies).reduce((acc, key) => {
-  //     return acc.concat(companies[key]);
-  //   }, []);
-  // };
-  
-
-  // // BUYPOWER FORMATTER
-  const formatResponse = (response) => {
-    const companies = response;
-    return Object.keys(companies).map(key => {
-      return {
-        ID: key,
-        NAME: key,
-  
-    }})
-  };
-  setformattedCompanies(formatResponse(data?.data));
-  // if(data?.data?.message === 'success'){
-
-  // }else{
-  //   closeModal();
-  //   console.log(data?.data)
-  //    Toast.show({
-  //                   type: 'error',
-  //                   text1: 'Unable to fetch data',
-  //                   text2: data?.data?.message || '',
-  //                 });
-  // }
-  
+      const formatted = formatResponse(data?.data);
+      console.log('✅ formatted companies:', formatted);
+      setformattedCompanies(formatted);
     }
-  },[data?.data])
+  }, [data, data?.data, country]);
 
   const filteredCompanies =
-  formattedCompanies?.length > 0
+    formattedCompanies?.length > 0
       ? formattedCompanies.filter(company =>
           company.NAME.toLowerCase().includes(searchText.toLowerCase()),
         )
@@ -78,8 +57,6 @@ const ElectModal = ({closeModal, proceed, selectCompany, activeCompany}) => {
 
   const renderCompany = ({item}) => {
     const isSelected = activeCompany?.ID === item.ID;
-    
-    const logoUrl = item.logo_url || '';
 
     return (
       <TouchableOpacity
@@ -97,7 +74,9 @@ const ElectModal = ({closeModal, proceed, selectCompany, activeCompany}) => {
         <View
           style={[
             tw`w-5 h-5 border rounded-full items-center justify-center`,
-            selectedCompany === item.ID ? tw`border-green-500` : tw`border-gray-400`,
+            selectedCompany === item.ID
+              ? tw`border-green-500`
+              : tw`border-gray-400`,
           ]}>
           {isSelected && <Ionicons name="checkmark" size={16} color="green" />}
         </View>
@@ -121,41 +100,35 @@ const ElectModal = ({closeModal, proceed, selectCompany, activeCompany}) => {
   return (
     <TouchableWithoutFeedback onPress={closeModal}>
       <View style={tw`flex-1 justify-end`}>
-        <PanGestureHandler onGestureEvent={handleSwipeDown}>
-          <View
-            style={tw`h-[95%] bg-white p-5 rounded-t-[10px] w-19/20 self-center  mb-1`}>
-            <View style={tw`items-center justify-center`}>
-              <View style={tw`w-20 h-2 bg-[#999999] rounded-full`} />
-            </View>
-
-            <View style={tw`flex-1 mt-4`}>
-              <Text style={tw`text-[#292929] font-medium text-[18px]`}>
-                Select a Company
-              </Text>
-
-              <TextInput
-                placeholder="Search company"
-                placeholderTextColor="gray"
-                value={searchText}
-                onChangeText={setSearchText}
-                style={tw`rounded-lg p-3 text-black mt-2 shadow-sm bg-white`}
-              />
-
-              <FlatList
-                data={filteredCompanies}
-                renderItem={renderCompany}
-                keyExtractor={item => item.ID.toString()}
-                style={tw`mt-4`}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={tw`pb-10`}
-              />
-            </View>
-
-            {/* <View style={tw`py-3`}>
-              <CustomButton onPress={proceed} text={'Proceed'} />
-            </View> */}
+        <View
+          style={tw`h-[95%] bg-white p-5 rounded-t-[10px] w-19/20 self-center  mb-1`}>
+          <View style={tw`items-center justify-center`}>
+            <View style={tw`w-20 h-2 bg-[#999999] rounded-full`} />
           </View>
-        </PanGestureHandler>
+
+          <View style={tw`flex-1 mt-4`}>
+            <Text style={tw`text-[#292929] font-medium text-[18px]`}>
+              Select a Company
+            </Text>
+
+            <TextInput
+              placeholder="Search company"
+              placeholderTextColor="gray"
+              value={searchText}
+              onChangeText={setSearchText}
+              style={tw`rounded-lg p-3 text-black mt-2 shadow-sm bg-white`}
+            />
+
+            <FlatList
+              data={filteredCompanies}
+              renderItem={renderCompany}
+              keyExtractor={item => item.ID.toString()}
+              style={tw`mt-4`}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={tw`pb-10`}
+            />
+          </View>
+        </View>
       </View>
     </TouchableWithoutFeedback>
   );

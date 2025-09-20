@@ -14,6 +14,7 @@ export const styles = StyleSheet.create({
     width: WIDTH,
     alignSelf: 'center',
     flex: 1,
+    paddingHorizontal: 15,
   },
   view1: {
     width: '100%',

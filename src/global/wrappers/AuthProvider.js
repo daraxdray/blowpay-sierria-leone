@@ -1,42 +1,41 @@
-import React, { createContext, useEffect, useRef } from 'react';
-import { AppState, Platform } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import React, {createContext, useEffect, useRef, useState} from 'react';
+import {AppState} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CommonActions } from '@react-navigation/native';
-import { useGetUser } from '../../hooks/user.hook';
+import {CommonActions} from '@react-navigation/native';
+import {useGetUser} from '../../hooks/user.hook';
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({children}) => {
   const navigation = useNavigation();
   const INACTIVITY_TIMEOUT = (1 * 60 * 1000) / 2;
   const lastActiveRef = useRef(Date.now());
-  // const routeState = useRoute();
-  const { data: user } = useGetUser();
+  const {data: user} = useGetUser();
 
-  const isUserAuthenticated = (currentRoute) => {
-    console.log("AUTHENTICATED")
-    // if (Platform.OS == 'android' && (user?.message == "Unauthorized" || user?.data == undefined)) {
-    //   navigation.dispatch(
-    //     CommonActions.reset({
-    //       index: 0,
-    //       routes: [{name: 'signin-screen',params:{"currentRoute":currentRoute.name}}],
-    //     }),
-    //   );
-    // }
-    // else {
+  const [country, setCountry] = useState(null);
+
+  const isUserAuthenticated = currentRoute => {
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
-        routes: [{ name: 'TransactionPinScreen', params: { "currentRoute": currentRoute.name } }],
+        routes: [
+          {
+            name: 'TransactionPinScreen',
+            params: {currentRoute: currentRoute.name},
+          },
+        ],
       }),
     );
-    // }
-  }
-
+  };
 
   useEffect(() => {
+    if (user?.data?.country) {
+      setCountry(user.data.country);
+    }
+  }, [user]);
 
+  useEffect(() => {
     const subscription = AppState.addEventListener(
       'change',
       handleAppStateChange,
@@ -45,23 +44,15 @@ export const AuthProvider = ({ children }) => {
     const checkInactivityOnStart = async () => {
       try {
         const storedTime = await AsyncStorage.getItem('backgroundTime');
-        console.log('Starting check on app open - storedTime:', storedTime);
 
         if (storedTime) {
           const currentTime = Date.now();
           const backgroundTime = parseInt(storedTime, 10);
           const timeDifference = currentTime - backgroundTime;
 
-          console.log('Time difference on app open:', timeDifference);
-
           if (timeDifference >= INACTIVITY_TIMEOUT) {
-            console.log(
-              'Navigating to TransactionPinScreen due to inactivity on app start',
-            );
             handleInactivity();
           }
-        } else {
-
         }
       } catch (error) {
         console.error('Error checking inactivity on start:', error);
@@ -80,22 +71,15 @@ export const AuthProvider = ({ children }) => {
       const currentTime = Date.now();
       await AsyncStorage.setItem('backgroundTime', currentTime.toString());
       lastActiveRef.current = currentTime;
-      console.log('App moved to background at:', currentTime);
     } else if (nextAppState === 'active') {
       const currentTime = Date.now();
       const storedTime = await AsyncStorage.getItem('backgroundTime');
-      // console.log('App moved to active, backgroundTime was:', storedTime);
 
       if (storedTime) {
         const backgroundTime = parseInt(storedTime, 10);
         const timeDifference = currentTime - backgroundTime;
 
-        // console.log('Time difference on app active:', timeDifference);
-
         if (timeDifference >= INACTIVITY_TIMEOUT) {
-          // console.log(
-          //   'Navigating to TransactionPinScreen due to inactivity on app active',
-          // );
           handleInactivity();
         }
       }
@@ -103,34 +87,38 @@ export const AuthProvider = ({ children }) => {
   };
 
   const handleInactivity = async () => {
-    // console.log('Navigating to TransactionPinScreen due to inactivity', user);
     await AsyncStorage.removeItem('backgroundTime');
-    const isLoggedIn = JSON.parse( await AsyncStorage.getItem('Login'));
-    const currentRoute = navigation.getState().routes[navigation.getState().index];
+    const isLoggedIn = JSON.parse(await AsyncStorage.getItem('Login'));
+    const currentRoute =
+      navigation.getState().routes[navigation.getState().index];
+
     if (isLoggedIn) {
-      console.log("going irto",isLoggedIn)
-      if (isLoggedIn?.status == "inactive") {
-        navigation.navigate('otp-screen', { emailAddress: isLoggedIn?.emailAddress, });
-        return
-      }
-      
-      else if ((isLoggedIn && isLoggedIn?.isPasscodeSet)) {
-        isUserAuthenticated(currentRoute)
-      }
-      else {
+      if (isLoggedIn?.status === 'inactive') {
+        navigation.navigate('otp-screen', {
+          emailAddress: isLoggedIn?.emailAddress,
+        });
+        return;
+      } else if (isLoggedIn?.isPasscodeSet) {
+        isUserAuthenticated(currentRoute);
+      } else {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: 'create-pin-screen', params: { "currentRoute": currentRoute.name } }],
-          }),);
-
+            routes: [
+              {
+                name: 'create-pin-screen',
+                params: {currentRoute: currentRoute.name},
+              },
+            ],
+          }),
+        );
       }
-    } else {
-
-
-
     }
   };
 
-  return <AuthContext.Provider value={{}}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{country, user}}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

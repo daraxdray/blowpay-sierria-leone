@@ -1,8 +1,8 @@
-import { useState, useEffect,  } from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import { navigatorOptions, screenOptions } from '../../global/routes';
-import { SplashScreen, Walkthrough } from '../../screens/onboard';
+import {useState, useEffect} from 'react';
+import {createStackNavigator} from '@react-navigation/stack';
+import {NavigationContainer} from '@react-navigation/native';
+import {screenOptions} from '../../global/routes';
+import {SplashScreen, Walkthrough} from '../../screens/onboard';
 import {
   Biometric,
   CreatePin,
@@ -53,15 +53,13 @@ import DataPaymentPin from '../../screens/main/home-tab/data/dataPinConfrim';
 import AirtimePaymentPin from '../../screens/main/home-tab/airtime/airtimePayPin';
 import ElectricPaymentPin from '../../screens/main/home-tab/electricity/electricPayPIn';
 import CablePaymentPin from '../../screens/main/home-tab/cable/cablePaymentPin';
-import Loader from '../../components/modals/Loader';
-import { AuthProvider } from '../../global/wrappers/AuthProvider';
+import {AuthProvider} from '../../global/wrappers/AuthProvider';
 import PaymentError from '../../screens/main/home-tab/airtime/paymentError';
-import { useDispatch, useSelector } from 'react-redux';
-import { loginSuccess, logout } from '../../contexts/actions/user';
-import Toast from 'react-native-toast-message';
+import {useDispatch, useSelector} from 'react-redux';
+import {loginSuccess, logout} from '../../contexts/actions/user';
 import MaintenanceScreen from '../../screens/maintenance';
-import { useCheckServerStatus } from '../../hooks/auth.hook';
-import { navigate, navigationRef } from './RootNavigation';
+import {useCheckServerStatus} from '../../hooks/auth.hook';
+import {navigate, navigationRef} from './RootNavigation';
 import PinOtpScreen from '../../screens/auth/pin-otp-screen';
 import SendBills from '../../screens/main/home-tab/SendBills';
 import BettingPaymentPin from '../../screens/main/home-tab/fundBetting/bettingPaymentPin';
@@ -69,35 +67,31 @@ import FundBetting from '../../screens/main/home-tab/fundBetting';
 
 const RootNav = props => {
   // const navigation = useNavigation();
-  const route = props.route;
+  // const route = props.route;
   // const navigation = props.navigation;
   // const {isBioAuthStatus} = route.params;
 
-
   const Stack = createStackNavigator();
-  const { Navigator, Screen } = Stack;
+  const {Navigator, Screen} = Stack;
   // const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isBioAuth, setIsBioAuth] = useState(false);
   const [bmEnabled, setBmEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useDispatch();
-  const { isAuthenticated,isSession } = useSelector((state) => state.user);
-  const { data, refetch } = useCheckServerStatus();
+  const {isAuthenticated, isSession} = useSelector(state => state.user);
+  const {data, refetch} = useCheckServerStatus();
 
   useEffect(() => {
     const checkSiteStatus = () => {
       // console.error(data);
       // console.log(data.status)
-      if (data && data.data && data.data.status != 'operational') {
+      if (data && data.data && data.data.status !== 'operational') {
         navigate('maintenance-screen');
       }
-    }
+    };
     checkSiteStatus();
-  }, [data])
-
+  }, [data]);
 
   useEffect(() => {
-   
     const loadInitialData = async () => {
       await retrieveLog();
       setIsLoading(false);
@@ -105,16 +99,14 @@ const RootNav = props => {
     loadInitialData();
   }, []);
 
-
   const retrieveLog = async () => {
     try {
-
       const bioEnabled = await AsyncStorage.getItem('bmEnabled');
       const isLoggedIn = await AsyncStorage.getItem('Login');
 
       if (isLoggedIn) {
         dispatch(loginSuccess()); //store user state on redux
-        setBmEnabled(bioEnabled != null)
+        setBmEnabled(bioEnabled != null);
       } else {
         dispatch(logout()); //disable redux effect
       }
@@ -127,7 +119,6 @@ const RootNav = props => {
       dispatch(logout()); //disable redux effect
     }
   };
-  
 
   const linking = {
     prefixes: ['blowpay://', 'https://blowpay.com', 'BillsByBlowmoney://'],
@@ -144,19 +135,18 @@ const RootNav = props => {
       <AuthProvider>
         <Stack.Navigator
           initialRouteName={
-          isAuthenticated ? 'TransactionPinScreen' : 'walkthrough-screen'
+            isAuthenticated ? 'bottom-tab' : 'walkthrough-screen'
           }>
-           
           <Screen
             name={'TransactionPinScreen'}
             component={TransactionPinScreen}
             options={screenOptions}
           />
-           <Screen
-              name={'walkthrough-screen'}
-              component={Walkthrough}
-              options={screenOptions}
-            />
+          <Screen
+            name={'walkthrough-screen'}
+            component={Walkthrough}
+            options={screenOptions}
+          />
           <Screen
             name={'bottom-tab'}
             component={BottomTab}
@@ -398,7 +388,6 @@ const RootNav = props => {
         </Stack.Navigator>
       </AuthProvider>
     </NavigationContainer>
-    
   );
 };
 

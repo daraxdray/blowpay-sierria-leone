@@ -1,22 +1,14 @@
-import {Platform, StyleSheet} from 'react-native';
+import {StyleSheet} from 'react-native';
 import {
   BLACK,
   DARK_GREY,
   GREY_LIGHT2,
   HEIGHT,
-  MILK,
-  SECONDARY_COLOR,
   SEMI_PRIMARY_COLOR,
   WHITE,
   WIDTH,
 } from '../../../global/theme';
-import {
-  open_sans_black,
-  open_sans_bold,
-  satoshi,
-  satoshi_bold,
-  satoshi_medium,
-} from '../../../constants/data/fonts';
+import {satoshi_bold, satoshi_medium} from '../../../constants/data/fonts';
 
 export const styles = StyleSheet.create({
   container: {
@@ -94,6 +86,7 @@ export const styles = StyleSheet.create({
     fontSize: 11.5,
     color: DARK_GREY,
     fontFamily: satoshi_medium,
+    alignSelf: 'center',
   },
   containerOtp: {
     // padding: 10,

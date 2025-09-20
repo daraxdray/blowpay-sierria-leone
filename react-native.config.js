@@ -16,9 +16,7 @@ module.exports = {
   },
   project: {
     ios: {},
-    android: {  packageName:'com.rdx.BillsByBlowmoney'
-      
-    },
+    android: {packageName: 'com.rdx.BillsByBlowmoney'},
   },
   assets: ['./node_modules/react-native-vector-icons/Fonts'],
 };

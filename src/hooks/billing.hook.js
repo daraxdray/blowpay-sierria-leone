@@ -1,6 +1,6 @@
 import {useQuery, useMutation} from '@tanstack/react-query';
 import billingServices from '../services/billing.service'; // Import your notification services
-import {_errorPrompt, _successPrompt} from '../utils'; // Import utilities
+import {_errorPrompt} from '../utils'; // Import utilities
 
 /**
  *
@@ -13,7 +13,7 @@ export const useBillerProducts = id => {
     queryKey: ['billerProducts', id],
     queryFn: async () => {
       const data = await billingServices.getBillerProducts(id);
-      
+
       return data;
     },
     onSuccess: data => {
@@ -31,7 +31,7 @@ export const useBillerGetCable = () => {
     queryKey: ['billerCables'],
     queryFn: async () => {
       const data = await billingServices.getBillerCables();
-      
+
       return data;
     },
     onSuccess: data => {
@@ -41,7 +41,6 @@ export const useBillerGetCable = () => {
     onError: error => {
       _errorPrompt(error.message);
     },
-    
   });
 };
 export const useBillerByCategory = id => {
@@ -49,7 +48,7 @@ export const useBillerByCategory = id => {
     queryKey: ['billerBycategory', id],
     queryFn: async () => {
       const data = await billingServices.getBillerProductsByCategory(id);
-      
+
       return data;
     },
     onSuccess: data => {
@@ -65,10 +64,10 @@ export const useBillerByCategory = id => {
 
 export const useNbBillerProvider = id => {
   return useQuery({
-    queryKey: ['billerProviders',],
+    queryKey: ['billerProviders'],
     queryFn: async () => {
       const data = await billingServices.getBillerNbProviders();
-      
+
       return data;
     },
     onSuccess: data => {
@@ -83,10 +82,10 @@ export const useNbBillerProvider = id => {
 };
 export const useBpBillerProvider = id => {
   return useQuery({
-    queryKey: ['billerProviders',],
+    queryKey: ['billerProviders'],
     queryFn: async () => {
       const data = await billingServices.getBillerBpProviders();
-      
+
       return data;
     },
     onSuccess: data => {
@@ -117,9 +116,38 @@ export const useBillerGetBetting = () => {
   });
 };
 
+export const useFundWallet = () => {
+  return useMutation({
+    mutationFn: async amount => {
+      const data = await billingServices.fundWallet(amount);
+      return data;
+    },
+    onSuccess: data => {
+      console.log('Wallet funded:', data);
+      return data;
+    },
+    onError: error => {
+      _errorPrompt(error.message);
+    },
+  });
+};
+export const useSpBillPayment = () => {
+  return useMutation({
+    mutationFn: async data => {
+      return await billingServices.spBillPayment(data);
+    },
+  });
+};
+export const useBillValidate = () => {
+  return useMutation({
+    mutationFn: async data => {
+      return await billingServices.billValidate(data);
+    },
+  });
+};
 export const useBettingValidate = () => {
   return useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async data => {
       return await billingServices.verifyBettingWallet(data);
     },
   });
@@ -127,7 +155,7 @@ export const useBettingValidate = () => {
 
 export const useBettingFund = () => {
   return useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async data => {
       return await billingServices.fundBettingWallet(data);
     },
   });
@@ -199,9 +227,9 @@ export const useByPBillPay = () => {
  * @return {Promise<*>}
  * @private
  */
-export const useBillValidate = () => {
+export const useSpValidateBill = () => {
   return useMutation({
-    mutationFn: payload => billingServices.billValidate(payload),
+    mutationFn: payload => billingServices.validateBilling(payload),
     onSuccess: data => {
       if (data) {
         return data;

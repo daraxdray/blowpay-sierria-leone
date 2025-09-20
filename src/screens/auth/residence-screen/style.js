@@ -56,7 +56,7 @@ export const styles = StyleSheet.create({
     width: '100%',
   },
   text1: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: satoshi_bold,
     color: BLACK,
     marginBottom: 5,

@@ -6,28 +6,23 @@ import {
   TouchableOpacity,
   Platform,
   Image,
-  Alert,
 } from 'react-native';
 import {styles} from './style';
 import {ScreenView} from '../../../global/wrappers';
 import {BLACK, WHITE} from '../../../global/theme';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {CustomButton} from '../../../global/components';
-import LocalAuthentication from 'react-native-local-auth';
 import useBiometricAuth from '../../../hooks/biometric.hook';
-import { create } from 'twrnc';
-import { useGetVitualAcc } from '../../../hooks/virtual.hook';
 
 const Biometric = props => {
   const navigation = props.navigation;
-  const {navigateHome, createKey, } = useBiometricAuth();
-  const {data} = useGetVitualAcc();
+  const {navigateHome, createKey} = useBiometricAuth();
 
-  const activate =  ()=>{
-     createKey()
-     navigateHome();
-  }
-  
+  const activate = () => {
+    createKey();
+    navigateHome('residence-screen');
+  };
+
   return (
     <ScreenView style={styles.container} light color={WHITE}>
       <ScrollView style={styles.viewContainer}>
@@ -72,7 +67,8 @@ const Biometric = props => {
           <CustomButton
             onPress={navigateHome}
             style={styles.btn3}
-            textStyle={{color:'black'}}
+            // eslint-disable-next-line react-native/no-inline-styles
+            textStyle={{color: 'black'}}
             text={'Cancel'}
           />
         </View>

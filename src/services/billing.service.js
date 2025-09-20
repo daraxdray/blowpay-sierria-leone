@@ -17,14 +17,7 @@ class BillingServices {
     );
   }
   getBillerNbProviders() {
-    return request(
-      `/billers/nb/discos`,
-      'GET',
-      undefined,
-      false,
-      false,
-      false,
-    );
+    return request(`/billers/nb/discos`, 'GET', undefined, false, false, false);
   }
   getBillerBpProviders() {
     return request(
@@ -38,40 +31,61 @@ class BillingServices {
   }
 
   // Add this to your billingServices
-getBillerBetting() {
-  return request(
-    `/billers/nb/betting`,
-    'GET',
-    undefined,
-    false,
-    false,
-    false,
-  );
-}
+  getBillerBetting() {
+    return request(
+      `/billers/nb/betting`,
+      'GET',
+      undefined,
+      false,
+      false,
+      false,
+    );
+  }
 
-// Add this to your billingServices
-verifyBettingWallet(data) {
-  return request(
-    `/billers/nb/verify-betting-wallet`,
-    'POST',
-    data,
-    false,
-    false,
-    false,
-  );
-}
+  // Add this to your billingServices
+  verifyBettingWallet(data) {
+    return request(
+      `/billers/nb/verify-betting-wallet`,
+      'POST',
+      data,
+      false,
+      false,
+      false,
+    );
+  }
 
-// Add this to your billingServices
-fundBettingWallet(data) {
-  return request(
-    `/billers/nb/fund-wallet`,
-    'POST',
-    data,
-    false,
-    false,
-    false,
-  );
-}
+  // Add this to your billingServices
+  fundBettingWallet(data) {
+    return request(
+      `/billers/nb/fund-wallet`,
+      'POST',
+      data,
+      false,
+      false,
+      false,
+    );
+  }
+  fundWallet(data) {
+    return request(
+      '/virtual-account/sle/fund',
+      'POST',
+      data,
+      false,
+      false,
+      false,
+    );
+  }
+  spBillPayment(data) {
+    // console.log(data);
+
+    return request('/billers/sp/outflow', 'POST', data, false, false, false);
+  }
+
+  validateBilling(data) {
+    // console.log(data);
+
+    return request('/billers/sp/outflow', 'POST', data, false, false, false);
+  }
   billValidate(payload) {
     // console.log({payload});
     return request(
@@ -132,14 +146,7 @@ fundBettingWallet(data) {
     );
   }
   getBillerCables() {
-    return request(
-      `/billers/nb/cables`,
-      'GET',
-      undefined,
-      false,
-      false,
-      false,
-    );
+    return request(`/billers/nb/cables`, 'GET', undefined, false, false, false);
   }
 
   /**
@@ -197,7 +204,6 @@ fundBettingWallet(data) {
    * @param {{productId: string}{amountEntered: string} } payload
    * @return {Promise<*>}
    */
-  
 }
 
 export default new BillingServices();

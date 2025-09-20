@@ -11,6 +11,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   viewContainer: {
+    paddingHorizontal: 10,
     width: WIDTH,
     alignSelf: 'center',
     flex: 1,

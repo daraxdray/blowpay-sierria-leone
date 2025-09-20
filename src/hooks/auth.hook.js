@@ -19,7 +19,6 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: payload => authServices.login(payload),
     onSuccess: data => {
-      
       if (data) {
         return data;
       }
@@ -70,10 +69,10 @@ export const useSendOtp = () => {
 // Hook for checking website statsu
 export const useCheckServerStatus = () => {
   return useQuery({
-    queryKey: ['serverStatus',],
+    queryKey: ['serverStatus'],
     queryFn: async () => {
       const data = await authServices.getServerStatus();
-      
+
       return data;
     },
     onSuccess: data => {
@@ -179,7 +178,7 @@ export const useResetPassword = () => {
 export const useLogout = () => {
   return useMutation({
     mutationFn: () => authServices.logout(),
-    onSuccess: (d) => {
+    onSuccess: d => {
       return d;
     },
     onError: error => {

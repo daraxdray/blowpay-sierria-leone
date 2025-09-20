@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -13,50 +13,102 @@ import {styles} from './style';
 import {ScreenView} from '../../../global/wrappers';
 import {BLACK, WHITE} from '../../../global/theme';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Tier1Req} from '../../../constants/data/auth';
 import {countryList} from '../../../constants/data/auth';
 import tw from 'twrnc';
 import IdSelectorModal from '../../../components/modals/IdSelectorModal';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useKYC} from '../../../hooks/auth.hook';
+import {CustomButton} from '../../../global/components';
+import Toast from 'react-native-toast-message';
 
-const ResidenceScreen = props => {
-  const {navigation, route} = props;
-  const {idNumber, expiryDate, documentImage, documentType} =
+const ResidenceScreen = ({navigation, route}) => {
+  const {idNumber, expiryDate, documentImage, documentType, selfieImage} =
     route?.params || {};
 
-  const bottomSheetRef = useRef(null);
   const [country, setCountry] = useState('');
   const [validCountry, setValidCountry] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalId, setModalId] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCountries, setFilteredCountries] = useState(countryList);
-  const [departureModalOpen, setDepartureModalOpen] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [validPhone, setValidPhone] = useState(false);
 
-  const saveData = async () => {
-    try {
-      await AsyncStorage.setItem('@idNumber', idNumber);
-      await AsyncStorage.setItem('@expiryDate', expiryDate);
-      await AsyncStorage.setItem('@documentImage', documentImage);
-      await AsyncStorage.setItem('@documentType', documentType);
-      await AsyncStorage.setItem('@country', country);
-    } catch (e) {
-      console.log('Error saving data:', e);
-    }
+  const {mutate: submitKYC, status} = useKYC();
+
+  const handlePhoneChange = text => {
+    setPhoneNumber(text);
+    setValidPhone(/^\d{7,15}$/.test(text));
   };
 
   const handleSearch = query => {
     setSearchQuery(query);
-    const filtered = countryList.filter(country =>
-      country.name.toLowerCase().includes(query.toLowerCase()),
+    setFilteredCountries(
+      countryList.filter(c =>
+        c.name.toLowerCase().includes(query.toLowerCase()),
+      ),
     );
-    setFilteredCountries(filtered);
   };
 
-  const handleCountrySelect = country => {
-    setCountry(country.name);
+  const handleCountrySelect = c => {
+    setCountry(c.name);
     setModalVisible(false);
     setValidCountry(true);
+  };
+
+  const handleSubmit = () => {
+    if (
+      !idNumber ||
+      !expiryDate ||
+      !documentImage ||
+      !documentType ||
+      !selfieImage
+    ) {
+      Toast.show({type: 'error', text1: 'Missing document details'});
+      return;
+    }
+
+    if (!validCountry) {
+      Toast.show({
+        type: 'error',
+        text1: 'Please select your country of residence',
+      });
+      return;
+    }
+
+    if (!validPhone) {
+      Toast.show({type: 'error', text1: 'Please enter a valid phone number'});
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('idNumber', idNumber);
+    formData.append('expiryDate', expiryDate);
+    formData.append('documentType', documentType);
+    formData.append('country', country);
+    formData.append('phoneNumber', phoneNumber);
+    formData.append('tier', 1);
+
+    formData.append('documentImage', {
+      uri: documentImage,
+      type: 'image/jpeg',
+      name: 'document.jpg',
+    });
+
+    formData.append('selfieImage', {
+      uri: selfieImage,
+      type: 'image/jpeg',
+      name: 'selfie.jpg',
+    });
+
+    submitKYC(formData, {
+      onSuccess: () => {
+        navigation.navigate('bottom-tab');
+        Toast.show({type: 'success', text1: 'KYC submitted successfully'});
+      },
+      onError: () => {
+        Toast.show({type: 'error', text1: 'Failed to submit KYC. Try again.'});
+      },
+    });
   };
 
   return (
@@ -70,6 +122,7 @@ const ResidenceScreen = props => {
             <Ionicons name="chevron-back" size={13} color={BLACK} />
           </TouchableOpacity>
         </View>
+
         <View style={styles.view1}>
           <View style={styles.v1}>
             <Text style={styles.text1}>Country of Residence</Text>
@@ -87,6 +140,37 @@ const ResidenceScreen = props => {
             <Ionicons name="chevron-down" size={16} color={BLACK} />
           </TouchableOpacity>
 
+          <View style={tw`w-full mt-4`}>
+            <Text style={tw`text-gray-900 text-[15px]`}>Phone Number</Text>
+            <Text style={styles.text11}>
+              Enter your phone number associated with this country
+            </Text>
+
+            <View
+              style={tw`w-full border flex flex-row items-center p-3 bg-[#F8F8FA] rounded-[5px] border-[#D0D5DD] mt-2`}>
+              <Ionicons
+                name="call-outline"
+                size={18}
+                color={BLACK}
+                style={tw`mr-2`}
+              />
+              <TextInput
+                style={styles.placeholderText}
+                placeholder="Enter phone number"
+                keyboardType="phone-pad"
+                value={phoneNumber}
+                onChangeText={handlePhoneChange}
+                placeholderTextColor="gray"
+              />
+            </View>
+
+            {!validPhone && phoneNumber.length > 0 && (
+              <Text style={tw`text-red-500 text-[12px] mt-1`}>
+                Please enter a valid phone number
+              </Text>
+            )}
+          </View>
+
           <View style={styles.v21}>
             <Text style={styles.text14}>Tier 1 Requirement</Text>
             <View style={styles.v22}>
@@ -97,8 +181,8 @@ const ResidenceScreen = props => {
                 <View style={styles.rowViewN}>
                   <Image
                     source={require('../../../../assets/icons/shield-face.png')}
-                    style={{width: 18, height: 18, marginRight: 10}}
-                    resizeMode={'contain'}
+                    style={tw`w-[20px] h-[20px] mr-[10px]`}
+                    resizeMode="contain"
                   />
                   <View>
                     <Text style={styles.text15}>Identity Verification</Text>
@@ -108,49 +192,31 @@ const ResidenceScreen = props => {
                     </Text>
                   </View>
                 </View>
-                <Ionicons name={'chevron-forward'} color={BLACK} size={16} />
+                <Ionicons name="chevron-forward" color={BLACK} size={16} />
               </TouchableOpacity>
-              {Tier1Req.map((item, index) => {
-                const isDisabled = !validCountry;
-                return (
-                  <TouchableOpacity
-                    style={styles.v4}
-                    key={index}
-                    activeOpacity={0.65}
-                    disabled={isDisabled}
-                    onPress={() => {
-                      saveData().then(() => {
-                        navigation.navigate(item.route);
-                      });
-                    }}>
-                    <View style={styles.rowViewN}>
-                      <Image
-                        source={item.icon}
-                        style={{width: 18, height: 18, marginRight: 10}}
-                        resizeMode={'contain'}
-                      />
-                      <View>
-                        <Text style={styles.text15}>{item.title}</Text>
-                        <Text style={styles.text16}>{item.content}</Text>
-                      </View>
-                    </View>
-                    <Ionicons
-                      name={'chevron-forward'}
-                      color={BLACK}
-                      size={16}
-                    />
-                  </TouchableOpacity>
-                );
-              })}
+
+              {idNumber ||
+              expiryDate ||
+              documentImage ||
+              documentType ||
+              selfieImage ? (
+                <View style={tw`absolute right-2 top-2`}>
+                  <Ionicons name="checkmark-circle" size={24} color="green" />
+                </View>
+              ) : null}
             </View>
           </View>
+
+          <CustomButton onPress={handleSubmit} loading={status === 'pending'} />
 
           <Text style={styles.text17}>
             By clicking, you consent to provide us with the requested data.
           </Text>
         </View>
+
+        {/* Country Selector Modal */}
         <Modal
-          transparent={true}
+          transparent
           animationType="slide"
           visible={modalVisible}
           onRequestClose={() => setModalVisible(false)}>
@@ -182,11 +248,13 @@ const ResidenceScreen = props => {
             </View>
           </View>
         </Modal>
+
+        {/* ID Selector Modal */}
         <Modal
-          transparent={true}
+          transparent
           animationType="slide"
           visible={modalId}
-          onRequestClose={() => setModalVisible(false)}>
+          onRequestClose={() => setModalId(false)}>
           <View style={tw`flex-1 justify-end bg-black bg-opacity-50`}>
             <IdSelectorModal closeModal={() => setModalId(false)} />
           </View>
