@@ -2,65 +2,68 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   TextInput,
   TouchableWithoutFeedback,
   FlatList,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { CustomButton } from '../../global/components';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import { useBillerByCategory, useBillerGetCable } from '../../hooks/billing.hook';
+import {CustomButton} from '../../global/components';
+import {PanGestureHandler, State} from 'react-native-gesture-handler';
+import {useBillerGetCable} from '../../hooks/billing.hook';
 import Loader from './Loader';
 
-const CableModal = ({ closeModal, proceed, selectCompany }) => {
+const CableModal = ({closeModal, proceed, selectCompany, country}) => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [searchText, setSearchText] = useState('');
-  const billerId = 'CABLEBILLS';
   const [formattedCompanies, setformattedCompanies] = useState([]);
-  const { data, isLoading, error } = useBillerGetCable();
+  const {data, status, error} = useBillerGetCable();
+
   useEffect(() => {
-
-    if (data?.data) {
-
-      const formatResponse = (response) => {
+    if (country?.toLowerCase() === 'sierra leone') {
+      setformattedCompanies([
+        {
+          ID: 'DSTV',
+          PACKAGE_ID: 'default',
+          PACKAGE_NAME: 'DSTV',
+          PRODUCT: [],
+        },
+      ]);
+    } else if (data?.data?.TV_ID) {
+      const formatResponse = response => {
         const companies = response?.TV_ID;
         return Object.keys(companies).reduce((acc, key) => {
-
           return acc.concat(companies[key]);
         }, []);
       };
 
-      setformattedCompanies(formatResponse(data?.data));
-      console.log("formattedCompanies",formattedCompanies);
+      let companies = formatResponse(data?.data);
+      setformattedCompanies(companies);
     }
-  }, [data?.data])
-  
-  const handleSwipeDown = ({ nativeEvent }) => {
+  }, [data?.data, country]);
+  const handleSwipeDown = ({nativeEvent}) => {
     if (nativeEvent.translationY > 50) {
       closeModal();
     }
   };
 
-  const handleGestureStateChange = ({ nativeEvent }) => {
+  const handleGestureStateChange = ({nativeEvent}) => {
     if (nativeEvent.state === State.END) {
-      handleSwipeDown({ nativeEvent });
+      handleSwipeDown({nativeEvent});
     }
   };
 
-
   const filteredCompanies =
-  formattedCompanies?.length > 0
+    formattedCompanies?.length > 0
       ? formattedCompanies.filter(company =>
           company.ID.toLowerCase().includes(searchText.toLowerCase()),
         )
       : [];
 
-  const renderCompany = ({ item }) => {
+  const renderCompany = ({item}) => {
     const isSelected = selectedCompany === item?.ID;
-    console.log(item)
+    console.log(item);
     return (
       <TouchableOpacity
         style={tw`flex-row items-center p-3 mb-1 bg-white shadow-sm rounded-lg`}
@@ -93,7 +96,7 @@ const CableModal = ({ closeModal, proceed, selectCompany }) => {
     );
   };
 
-  if (isLoading) {
+  if (status === 'pending') {
     return <Loader />;
   }
 

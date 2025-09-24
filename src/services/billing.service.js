@@ -66,6 +66,8 @@ class BillingServices {
     );
   }
   fundWallet(data) {
+    // console.log(data, 'payload');
+
     return request(
       '/virtual-account/sle/fund',
       'POST',
@@ -84,7 +86,7 @@ class BillingServices {
   validateBilling(data) {
     // console.log(data);
 
-    return request('/billers/sp/outflow', 'POST', data, false, false, false);
+    return request('/billers/sp/validate', 'POST', data, false, false, false);
   }
   billValidate(payload) {
     // console.log({payload});
@@ -146,7 +148,17 @@ class BillingServices {
     );
   }
   getBillerCables() {
-    return request(`/billers/nb/cables`, 'GET', undefined, false, false, false);
+    return request('/billers/nb/cables', 'GET', undefined, false, false, false);
+  }
+  getSLCablesPlan() {
+    return request(
+      '/billers/sp/package-list',
+      'GET',
+      undefined,
+      false,
+      false,
+      false,
+    );
   }
 
   /**

@@ -58,7 +58,7 @@ import PaymentError from '../../screens/main/home-tab/airtime/paymentError';
 import {useDispatch, useSelector} from 'react-redux';
 import {loginSuccess, logout} from '../../contexts/actions/user';
 import MaintenanceScreen from '../../screens/maintenance';
-import {useCheckServerStatus} from '../../hooks/auth.hook';
+// import {useCheckServerStatus} from '../../hooks/auth.hook';
 import {navigate, navigationRef} from './RootNavigation';
 import PinOtpScreen from '../../screens/auth/pin-otp-screen';
 import SendBills from '../../screens/main/home-tab/SendBills';
@@ -78,18 +78,18 @@ const RootNav = props => {
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useDispatch();
   const {isAuthenticated, isSession} = useSelector(state => state.user);
-  const {data, refetch} = useCheckServerStatus();
+  // const {data, refetch} = useCheckServerStatus();
 
-  useEffect(() => {
-    const checkSiteStatus = () => {
-      // console.error(data);
-      // console.log(data.status)
-      if (data && data.data && data.data.status !== 'operational') {
-        navigate('maintenance-screen');
-      }
-    };
-    checkSiteStatus();
-  }, [data]);
+  // useEffect(() => {
+  //   const checkSiteStatus = () => {
+  //     console.error(data);
+  //     console.log(data.status)
+  //     if (data && data.data && data.data.status !== 'operational') {
+  //       navigate('maintenance-screen');
+  //     }
+  //   };
+  //   checkSiteStatus();
+  // }, [data]);
 
   useEffect(() => {
     const loadInitialData = async () => {

@@ -60,6 +60,8 @@ const Electricity = props => {
         },
         {
           onSuccess: res => {
+            console.log(res, 'validation res');
+
             Toast.show({
               type: 'success',
               text1: 'Meter Validated',

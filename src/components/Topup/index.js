@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {
   View,
   Text,
@@ -6,22 +7,20 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useContext} from 'react';
 import tw from 'twrnc';
 import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {CustomButton} from '../../global/components';
 import {BLACK} from '../../global/theme';
 import {PanGestureHandler} from 'react-native-gesture-handler';
-import {useGetUser} from '../../hooks/user.hook';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {useFundWallet} from '../../hooks/billing.hook';
 import AppConstant from '../../constants/data/appConstant';
-
+import {AuthContext} from '../../global/wrappers/AuthProvider';
 const TopupModal = ({closeModal, accountData}) => {
-  const {data: countryData} = useGetUser();
+  const {country} = useContext(AuthContext);
   const {mutate: fundWallet, data: fundData, isPending} = useFundWallet();
-  const getCountry = countryData?.data?.country || {};
   const [amount, setAmount] = useState('');
   const [step, setStep] = useState('input');
   const userData = accountData || {};
@@ -93,7 +92,7 @@ Account Number: ${userData?.accountNumber || 'N/A'}
           <View />
         </View>
 
-        {getCountry === 'Sierra Leone' ? (
+        {country === 'Sierra Leone' ? (
           step === 'input' ? (
             <View style={tw`mt-6`}>
               <Text

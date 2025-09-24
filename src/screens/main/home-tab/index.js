@@ -32,7 +32,6 @@ import {
 import {useGetTransactions} from '../../../hooks/transactions.hook';
 import Bmoney from '../../../components/modals/BMoneyModal';
 import {CommonActions} from '@react-navigation/native';
-import {useDispatch} from 'react-redux';
 import AdvertModal from '../../../global/components/AdvertModal';
 
 const HomeTab = props => {
@@ -46,8 +45,6 @@ const HomeTab = props => {
   const {data: vtAcc, refetch: refetchBalance} = useGetVitualBalance();
   const {refetch: refetchTransactions} = useGetTransactions();
   const [advertModalVisible, setAdvertModalVisible] = useState(true);
-
-  const dispatch = useDispatch();
 
   const loadUserData = async () => {
     try {
@@ -264,7 +261,7 @@ const HomeTab = props => {
           visible={modalVisible}
           onRequestClose={closeModal}>
           <View style={tw`flex-1 justify-end bg-black bg-opacity-50`}>
-            <TopupModal accountData={data?.data}  closeModal={closeModal} />
+            <TopupModal accountData={data?.data} closeModal={closeModal} />
           </View>
         </Modal>
         <Modal

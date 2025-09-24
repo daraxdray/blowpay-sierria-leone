@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState, useContext} from 'react';
 import {
   View,
   Text,
@@ -7,21 +7,26 @@ import {
   TouchableOpacity,
   Modal,
 } from 'react-native';
-import { styles } from './style';
-import { ScreenView } from '../../../../global/wrappers';
-import { WHITE } from '../../../../global/theme';
+import {styles} from './style';
+import {ScreenView} from '../../../../global/wrappers';
+import {WHITE} from '../../../../global/theme';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Header from '../../../../global/components/Header';
 import tw from 'twrnc';
 import Amount from '../../../../components/airtime/Amount';
-import { CustomButton } from '../../../../global/components';
+import {CustomButton} from '../../../../global/components';
 import CableModal from '../../../../components/modals/CableModal';
 import CablePlanModal from '../../../../components/modals/CablePlanModel';
 import Toast from 'react-native-toast-message';
-import { useBillValidate, useCableValidate } from '../../../../hooks/billing.hook'; // Import the hook
+import {
+  useCableValidate,
+  useSpValidateBill,
+} from '../../../../hooks/billing.hook';
 import Loader from '../../../../components/modals/Loader';
+import {AuthContext} from '../../../../global/wrappers/AuthProvider';
 
 const Cable = props => {
+  const {country} = useContext(AuthContext);
   const navigation = props.navigation;
   const [modalVisible, setModalVisible] = useState(false);
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
@@ -31,9 +36,10 @@ const Cable = props => {
   const [userDetails, setUserDetails] = useState('');
   const [userError, setUserErroe] = useState('');
   const [isValidationSuccessful, setIsValidationSuccessful] = useState(false);
-  const { mutate: validateBill, status: validateStatus } = useCableValidate();
-  const billerId = selectedProvider?.biller_code;
-
+  const spValidate = useSpValidateBill();
+  const cableValidate = useCableValidate();
+  const {mutate: validateBill, status: validateStatus} =
+    country === 'Sierra Leone' ? spValidate : cableValidate;
   const openModal = () => {
     setModalVisible(true);
   };
@@ -58,9 +64,15 @@ const Cable = props => {
   const handleNext = () => {
     if (!selectedProvider || !selectedOption || !smartCardNumber) {
       let missingFields = [];
-      if (!selectedProvider) missingFields.push('Service Provider');
-      if (!selectedOption) missingFields.push('Service Plan');
-      if (!smartCardNumber) missingFields.push('Smart Card Number');
+      if (!selectedProvider) {
+        missingFields.push('Service Provider');
+      }
+      if (!selectedOption) {
+        missingFields.push('Service Plan');
+      }
+      if (!smartCardNumber) {
+        missingFields.push('Smart Card Number');
+      }
 
       Toast.show({
         text1: 'Missing Fields',
@@ -69,36 +81,14 @@ const Cable = props => {
       });
       return;
     }
-
-    // Prepare the data for validation
     const userValidate = {
       cableTv: selectedProvider.ID,
       smartCardNo: smartCardNumber,
       packageId: selectedOption.PACKAGE_ID,
-      selectedAmount: selectedOption?.PACKAGE_AMOUNT
+      selectedAmount: selectedOption?.PACKAGE_AMOUNT,
+      country,
     };
-
-    console.log("VALIDATE", userValidate);
-
     navigation.navigate('CablePaymentPin', userValidate);
-    // Call validateBill mutation
-    // validateBill(userValidate, {
-    //   onSuccess: (res) => {
-    //     console.log("RESPONSE",res);
-    //     // navigation.navigate('CablePaymentPin', {
-    //     //   selectedOption,
-    //     //   smartCardNumber,
-    //     // });
-    //   },
-    //   onError: (err) => {
-    //     console.log(err)
-    //     Toast.show({
-    //       text1: 'Validation Failed',
-    //       text2: 'Invalid Smart Card Number. Please try again.',
-    //       type: 'error',
-    //     });
-    //   },
-    // });
   };
 
   const proceed = () => {
@@ -113,25 +103,27 @@ const Cable = props => {
     }
   };
 
-  const handleSmartCardBlur = (val) => {
-
+  const handleSmartCardBlur = val => {
     if (val && val.length >= 10 && selectedOption) {
-      // Prepare the data for validation
-      const userValidate = {
-        cableTv: selectedProvider.ID,
-        smartCardNo: val
-      };
-      console.log("VALIDATE", userValidate);
+      let userValidate;
 
+      if (country === 'Sierra Leone') {
+        userValidate = {
+          amount: selectedOption?.PACKAGE_AMOUNT,
+          recipient: val,
+          category: 'DSTV',
+        };
+      } else {
+        userValidate = {
+          cableTv: selectedProvider.ID,
+          smartCardNo: val,
+        };
+      }
       validateBill(userValidate, {
         onSuccess: async response => {
+          console.log('VALIDATION RESPONSE:', response);
           try {
-
-
-            if (
-              response && response?.customer_name != ""
-            ) {
-              
+            if (response && response?.customer_name !== '') {
               Toast.show({
                 type: 'success',
                 text1: 'Validation Successful',
@@ -196,9 +188,7 @@ const Cable = props => {
                 onPress={openModal}
                 style={tw`relative w-full border border-[#D0D5DD] rounded-[10px] items-center justify-between flex-row px-3 py-3`}>
                 <Text style={tw`text-[#98A2B3]`}>
-                  {selectedProvider
-                    ? selectedProvider.ID
-                    : 'Service Provider'}
+                  {selectedProvider ? selectedProvider.ID : 'Service Provider'}
                 </Text>
                 <Ionicons name="chevron-down" size={13} />
               </TouchableOpacity>
@@ -230,12 +220,11 @@ const Cable = props => {
                 value={smartCardNumber}
                 keyboardType="numeric"
                 onChangeText={handleSmartCardBlur}
-                
               />
               {userDetails ? (
                 <View style={tw`p-2 bg-green-100 w-[80%] rounded-md`}>
                   <Text style={tw`text-[12px] text-black`}>
-                    Name: {userDetails?.customer_name || 'N/A'}
+                    Name: {userDetails?.customer_name || 'No user Available'}
                   </Text>
                 </View>
               ) : userError ? (
@@ -243,14 +232,15 @@ const Cable = props => {
                   <Text style={tw`text-[12px] text-red-500`}>{userError}</Text>
                 </View>
               ) : (
-                <View></View>
+                <View />
               )}
             </View>
           </View>
           <View style={tw`pt-6 gap-5 w-full`}>
             <Amount
-              amount={`${selectedOption?.PACKAGE_AMOUNT ?? '' }`}
-              editable ={false}
+              amount={`${selectedOption?.PACKAGE_AMOUNT ?? ''}`}
+              editable={false}
+              country={country}
             />
           </View>
           <Modal
@@ -262,6 +252,7 @@ const Cable = props => {
               <CableModal
                 selectCompany={selectCompany}
                 closeModal={closeModal}
+                country={country}
               />
             </View>
           </Modal>
@@ -272,9 +263,9 @@ const Cable = props => {
             onRequestClose={closeOptionsModal}>
             <View style={tw`flex-1 justify-end bg-black bg-opacity-50`}>
               <CablePlanModal
-
                 closeModal={closeOptionsModal}
                 selectOption={selectOption}
+                country={country}
                 products={selectedProvider?.PRODUCT}
               />
             </View>

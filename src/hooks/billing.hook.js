@@ -1,6 +1,6 @@
 import {useQuery, useMutation} from '@tanstack/react-query';
-import billingServices from '../services/billing.service'; // Import your notification services
-import {_errorPrompt} from '../utils'; // Import utilities
+import billingServices from '../services/billing.service';
+import {_errorPrompt} from '../utils';
 
 /**
  *
@@ -31,6 +31,23 @@ export const useBillerGetCable = () => {
     queryKey: ['billerCables'],
     queryFn: async () => {
       const data = await billingServices.getBillerCables();
+
+      return data;
+    },
+    onSuccess: data => {
+      console.log('Cables Products fetched:', data);
+      return data;
+    },
+    onError: error => {
+      _errorPrompt(error.message);
+    },
+  });
+};
+export const useGetSLCablePlans = () => {
+  return useQuery({
+    queryKey: ['billerSLCables'],
+    queryFn: async () => {
+      const data = await billingServices.getSLCablesPlan();
 
       return data;
     },

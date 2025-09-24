@@ -63,16 +63,19 @@ const WalletCard = ({handleAdd}) => {
   }, [userData, userBalance]);
 
   const isIpad = () => {
-    const { width, height } = Dimensions.get('window');
+    const {width, height} = Dimensions.get('window');
     return (width >= 768 && height >= 1024) || (width >= 1024 && height >= 768);
   };
 
   return (
     <View style={tw`mt-5 flex items-center p-2`}>
       <View style={tw`w-full relative items-center justify-center`}>
-        <WalletCardSVG width={"110%"} height="110%" style={tw`absolute`} />
+        <WalletCardSVG width={'115%'} height="115%" style={tw`absolute`} />
 
-        <View style={tw`flex-row justify-between items-center py-6 px-6 ${isIpad() ? 'w-[35%]' : 'w-90%'}`}>
+        <View
+          style={tw`flex-row justify-between items-center py-6 px-6 ${
+            isIpad() ? 'w-[35%]' : 'w-90%'
+          }`}>
           <View style={tw`flex-1 pb-3`}>
             <ImageBackground
               source={require('../../../assets/images/Rectangle.png')}

@@ -1,30 +1,42 @@
-import React, {useState} from 'react';
+/* eslint-disable no-shadow */
+import React, {useState, useMemo} from 'react';
 import {View, Text, TouchableOpacity, TextInput, FlatList} from 'react-native';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {CustomButton} from '../../global/components';
 import {PanGestureHandler} from 'react-native-gesture-handler';
-import {useBillerGetCable, useBillerProducts} from '../../hooks/billing.hook';
+import {useGetSLCablePlans} from '../../hooks/billing.hook';
 import Loader from './Loader';
 
-const CablePlanModal = ({closeModal, proceed, item, selectOption, products = []}) => {
-  const {data, isLoading, error} = useBillerGetCable();
+const CablePlanModal = ({
+  closeModal,
+  proceed,
+  item,
+  selectOption,
+  products = [],
+  country,
+}) => {
   const [searchText, setSearchText] = useState('');
   const [selectedCompany, setSelectedCompany] = useState(null);
-  const formattedAmount = new Intl.NumberFormat();
 
-  console.log("CABLES",data)
-  const filteredCompanies =
-  products
-      ? products.filter(company =>
-          company.PACKAGE_NAME.toLowerCase().includes(searchText?.toLowerCase()),
-        )
-      : [];
-  const handleSwipeDown = ({nativeEvent}) => {
-    if (nativeEvent.translationY > 50) {
-      closeModal();
+  const {data: slData, status, error: slError} = useGetSLCablePlans();
+
+  const plans = useMemo(() => {
+    if (country?.toLowerCase() === 'sierra leone') {
+      return (
+        slData?.data?.packages?.map((p, index) => ({
+          PACKAGE_ID: p.service_slug || `sl_${index}`,
+          PACKAGE_NAME: p.name,
+          PACKAGE_AMOUNT: p.price,
+        })) || []
+      );
     }
-  };
+    return products || [];
+  }, [country, slData?.data, products]);
+
+  const filteredCompanies = plans.filter(plan =>
+    plan.PACKAGE_NAME.toLowerCase().includes(searchText?.toLowerCase()),
+  );
 
   const renderCompany = ({item}) => {
     const isSelected = selectedCompany === item.PACKAGE_ID;
@@ -35,7 +47,7 @@ const CablePlanModal = ({closeModal, proceed, item, selectOption, products = []}
         onPress={() => {
           setSelectedCompany(item.PACKAGE_ID);
           selectOption(item);
-          closeModal()
+          closeModal();
         }}>
         <View style={tw`flex-1`}>
           <Text style={tw`text-[#292929] font-medium text-[14px]`}>
@@ -52,17 +64,17 @@ const CablePlanModal = ({closeModal, proceed, item, selectOption, products = []}
       </TouchableOpacity>
     );
   };
-
-  if (isLoading) {
-    return <Loader />;
-  }
-
-  if (error) {
-    return <Text>Error loading companies.</Text>;
+  if (country?.toLowerCase() === 'sierra leone') {
+    if (status === 'pending') {
+      return <Loader />;
+    }
+    if (slError) {
+      return <Text>Error loading Sierra Leone plans.</Text>;
+    }
   }
 
   return (
-    <PanGestureHandler onGestureEvent={handleSwipeDown}>
+    <PanGestureHandler>
       <View
         style={tw`h-[95%] bg-white p-5 rounded-t-[20px] w-19/20 self-center rounded-b-10 mb-5`}>
         <View style={tw`items-center justify-center`}>
@@ -75,7 +87,7 @@ const CablePlanModal = ({closeModal, proceed, item, selectOption, products = []}
           </Text>
 
           <TextInput
-            placeholder="Search company"
+            placeholder="Search plan"
             value={searchText}
             onChangeText={setSearchText}
             style={tw`rounded-lg text-black p-3 mt-2 border-[0.1] bg-white`}
