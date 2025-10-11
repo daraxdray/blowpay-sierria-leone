@@ -1,12 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  FlatList,
-  Modal,
-} from 'react-native';
+import React, {useEffect, useState, useContext} from 'react';
+import {View, Text, TouchableOpacity, Modal} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {styles} from './style';
 import tw from 'twrnc';
@@ -15,20 +8,19 @@ import {WHITE} from '../../../global/theme';
 import MywalletCard from '../../../components/wallet/MyWalletCard';
 import SendBillsSVG from '../../../../assets/svgs/SendBills.svg';
 import TopupSVG from '../../../../assets/svgs/Topup.svg';
-import TransactionItem from '../../../components/wallet/TransactionItem';
-// import { transactions } from '../../../constants/data/Transaction';
 import {useGetTransactions} from '../../../hooks/transactions.hook';
-import AddfundSVG from '../../../../assets/svgs/Addfund.svg';
-import {formatTime} from '../../../constants/data/Transaction';
 import TopupModal from '../../../components/Topup';
 import TransactionDetails from '../../../components/modals/TransactionDetails';
 import Recent from '../../../components/wallet/Recent';
+import Loader from '../../../components/modals/Loader';
+import {AuthContext} from '../../../global/wrappers/AuthProvider';
 
 const WalletTab = props => {
   const navigation = props.navigation;
   const [modalVisible, setModalVisible] = useState(false);
   const [deatailModalVisible, setDetailsModalVisible] = useState(false);
   const [transactions, setTransactions] = useState([]);
+  const {country} = useContext(AuthContext);
   const [selectedTransactionId, setSelectedTransactionId] = useState(null);
 
   const openModal = () => {
@@ -53,7 +45,7 @@ const WalletTab = props => {
     openDetailsModal();
   };
 
-  const {data, isLoading, error} = useGetTransactions();
+  const {data, status} = useGetTransactions();
   useEffect(() => {
     const loadTransactions = async () => {
       const cachedTransactions = await AsyncStorage.getItem(
@@ -77,6 +69,9 @@ const WalletTab = props => {
     }
   }, [data]);
 
+  if (status === 'pending') {
+    <Loader />;
+  }
   return (
     <ScreenView style={styles.container} light color={WHITE}>
       <View style={styles.view1}>
@@ -86,7 +81,7 @@ const WalletTab = props => {
           </Text>
         </View>
 
-        <MywalletCard />
+        <MywalletCard country={country} />
 
         <View style={tw`flex flex-row gap-5 mt-5 items-center justify-between`}>
           <TouchableOpacity
@@ -105,7 +100,7 @@ const WalletTab = props => {
           </TouchableOpacity>
         </View>
 
-       <Recent />
+        <Recent />
         {/* <View style={tw`flex-1 justify-center items-center  w-full`}>
           {transactions && transactions.length > 0 ? (
             <View>

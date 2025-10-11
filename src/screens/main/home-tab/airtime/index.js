@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useState, useContext} from 'react';
 import {View, Text, ScrollView} from 'react-native';
 import {styles} from './style';
 import {ScreenView} from '../../../../global/wrappers';
@@ -10,37 +10,28 @@ import {AirtimePlans} from '../../../../constants/data/airtime';
 import NumberInput from '../../../../components/airtime/NumberInput';
 import {CustomButton} from '../../../../global/components';
 import Amount from '../../../../components/airtime/Amount';
-import {useBillerProducts} from '../../../../hooks/billing.hook';
 import Toast from 'react-native-toast-message';
 import ContactListModal from '../../../../components/modals/ContactListModal';
-import {formatAmount} from '../../../../utils/format';
 import SierraLeoneForm from '../../../../components/SierraLeone/SierraLeoneForm';
 import {AuthContext} from '../../../../global/wrappers/AuthProvider';
+import NetworkPerformance from '../../../../components/airtime/NetworkPerformance';
+import {formatAmount} from '../../../../utils/format';
 
 const Airtime = props => {
   const {country} = useContext(AuthContext);
   const {navigation} = props;
   const [selectedAmount, setSelectedAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [billerId, setBillerId] = useState('BIL099');
-  const [setBillerDataId] = useState('BIL099');
-  const {data} = useBillerProducts(billerId);
-  const [airtimeProducts, setAirtimeProducts] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [contactIndex, setContactIndex] = useState(null);
+
+  const [providerStatus, setProviderStatus] = useState(null);
   const handleAmountChange = val => {
     const raw = val.replace(/[^0-9]/g, '');
     setSelectedAmount(formatAmount(raw));
   };
-  useEffect(() => {
-    if (data) {
-      const products = data.data?.filter(product => product.is_airtime);
-      setAirtimeProducts(products || []);
-    }
-  }, [data]);
 
   const isFormValid = !!phoneNumber && !!selectedAmount;
-
   const handleNext = () => {
     if (!phoneNumber) {
       Toast.show({
@@ -57,9 +48,9 @@ const Airtime = props => {
     } else {
       navigation.navigate('AirtimePaymentPin', {
         phoneNumber,
-        airtimeProducts,
         selectedAmount,
-        country: country,
+        country,
+        providerName: providerStatus?.name || null,
       });
     }
   };
@@ -93,13 +84,14 @@ const Airtime = props => {
           <View>
             <View style={tw`pt-4 gap-5`}>
               <NumberInput
-                onOptionSelect={setBillerId}
                 phoneNumber={phoneNumber}
                 setPhoneNumber={setPhoneNumber}
-                dataOptionSelect={setBillerDataId}
               />
-
-              {/* Flash Sales Plans */}
+              <NetworkPerformance
+                phoneNumber={phoneNumber}
+                onStatusChange={setProviderStatus}
+                country={country}
+              />
               <Text style={tw`text-gray-700 font-semibold text-[16px]`}>
                 Flash sales
               </Text>
@@ -122,6 +114,7 @@ const Airtime = props => {
             <Amount
               amount={selectedAmount}
               onAmountChange={handleAmountChange}
+              country={country}
             />
           </View>
         )}

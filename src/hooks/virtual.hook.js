@@ -1,5 +1,5 @@
 import {useMutation, useQuery} from '@tanstack/react-query';
-import {_errorPrompt, _successPrompt} from '../utils';
+import {_errorPrompt} from '../utils';
 import virtualService from '../services/virtual.service';
 
 /**
@@ -11,26 +11,19 @@ export const useGetVitualAcc = () => {
   return useQuery({
     queryKey: ['virtualAcc'],
     queryFn: async () => {
-      
-      try{
-        const data = await virtualService.getVirtualAccount();
-        
-        return data;  
-
-      }catch(err){
-        console.log(err);
-        return null
-      }
-      console.log("+=====+++++++++++++++++++")
-    },
-
-    onSuccess: data => {
-      console.log('Account fetched:', data);
+      const data = await virtualService.getVirtualAccount();
       return data;
     },
+    staleTime: 1000 * 60,
+    cacheTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: true,
+    refetchInterval: 1000 * 60,
+    retry: 1,
+    onSuccess: data => {
+      console.log('Account fetched:', data);
+    },
     onError: error => {
-      console.warn("ERRROR")
-      _errorPrompt(error.message);
+      console.warn('Virtual account fetch error:', error.message);
     },
   });
 };
@@ -45,13 +38,23 @@ export const useGetVitualBalance = () => {
     queryKey: ['virtualBal'],
     queryFn: async () => {
       const data = await virtualService.getVirtualBalance();
-      
       return data;
     },
-
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: (failureCount, error) => {
+      if (
+        error?.message?.includes('Too many OTP requests') ||
+        error?.response?.data?.message?.includes('Too many OTP requests')
+      ) {
+        return false;
+      }
+      return failureCount < 3;
+    },
     onSuccess: data => {
       console.log('Account balance fetched:', data);
-      return data;
     },
     onError: error => {
       _errorPrompt(error.message);
@@ -59,7 +62,7 @@ export const useGetVitualBalance = () => {
   });
 };
 
-export const useGetReceiver = (recipient,fetchAuto = true) => {
+export const useGetReceiver = (recipient, fetchAuto = true) => {
   console.log('====================================');
   console.log(recipient);
   console.log('====================================');
@@ -67,12 +70,12 @@ export const useGetReceiver = (recipient,fetchAuto = true) => {
   const queryParam = isAccountNumber
     ? `accountNumber=${recipient}`
     : `username=${recipient}`;
-    
+
   return useQuery({
     queryKey: ['RecieverAcc', recipient],
     queryFn: async () => {
       const data = await virtualService.getRecieverAcc(queryParam);
-      
+
       return data;
     },
 
@@ -83,7 +86,7 @@ export const useGetReceiver = (recipient,fetchAuto = true) => {
     onError: error => {
       _errorPrompt(error.message);
     },
-    enabled:fetchAuto
+    enabled: fetchAuto,
   });
 };
 

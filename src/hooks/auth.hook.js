@@ -1,7 +1,6 @@
-import {useMutation, QueryClient, useQuery} from '@tanstack/react-query';
+import {useMutation, useQuery} from '@tanstack/react-query';
 import authServices from '../services/auth.services';
-
-const queryClient = new QueryClient(); // Initialize query client
+import {_errorPrompt} from '../utils';
 
 export const useRegisterUser = () => {
   return useMutation({

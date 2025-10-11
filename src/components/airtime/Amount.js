@@ -11,7 +11,7 @@ import tw from 'twrnc';
 
 const Amount = ({amount = '', onAmountChange, editable = true, country}) => {
   return (
-    <View style={tw`mx-2 pt-4 gap-2`}>
+    <View style={tw` pt-4 gap-2`}>
       <Text style={tw`text-gray-900 font-medium text-[14px]`}>
         Enter Amount
       </Text>
@@ -29,7 +29,7 @@ const Amount = ({amount = '', onAmountChange, editable = true, country}) => {
         />
         <TouchableOpacity style={styles.imageContainer}>
           <Text style={tw`text-[#98A2B3] font-medium text-[14px]`}>
-            {country?.toLowerCase() === 'sierra leone' ? 'SL' : 'NGN'}
+            {country?.toLowerCase() === 'sierra leone' ? 'SLE' : 'NGN'}
           </Text>
         </TouchableOpacity>
       </View>

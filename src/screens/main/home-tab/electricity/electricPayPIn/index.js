@@ -18,12 +18,12 @@ import CustomToast from '../../../../../global/components/CustomToast';
 import {useGetVitualBalance} from '../../../../../hooks/virtual.hook';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
+import {unformatAmount, getCurrencySymbol} from '../../../../../utils/format';
 
 const ElectricPaymentPin = ({navigation, route}) => {
   const {selectedProvider, selectedMeter, selectedAmount, country} =
     route.params;
 
-  const unformatAmount = formattedValue => formattedValue.replace(/,/g, '');
   const rawValue = unformatAmount(selectedAmount);
 
   const {data: balanceData} = useGetVitualBalance();
@@ -46,7 +46,14 @@ const ElectricPaymentPin = ({navigation, route}) => {
     setToastVisible(true);
     setTimeout(() => setToastVisible(false), 3000);
   };
-  console.log(country, 'hhshs');
+  console.log(
+    selectedProvider,
+    'selectedProvider',
+    selectedMeter,
+    'selectedMeter',
+    rawValue,
+    'selectedAmount',
+  );
   const handleVerify = otpInput => {
     if (userBalance < rawValue) {
       const screenError = 'Insufficient funds. Please top up your account.';
@@ -90,7 +97,6 @@ const ElectricPaymentPin = ({navigation, route}) => {
     );
   };
 
-  // ✅ Normal flow (Nigeria, etc.)
   const completeTransaction = () => {
     const userInfo = {
       disco: selectedProvider?.ID,
@@ -134,8 +140,6 @@ const ElectricPaymentPin = ({navigation, route}) => {
       },
     });
   };
-
-  // ✅ Sierra Leone flow (no validation, just hit useSpBillPayment)
   const completeTransactionSL = () => {
     const payload = {
       category: 'EDSA',
@@ -179,7 +183,9 @@ const ElectricPaymentPin = ({navigation, route}) => {
 
   const handleOtp = otpInput => {
     setOtp(otpInput);
-    if (otpInput.length === 6) handleVerify(otpInput);
+    if (otpInput.length === 6) {
+      handleVerify(otpInput);
+    }
   };
 
   return (
@@ -233,7 +239,7 @@ const ElectricPaymentPin = ({navigation, route}) => {
             <CustomButton
               onPress={() => handleVerify(otp)}
               style={styles.btn1}
-              text={`Pay ₦${selectedAmount}`}
+              text={`Pay ${getCurrencySymbol(country)}${selectedAmount}`}
             />
           </View>
         </View>

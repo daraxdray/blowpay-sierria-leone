@@ -22,7 +22,10 @@ import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {formatAmount, removeCommas} from '../../../../utils/format';
 import SierraLeoneForm from '../../../../components/SierraLeone/SierraLeoneForm';
-import {useSpValidateBill} from '../../../../hooks/billing.hook';
+import {
+  useSpValidateBill,
+  useBpCheckMeter,
+} from '../../../../hooks/billing.hook';
 import {AuthContext} from '../../../../global/wrappers/AuthProvider';
 
 const Electricity = props => {
@@ -35,6 +38,8 @@ const Electricity = props => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalItemVisible, setModalItemVisible] = useState(false);
   const {mutate, status} = useSpValidateBill();
+  const {mutate: bpmutate} = useBpCheckMeter();
+  const [userName, setUserName] = useState('');
 
   const handleAmountChange = val => {
     const raw = val.replace(/[^0-9]/g, '');
@@ -139,7 +144,7 @@ const Electricity = props => {
                 <Ionicons name="chevron-down" size={14} />
               </TouchableOpacity>
             </View>
-            <View>
+            {/* <View>
               <Text style={tw`text-gray-700 font-semibold text-[14px]`}>
                 Account/Meter Type
               </Text>
@@ -153,7 +158,7 @@ const Electricity = props => {
                 </Text>
                 <Ionicons name="chevron-down" size={14} />
               </TouchableOpacity>
-            </View>
+            </View> */}
             <View>
               <Text style={tw`text-gray-700 font-semibold text-[14px]`}>
                 Meter Number
@@ -163,8 +168,68 @@ const Electricity = props => {
                 placeholder="Enter meter number"
                 keyboardType="numeric"
                 value={selectedMeter}
-                onChangeText={setSelectedMeter}
+                onChangeText={val => {
+                  setSelectedMeter(val);
+                  if (
+                    country === 'Nigeria' &&
+                    val.length >= 11 &&
+                    selectedProvider
+                  ) {
+                    bpmutate(
+                      {
+                        meter: val,
+                        disco:
+                          selectedProvider?.biller_code ||
+                          selectedProvider?.NAME,
+                      },
+                      {
+                        onSuccess: res => {
+                          const name = res?.data?.name;
+                          if (name) {
+                            setUserName(name);
+                          }
+                        },
+                        onError: error => {
+                          const errorMessage =
+                            error?.response?.data?.error ||
+                            error?.response?.data?.message ||
+                            'Invalid meter number. Please check again.';
+                          setUserName(`error:${errorMessage}`);
+                        },
+                      },
+                    );
+                  }
+                }}
               />
+              {userName ? (
+                userName.startsWith('error:') ? (
+                  <View
+                    style={tw`flex-row items-center mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2`}>
+                    <Ionicons
+                      name="alert-circle"
+                      size={16}
+                      color="#DC2626"
+                      style={tw`mr-2`}
+                    />
+                    <Text style={tw`text-red-700 text-[13px]`}>
+                      {userName.replace('error:', '')}
+                    </Text>
+                  </View>
+                ) : (
+                  <View
+                    style={tw`flex-row items-center mt-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2`}>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={16}
+                      color="#16A34A"
+                      style={tw`mr-2`}
+                    />
+                    <Text style={tw`text-green-700 text-[13px]`}>
+                      Name: {userName}
+                    </Text>
+                  </View>
+                )
+              ) : null}
             </View>
             <View style={tw`pt-4 gap-3`}>
               <Text style={tw`text-gray-700 font-semibold text-[16px]`}>

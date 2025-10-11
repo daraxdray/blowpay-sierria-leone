@@ -11,9 +11,7 @@ const TransactionItem = ({
   details,
   txId,
   type,
-  
 }) => {
-
   return (
     <TouchableOpacity
       style={tw`flex flex-row justify-between items-center p-4 w-full`}
@@ -24,13 +22,16 @@ const TransactionItem = ({
           <Text style={tw`text-[#AEAEAE] font-medium text-[9px]`}>{time}</Text>
           <Text style={tw`text-[grey] font-medium text-[10px]`}>{txId}</Text>
           <Text style={tw`text-[#374151] font-medium text-[12px]`}>
-            {description == 'Transfer' || description == 'Wallet Funding'?'Account -'+description:description}
+            {description === 'Transfer' || description === 'Wallet Funding'
+              ? 'Account -' + description
+              : description}
           </Text>
         </View>
       </View>
       <View>
         <Text style={tw`text-[${amountColor}] font-bold text-[14px]`}>
-          {type == 'debit'? '-':''}₦{amount}
+          {type === 'debit' ? '-' : ''}
+          {amount}
         </Text>
       </View>
     </TouchableOpacity>

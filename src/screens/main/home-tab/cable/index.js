@@ -18,13 +18,9 @@ import {CustomButton} from '../../../../global/components';
 import CableModal from '../../../../components/modals/CableModal';
 import CablePlanModal from '../../../../components/modals/CablePlanModel';
 import Toast from 'react-native-toast-message';
-import {
-  useCableValidate,
-  useSpValidateBill,
-} from '../../../../hooks/billing.hook';
+import {useSpValidateBill} from '../../../../hooks/billing.hook';
 import Loader from '../../../../components/modals/Loader';
 import {AuthContext} from '../../../../global/wrappers/AuthProvider';
-
 const Cable = props => {
   const {country} = useContext(AuthContext);
   const navigation = props.navigation;
@@ -34,23 +30,13 @@ const Cable = props => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [smartCardNumber, setSmartCardNumber] = useState('');
   const [userDetails, setUserDetails] = useState('');
-  const [userError, setUserErroe] = useState('');
+  const [userError, setUserError] = useState('');
   const [isValidationSuccessful, setIsValidationSuccessful] = useState(false);
-  const spValidate = useSpValidateBill();
-  const cableValidate = useCableValidate();
-  const {mutate: validateBill, status: validateStatus} =
-    country === 'Sierra Leone' ? spValidate : cableValidate;
-  const openModal = () => {
-    setModalVisible(true);
-  };
+  const {mutate: validateBill, status: validateStatus} = useSpValidateBill();
 
-  const closeModal = () => {
-    setModalVisible(false);
-  };
-
-  const closeOptionsModal = () => {
-    setOptionsModalVisible(false);
-  };
+  const openModal = () => setModalVisible(true);
+  const closeModal = () => setModalVisible(false);
+  const closeOptionsModal = () => setOptionsModalVisible(false);
 
   const selectCompany = company => {
     setSelectedProvider(company);
@@ -81,6 +67,7 @@ const Cable = props => {
       });
       return;
     }
+
     const userValidate = {
       cableTv: selectedProvider.ID,
       smartCardNo: smartCardNumber,
@@ -88,6 +75,7 @@ const Cable = props => {
       selectedAmount: selectedOption?.PACKAGE_AMOUNT,
       country,
     };
+
     navigation.navigate('CablePaymentPin', userValidate);
   };
 
@@ -104,49 +92,40 @@ const Cable = props => {
   };
 
   const handleSmartCardBlur = val => {
-    if (val && val.length >= 10 && selectedOption) {
-      let userValidate;
+    setSmartCardNumber(val);
+    setUserError('');
+    setUserDetails('');
+    setIsValidationSuccessful(false);
 
-      if (country === 'Sierra Leone') {
-        userValidate = {
-          amount: selectedOption?.PACKAGE_AMOUNT,
-          recipient: val,
-          category: 'DSTV',
-        };
-      } else {
-        userValidate = {
-          cableTv: selectedProvider.ID,
-          smartCardNo: val,
-        };
-      }
+    if (
+      country === 'Sierra Leone' &&
+      val &&
+      val.length >= 10 &&
+      selectedOption
+    ) {
+      const userValidate = {
+        amount: selectedOption?.PACKAGE_AMOUNT,
+        recipient: val,
+        category: 'DSTV',
+      };
+
       validateBill(userValidate, {
         onSuccess: async response => {
-          console.log('VALIDATION RESPONSE:', response);
-          try {
-            if (response && response?.customer_name !== '') {
-              Toast.show({
-                type: 'success',
-                text1: 'Validation Successful',
-                text2: response?.message || 'card number is valid',
-              });
-              setUserDetails(response?.data);
-              setIsValidationSuccessful(true);
-            } else {
-              Toast.show({
-                type: 'error',
-                text1: 'Validation Failed',
-                text2: 'Please check the card number and try again',
-              });
-              setUserErroe('Please check the card number and try again');
-              setIsValidationSuccessful(false);
-            }
-          } catch (error) {
-            console.log('Error processing the response:', error);
+          if (response?.data?.customer_name) {
+            Toast.show({
+              type: 'success',
+              text1: 'Validation Successful',
+              text2: response?.message || 'Card number is valid',
+            });
+            setUserDetails(response?.data);
+            setIsValidationSuccessful(true);
+          } else {
             Toast.show({
               type: 'error',
-              text1: 'Error',
-              text2: 'An unexpected error occurred',
+              text1: 'Validation Failed',
+              text2: 'Please check the card number and try again',
             });
+            setUserError('Please check the card number and try again');
             setIsValidationSuccessful(false);
           }
         },
@@ -156,25 +135,21 @@ const Cable = props => {
             text2: 'Invalid Smart Card Number. Please try again.',
             type: 'error',
           });
+          setUserError('Invalid Smart Card Number');
+          setIsValidationSuccessful(false);
         },
       });
-      setIsValidationSuccessful(false);
     }
-    setSmartCardNumber(val);
   };
 
   return (
     <ScreenView style={styles.container} light color={WHITE}>
       <View style={tw`px-3 pt-2`}>
         <Header
-          navigation={() => {
-            navigation.goBack();
-          }}
+          navigation={() => navigation.goBack()}
           ImageSource={require('../../../../../assets/icons/filter.png')}
           title="Cable"
           showIcon={false}
-          iconName="add-circle"
-          imagePress={() => console.log('Second Icon Pressed')}
         />
       </View>
       <ScrollView style={styles.viewContainer}>
@@ -193,6 +168,7 @@ const Cable = props => {
                 <Ionicons name="chevron-down" size={13} />
               </TouchableOpacity>
             </View>
+
             <View style={tw`mt-2 gap-2`}>
               <Text style={tw`text-gray-900 font-medium text-[14px]`}>
                 Select Plan
@@ -216,11 +192,12 @@ const Cable = props => {
               <TextInput
                 placeholder="Enter Smart Card Number"
                 placeholderTextColor="gray"
-                style={tw`border border-[#D0D5DD] rounded-[10px] p-3 py-2 text-black`}
+                style={tw`border border-[#D0D5DD] rounded-[10px] p-3 py-3 text-black`}
                 value={smartCardNumber}
                 keyboardType="numeric"
                 onChangeText={handleSmartCardBlur}
               />
+
               {userDetails ? (
                 <View style={tw`p-2 bg-green-100 w-[80%] rounded-md`}>
                   <Text style={tw`text-[12px] text-black`}>
@@ -231,18 +208,17 @@ const Cable = props => {
                 <View style={tw`p-2 bg-pink-100 w-[80%] rounded-md`}>
                   <Text style={tw`text-[12px] text-red-500`}>{userError}</Text>
                 </View>
-              ) : (
-                <View />
-              )}
+              ) : null}
+            </View>
+            <View style={tw` w-full`}>
+              <Amount
+                amount={`${selectedOption?.PACKAGE_AMOUNT ?? ''}`}
+                editable={false}
+                country={country}
+              />
             </View>
           </View>
-          <View style={tw`pt-6 gap-5 w-full`}>
-            <Amount
-              amount={`${selectedOption?.PACKAGE_AMOUNT ?? ''}`}
-              editable={false}
-              country={country}
-            />
-          </View>
+
           <Modal
             animationType="slide"
             transparent={true}
@@ -256,6 +232,7 @@ const Cable = props => {
               />
             </View>
           </Modal>
+
           <Modal
             animationType="slide"
             transparent={true}
@@ -266,7 +243,7 @@ const Cable = props => {
                 closeModal={closeOptionsModal}
                 selectOption={selectOption}
                 country={country}
-                products={selectedProvider?.PRODUCT}
+                products={selectedProvider}
               />
             </View>
           </Modal>
@@ -279,13 +256,12 @@ const Cable = props => {
                 !selectedProvider ||
                 !selectedOption ||
                 !smartCardNumber ||
-                !isValidationSuccessful
+                (country === 'Sierra Leone' && !isValidationSuccessful)
               }
             />
           </View>
         </View>
       </ScrollView>
-      {/* <Toast ref={ref => Toast.setRef(ref)} /> */}
       {validateStatus === 'pending' && <Loader />}
     </ScreenView>
   );

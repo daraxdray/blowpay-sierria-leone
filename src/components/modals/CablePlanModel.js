@@ -5,7 +5,7 @@ import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {CustomButton} from '../../global/components';
 import {PanGestureHandler} from 'react-native-gesture-handler';
-import {useGetSLCablePlans} from '../../hooks/billing.hook';
+import {useGetSLCablePlans, useBillerGetCable} from '../../hooks/billing.hook';
 import Loader from './Loader';
 
 const CablePlanModal = ({
@@ -18,11 +18,23 @@ const CablePlanModal = ({
 }) => {
   const [searchText, setSearchText] = useState('');
   const [selectedCompany, setSelectedCompany] = useState(null);
-
-  const {data: slData, status, error: slError} = useGetSLCablePlans();
+  const isSierraLeone = country?.toLowerCase() === 'sierra leone';
+  const {
+    data: slData,
+    status,
+    error: slError,
+  } = useGetSLCablePlans({
+    enabled: isSierraLeone,
+  });
+  const {
+    data: cableData,
+    error: cableError,
+    status: Bpstatus,
+  } = useBillerGetCable(products?.ID);
+  console.log(cableData, 'cableData');
 
   const plans = useMemo(() => {
-    if (country?.toLowerCase() === 'sierra leone') {
+    if (isSierraLeone) {
       return (
         slData?.data?.packages?.map((p, index) => ({
           PACKAGE_ID: p.service_slug || `sl_${index}`,
@@ -31,16 +43,23 @@ const CablePlanModal = ({
         })) || []
       );
     }
-    return products || [];
-  }, [country, slData?.data, products]);
+    const dataList = cableData?.data?.data || [];
+    if (!Array.isArray(dataList)) {
+      return [];
+    }
+    return dataList.map((p, index) => ({
+      PACKAGE_ID: p.code || p.product_id || `pkg_${index}`,
+      PACKAGE_NAME: p.desc || p.product_name || 'Unknown Plan',
+      PACKAGE_AMOUNT: p.price || p.amount || 0,
+    }));
+  }, [isSierraLeone, slData?.data, cableData?.data]);
 
   const filteredCompanies = plans.filter(plan =>
-    plan.PACKAGE_NAME.toLowerCase().includes(searchText?.toLowerCase()),
+    plan.PACKAGE_NAME?.toLowerCase()?.includes(searchText?.toLowerCase()),
   );
 
   const renderCompany = ({item}) => {
     const isSelected = selectedCompany === item.PACKAGE_ID;
-
     return (
       <TouchableOpacity
         style={tw`flex-row items-center p-3 mb-1 bg-white shadow-sm rounded-lg`}
@@ -53,6 +72,9 @@ const CablePlanModal = ({
           <Text style={tw`text-[#292929] font-medium text-[14px]`}>
             {item?.PACKAGE_NAME}
           </Text>
+          <Text style={tw`text-gray-500 text-[13px]`}>
+            ₦{item?.PACKAGE_AMOUNT?.toLocaleString()}
+          </Text>
         </View>
         <View
           style={[
@@ -64,15 +86,18 @@ const CablePlanModal = ({
       </TouchableOpacity>
     );
   };
-  if (country?.toLowerCase() === 'sierra leone') {
-    if (status === 'pending') {
-      return <Loader />;
-    }
-    if (slError) {
-      return <Text>Error loading Sierra Leone plans.</Text>;
-    }
+  if (isSierraLeone && slError) {
+    return <Text>Error loading Sierra Leone plans.</Text>;
   }
-
+  if (!isSierraLeone && cableError) {
+    return <Text Text> Error loading cable plans.</Text>;
+  }
+  if (country?.toLowerCase() === 'sierra leone' && status === 'pending') {
+    <Loader />;
+  }
+  if (country?.toLowerCase() === !'sierra leone' && Bpstatus === 'pending') {
+    <Loader />;
+  }
   return (
     <PanGestureHandler>
       <View

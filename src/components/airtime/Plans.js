@@ -8,20 +8,17 @@ const PlansList = ({plans, onPlanSelect}) => {
     <View style={tw`flex flex-wrap flex-row items-center justify-center`}>
       {plans.length > 0 ? (
         plans.map((plan, index) => {
-          const dataMatch = plan?.biller_name.match(/(\d+[A-Za-z]+)/);
-          const durationMatch = plan?.validity_period;
+          const rawText = plan?.desc || plan?.biller_name || '';
+          const dataMatch = rawText.match(/(\d+(\.\d+)?\s*(GB|MB|TB))/i);
+          const dataSize = dataMatch ? dataMatch[0] : rawText;
 
-          const dataSize = dataMatch ? dataMatch[0] : '';
-          const duration = durationMatch
-            ? `${durationMatch[1]} ${durationMatch[2]}`
-            : '';
           return (
-            <View key={index} style={[tw`m-1 w-[28%]`,]}>
+            <View key={index} style={tw`m-1 w-[28%]`}>
               <Plan
-                amount={durationMatch}
+                amount={plan?.validity}
                 dataSize={dataSize}
-                duration={`Pay ₦${plan?.amount
-                  .toFixed(2)
+                duration={`₦${plan?.price
+                  ?.toFixed(2)
                   .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`}
                 onPress={() => onPlanSelect(plan)}
               />

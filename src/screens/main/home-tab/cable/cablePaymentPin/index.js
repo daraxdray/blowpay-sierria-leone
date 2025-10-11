@@ -14,34 +14,28 @@ import {CommonActions, useNavigation} from '@react-navigation/native';
 import {useGetVitualBalance} from '../../../../../hooks/virtual.hook';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
+import {unformatAmount, getCurrencySymbol} from '../../../../../utils/format';
 
 const CablePaymentPin = props => {
   const {cableTv, smartCardNo, packageId, selectedAmount, country} =
     props?.route?.params;
-
   const navigation = useNavigation();
-  const unformatAmount = formattedValue =>
-    formattedValue ? String(formattedValue).replace(/,/g, '') : '0';
   const rawValue = parseFloat(unformatAmount(selectedAmount));
-
   const {data: balanceData} = useGetVitualBalance();
   const userBalance = balanceData?.data?.balance / 100;
-
   const {mutate: confirmPasscode, status: passcodeStatus} =
     useConfirmPasscode();
   const {mutate: cableBill, status: billStatus} = useCablePay();
   const {mutate: spBillPayment, status: spBillStatus} = useSpBillPayment();
-
   const [otp, setOtp] = useState('');
   const {isBiometricExist} = useBiometricAuth();
 
   const handleVerify = () => {
-    if (userBalance < rawValue) {
-      const screenError = 'Insufficient funds. Please top up your account.';
-      navigation.navigate('PaymentError', {screenError});
-      return;
-    }
-
+    // if (userBalance < rawValue) {
+    //   const screenError = 'Insufficient funds. Please top up your account.';
+    //   navigation.navigate('PaymentError', {screenError});
+    //   return;
+    // }
     if (otp.length === 6) {
       confirmPasscode(
         {passcode: otp},
@@ -71,7 +65,6 @@ const CablePaymentPin = props => {
       navigation.navigate('PaymentError', {screenError});
     }
   };
-
   const processBillPayment = () => {
     if (country === 'Sierra Leone') {
       const payload = {
@@ -80,7 +73,6 @@ const CablePaymentPin = props => {
         category: 'DSTV',
         description: `Cable payment for ${cableTv}`,
       };
-
       spBillPayment(payload, {
         onSuccess: DataResponse => {
           if (DataResponse) {
@@ -113,8 +105,12 @@ const CablePaymentPin = props => {
         },
       });
     } else {
-      // Default flow → useCablePay
-      const userInfo = {cableTv, smartCardNo, packageId};
+      const userInfo = {
+        smartCard: smartCardNo,
+        provider: cableTv,
+        package: packageId,
+        amount: selectedAmount,
+      };
       cableBill(userInfo, {
         onSuccess: DataResponse => {
           if (DataResponse) {
@@ -148,7 +144,6 @@ const CablePaymentPin = props => {
       });
     }
   };
-
   const makeTransaction = () => {
     if (userBalance < rawValue) {
       const screenError = 'Insufficient funds. Please top up your account.';
@@ -157,7 +152,6 @@ const CablePaymentPin = props => {
     }
     processBillPayment();
   };
-
   const completeTransaction = () => {
     makeTransaction();
   };
@@ -180,7 +174,6 @@ const CablePaymentPin = props => {
               Enter PIN to confirm transaction
             </Text>
           </View>
-
           <View style={styles.v2}>
             <OTPTextView
               inputCellLength={1}
@@ -193,24 +186,21 @@ const CablePaymentPin = props => {
               keyboardType={'number-pad'}
             />
           </View>
-
           {isBiometricExist && (
             <View
               style={tw`mt-[300] flex flex-row items-center justify-center p-4 rounded-lg`}>
               <BiometricComponent signin={true} onComplete={makeTransaction} />
             </View>
           )}
-
           <View style={tw`pb-5 w-full mt-10`}>
             <CustomButton
               onPress={handleVerify}
               style={styles.btn1}
-              text={`Pay ₦${selectedAmount}`}
+              text={`Pay ${getCurrencySymbol(country)}${selectedAmount}`}
             />
           </View>
         </View>
       </ScrollView>
-
       {(passcodeStatus === 'pending' ||
         billStatus === 'pending' ||
         spBillStatus === 'pending') && <Loader />}

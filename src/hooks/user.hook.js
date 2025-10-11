@@ -12,7 +12,6 @@ export const useGetUser = () => {
     queryKey: ['user-properties'],
     queryFn: async () => {
       const data = await userService.getUser();
-      
       return data;
     },
 
@@ -22,6 +21,37 @@ export const useGetUser = () => {
     },
     onError: error => {
       _errorPrompt(error.message);
+    },
+  });
+};
+export const useGetUserAcc = () => {
+  return useQuery({
+    queryKey: ['userVirtualAccount'],
+    queryFn: async () => {
+      const response = await userService.getUserAcc();
+      return response?.data || {};
+    },
+    staleTime: 1000 * 60 * 5, // 5 mins
+    cacheTime: 1000 * 60 * 10, // 10 mins
+    refetchOnWindowFocus: false,
+    retry: 1,
+    onError: error => {
+      _errorPrompt(error.message || 'Failed to fetch user virtual account');
+    },
+  });
+};
+export const useCreateUserAcc = () => {
+  return useMutation({
+    mutationFn: async payload => {
+      const response = await userService.CreateAcc(payload);
+      return response?.data;
+    },
+    onSuccess: data => {
+      _successPrompt('Virtual account created successfully!');
+      console.log('✅ Created Virtual Account:', data);
+    },
+    onError: error => {
+      _errorPrompt(error.message || 'Failed to create virtual account');
     },
   });
 };
@@ -46,13 +76,10 @@ export const useEditUser = () => {
   });
 };
 
-
-// Hook for sending OTP
 export const useSendOtp4Pin = () => {
   return useMutation({
     mutationFn: payload => userService.sendOtpForPin(),
     onSuccess: (data, variables) => {
-      
       return data;
     },
     onError: error => {

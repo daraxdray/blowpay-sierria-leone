@@ -24,10 +24,7 @@ const ElectModal = ({
   const [formattedCompanies, setformattedCompanies] = useState([]);
   const billerId = 'UTILITYBILLS';
   const {data, isLoading, error} = useBpBillerProvider(billerId);
-
   useEffect(() => {
-    console.log('country:', country);
-    console.log('raw hook data:', data);
     if (country === 'Sierra Leone') {
       console.log('⚡ Sierra Leone detected → forcing EDSA');
       setformattedCompanies([{ID: 'EDSA', NAME: 'EDSA'}]);

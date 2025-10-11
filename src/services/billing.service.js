@@ -6,6 +6,38 @@ class BillingServices {
    * @return {Promise<*>}
    */
 
+  getBpDataPlans(provider) {
+    return request(
+      `/billers/bp/price-list?vertical=DATA&provider=${provider}`,
+      'GET',
+      undefined,
+      false,
+      false,
+      false,
+    );
+  }
+  BpAirtime(payload) {
+    // console.log({payload});
+    return request(
+      '/billers/bp/vend-airtime/',
+      'POST',
+      payload,
+      undefined,
+      undefined,
+      undefined,
+    );
+  }
+  BpPerfomanceMetrics() {
+    return request(
+      '/billers/bp/provider-status/',
+      'GET',
+      undefined,
+      false,
+      false,
+      false,
+    );
+  }
+
   getBillerProductsByCategory(id) {
     return request(
       `/billers/category/${id}`,
@@ -17,11 +49,11 @@ class BillingServices {
     );
   }
   getBillerNbProviders() {
-    return request(`/billers/nb/discos`, 'GET', undefined, false, false, false);
+    return request('/billers/nb/discos', 'GET', undefined, false, false, false);
   }
   getBillerBpProviders() {
     return request(
-      `/billers/bp/check-disco`,
+      '/billers/bp/check-disco',
       'GET',
       undefined,
       false,
@@ -29,11 +61,21 @@ class BillingServices {
       false,
     );
   }
+  BpCheckMeter(payload) {
+    console.log(payload, 'payload');
+    return request(
+      '/billers/bp/check-meter',
+      'POST',
+      payload,
+      false,
+      false,
+      false,
+    );
+  }
 
-  // Add this to your billingServices
   getBillerBetting() {
     return request(
-      `/billers/nb/betting`,
+      '/billers/nb/betting',
       'GET',
       undefined,
       false,
@@ -41,11 +83,9 @@ class BillingServices {
       false,
     );
   }
-
-  // Add this to your billingServices
   verifyBettingWallet(data) {
     return request(
-      `/billers/nb/verify-betting-wallet`,
+      '/billers/nb/verify-betting-wallet',
       'POST',
       data,
       false,
@@ -57,7 +97,7 @@ class BillingServices {
   // Add this to your billingServices
   fundBettingWallet(data) {
     return request(
-      `/billers/nb/fund-wallet`,
+      '/billers/nb/fund-wallet',
       'POST',
       data,
       false,
@@ -66,7 +106,7 @@ class BillingServices {
     );
   }
   fundWallet(data) {
-    // console.log(data, 'payload');
+    console.log(data, 'payload');
 
     return request(
       '/virtual-account/sle/fund',
@@ -111,6 +151,7 @@ class BillingServices {
       undefined,
     );
   }
+
   bpBillValidate(payload) {
     // console.log({payload});
     return request(
@@ -147,9 +188,18 @@ class BillingServices {
       false,
     );
   }
-  getBillerCables() {
-    return request('/billers/nb/cables', 'GET', undefined, false, false, false);
+
+  getBillerCables(provider) {
+    return request(
+      `/billers/bp/price-list?vertical=TV&provider=${provider}`,
+      'GET',
+      undefined,
+      false,
+      false,
+      false,
+    );
   }
+
   getSLCablesPlan() {
     return request(
       '/billers/sp/package-list',
@@ -177,10 +227,11 @@ class BillingServices {
       undefined,
     );
   }
+
   cablePay(payload) {
     // console.log({payload});
     return request(
-      '/billers/nb/cable/create-order',
+      '/billers/bp/vend-tv',
       'POST',
       payload,
       undefined,

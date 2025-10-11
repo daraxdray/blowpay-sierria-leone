@@ -8,7 +8,7 @@ import tw from 'twrnc';
 import OTPTextView from 'react-native-otp-textinput';
 import {CustomButton} from '../../../../../global/components';
 import {useConfirmPasscode} from '../../../../../hooks/auth.hook';
-import {useBillPay, useBillValidate} from '../../../../../hooks/billing.hook';
+import {useBpAirtime} from '../../../../../hooks/billing.hook';
 import Loader from '../../../../../components/modals/Loader';
 import {CommonActions} from '@react-navigation/native';
 import CustomToast from '../../../../../global/components/CustomToast';
@@ -16,14 +16,14 @@ import {useGetVitualBalance} from '../../../../../hooks/virtual.hook';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
 import {useSpBillPayment} from '../../../../../hooks/billing.hook';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
+import {unformatAmount, getCurrencySymbol} from '../../../../../utils/format';
 
 const AirtimePaymentPin = props => {
   const navigation = props.navigation;
   const route = props.route;
-  const {airtimeProducts, phoneNumber, selectedAmount, country} = route.params;
+  const {providerName, phoneNumber, selectedAmount, country} = route.params;
   const {mutate: confirmPasscode, status} = useConfirmPasscode();
-  const {mutate: validateBill, status: validateStatus} = useBillValidate();
-  const {mutate: dataBill, status: bill} = useBillPay();
+  const {mutate: Bpairtime, status: bill} = useBpAirtime();
   const [otp, setOtp] = useState();
   const {mutate: buyAirtime, status: sierraStatus} = useSpBillPayment();
   const [toastMessage, setToastMessage] = useState('');
@@ -32,25 +32,7 @@ const AirtimePaymentPin = props => {
   const {data: balanceData} = useGetVitualBalance();
   const userBalance = balanceData?.data?.balance / 100;
   const {isBiometricExist} = useBiometricAuth();
-  const unformatAmount = formattedValue => {
-    return formattedValue.replace(/,/g, '');
-  };
   const rawValue = unformatAmount(selectedAmount);
-
-  const userValidate = {
-    billerCode: airtimeProducts[0]?.biller_code,
-    itemCode: airtimeProducts[0]?.item_code,
-    customer: phoneNumber,
-  };
-
-  const userInfo = {
-    billerCode: airtimeProducts[0]?.biller_code,
-    amountEntered: rawValue,
-    itemCode: airtimeProducts[0]?.item_code,
-    customerId: phoneNumber,
-    description: 'Airtime',
-  };
-
   const showToast = (message, type = 'error') => {
     setToastMessage(message);
     setToastType(type);
@@ -73,7 +55,7 @@ const AirtimePaymentPin = props => {
 
   const completeTransaction = () => {
     if (country === 'Sierra Leone') {
-      // 🔹 Sierra Leone flow: use buyAirtime
+      // Sierra Leone flow
       buyAirtime(
         {
           amount: rawValue,
@@ -81,7 +63,7 @@ const AirtimePaymentPin = props => {
           category: 'Airtime',
         },
         {
-          onSuccess: res => {
+          onSuccess: () => {
             navigation.dispatch(
               CommonActions.reset({
                 index: 0,
@@ -100,54 +82,31 @@ const AirtimePaymentPin = props => {
         },
       );
     } else {
-      // 🔹 Other countries flow
-      validateBill(userValidate, {
-        onSuccess: async validationResponse => {
-          if (validationResponse?.data != null) {
-            dataBill(userInfo, {
-              onSuccess: async DataResponse => {
-                if (DataResponse) {
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{name: 'PaymentSucess'}],
-                    }),
-                  );
-                } else {
-                  const screenError =
-                    DataResponse?.error ||
-                    DataResponse?.response?.data?.error ||
-                    'Airtime purchase failed. Please try again.';
-                  showToast(screenError);
-                  navigation.navigate('PaymentError', {screenError});
-                }
-              },
-              onError: transferError => {
-                const screenError =
-                  transferError?.response?.data?.message ||
-                  transferError?.response?.data?.error ||
-                  'Airtime purchase failed. Please try again.';
-                showToast(screenError);
-                navigation.navigate('PaymentError', {screenError});
-              },
-            });
-          } else {
+      Bpairtime(
+        {
+          provider: providerName,
+          phone: phoneNumber,
+          amount: rawValue,
+        },
+        {
+          onSuccess: () => {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{name: 'PaymentSucess'}],
+              }),
+            );
+          },
+          onError: err => {
             const screenError =
-              validationResponse?.error ||
-              'Bill validation failed. Please try again.';
+              err?.response?.data?.message ||
+              err?.response?.data?.error ||
+              'Airtime purchase failed. Please try again.';
             showToast(screenError);
             navigation.navigate('PaymentError', {screenError});
-          }
+          },
         },
-        onError: validationError => {
-          const screenError =
-            validationError?.response?.data?.message ||
-            validationError?.response?.data?.error ||
-            'Bill validation failed. Please try again.';
-          showToast(screenError);
-          navigation.navigate('PaymentError', {screenError});
-        },
-      });
+      );
     }
   };
 
@@ -231,13 +190,12 @@ const AirtimePaymentPin = props => {
             <CustomButton
               onPress={handleVerify}
               style={styles.btn1}
-              text={`Pay ₦${selectedAmount}`}
+              text={`Pay ${getCurrencySymbol(country)}${selectedAmount}`}
             />
           </View>
         </View>
       </ScrollView>
       {status === 'pending' && <Loader />}
-      {validateStatus === 'pending' && <Loader />}
       {sierraStatus === 'pending' && <Loader />}
       {bill === 'pending' && <Loader />}
       {toastVisible && <CustomToast message={toastMessage} type={toastType} />}

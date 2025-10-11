@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
 import Toast from 'react-native-toast-message';
 import {styles} from './style';
@@ -12,9 +12,10 @@ import Loader from '../../../components/modals/Loader.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {CommonActions} from '@react-navigation/native';
 import useBiometricAuth from '../../../hooks/biometric.hook.js';
-import { loginSuccess } from '../../../contexts/actions/user/index.js';
-import { useDispatch, useSelector } from 'react-redux';
-import { getUserPincode } from '../../../utils/storage.js';
+import {loginSuccess} from '../../../contexts/actions/user/index.js';
+import {useDispatch} from 'react-redux';
+import {AuthContext} from '../../../global/wrappers/AuthProvider';
+import {getUserPincode} from '../../../utils/storage.js';
 
 const Signin = props => {
   const navigation = props.navigation;
@@ -22,18 +23,11 @@ const Signin = props => {
   const [validEmail, setValidEmail] = useState(false);
   const [password, setPass] = useState('');
   const [validPass, setValidPass] = useState(false);
-  const {mutate: loginUser, data, status} = useLogin();
-  const {isBiometricExist,keyFound, handleBiometricAuth, deleteKey} = useBiometricAuth();
+  const {reloadAuth} = useContext(AuthContext);
+  const {mutate: loginUser, status} = useLogin();
+  const {isBiometricExist, keyFound, handleBiometricAuth, deleteKey} =
+    useBiometricAuth();
   const dispatch = useDispatch();
-
-  useEffect(()=>{
-     checkLogin= async()=>{
-      const isLoggedIn = await AsyncStorage.getItem('Login');
-      if(isLoggedIn){
-        navigation.navigate('TransactionPinScreen')
-      }
-    }
-  },[])
 
   const handleLogin = () => {
     if (!validEmail || !validPass) {
@@ -55,34 +49,39 @@ const Signin = props => {
       onSuccess: async data => {
         if (data.data != null) {
           try {
-            
-            console.log(data?.data);
-            await AsyncStorage.setItem('Login', JSON.stringify(data?.data));
-            await AsyncStorage.setItem('authEmail',email); //stored for tx or authentications
-                      
-            const det = await getUserPincode();
-            if(data?.data?.status == "inactive"){
-              navigation.navigate('otp-screen', {emailAddress:email, triggerSend:true});
-              return
+            if (data?.data?.country) {
+              await AsyncStorage.setItem('userCountry', data.data.country);
             }
-            if(!det){
+            await AsyncStorage.setItem('userCountry', data.data.country);
+            await AsyncStorage.setItem('Login', JSON.stringify(data.data));
+            console.log('🌍 Country saved:', data.data.country);
+            await reloadAuth();
+
+            const det = await getUserPincode();
+            if (data?.data?.status === 'inactive') {
+              navigation.navigate('otp-screen', {
+                emailAddress: email,
+                triggerSend: true,
+              });
+              return;
+            }
+            if (!det) {
               navigation.navigate('ConfirmPin');
-              return
+              return;
             }
 
-             dispatch(loginSuccess()) ///stores login status
-            if(!keyFound && isBiometricExist){
-              navigation.navigate('biometric-screen')
-            }else{
+            dispatch(loginSuccess()); ///stores login status
+            if (!keyFound && isBiometricExist) {
+              navigation.navigate('biometric-screen');
+            } else {
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
                   routes: [{name: 'bottom-tab'}],
                 }),
-              );  
+              );
             }
             //check if biometric exist and create key and store if it does not else moves to home page
-            
           } catch (error) {
             console.error('Failed to save user data', error);
             Toast.show({
@@ -101,15 +100,19 @@ const Signin = props => {
         }
       },
       onError: error => {
-        
-        if(error.response.data.error == "account not active. Please verify account"){
-          navigation.navigate('otp-screen', {emailAddress:email});
-          return
+        if (
+          error.response.data.error ===
+          'account not active. Please verify account'
+        ) {
+          navigation.navigate('otp-screen', {emailAddress: email});
+          return;
         }
         Toast.show({
           type: 'error',
           text1: 'Login Error',
-          text2: error?.response?.data?.error || 'An error occurred. Please try again.',
+          text2:
+            error?.response?.data?.error ||
+            'An error occurred. Please try again.',
         });
       },
     });
@@ -125,12 +128,14 @@ const Signin = props => {
           <TouchableOpacity
             style={styles.btn}
             activeOpacity={0.65}
-            onPress={() => navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{name: 'walkthrough-screen'}],
-              }),
-            )}>
+            onPress={() =>
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{name: 'walkthrough-screen'}],
+                }),
+              )
+            }>
             <Ionicons name="chevron-back" size={13} color={BLACK} />
           </TouchableOpacity>
         </View>

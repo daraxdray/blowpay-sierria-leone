@@ -11,37 +11,20 @@ import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {CustomButton} from '../../global/components';
 import {PanGestureHandler, State} from 'react-native-gesture-handler';
-import {useBillerGetCable} from '../../hooks/billing.hook';
-import Loader from './Loader';
 
 const CableModal = ({closeModal, proceed, selectCompany, country}) => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [searchText, setSearchText] = useState('');
-  const [formattedCompanies, setformattedCompanies] = useState([]);
-  const {data, status, error} = useBillerGetCable();
+  const [formattedCompanies, setFormattedCompanies] = useState([]);
 
   useEffect(() => {
     if (country?.toLowerCase() === 'sierra leone') {
-      setformattedCompanies([
-        {
-          ID: 'DSTV',
-          PACKAGE_ID: 'default',
-          PACKAGE_NAME: 'DSTV',
-          PRODUCT: [],
-        },
-      ]);
-    } else if (data?.data?.TV_ID) {
-      const formatResponse = response => {
-        const companies = response?.TV_ID;
-        return Object.keys(companies).reduce((acc, key) => {
-          return acc.concat(companies[key]);
-        }, []);
-      };
-
-      let companies = formatResponse(data?.data);
-      setformattedCompanies(companies);
+      setFormattedCompanies([{ID: 'DSTV'}]);
+    } else {
+      setFormattedCompanies([{ID: 'DSTV'}, {ID: 'GOTV'}, {ID: 'STARTIMES'}]);
     }
-  }, [data?.data, country]);
+  }, [country]);
+
   const handleSwipeDown = ({nativeEvent}) => {
     if (nativeEvent.translationY > 50) {
       closeModal();
@@ -63,7 +46,6 @@ const CableModal = ({closeModal, proceed, selectCompany, country}) => {
 
   const renderCompany = ({item}) => {
     const isSelected = selectedCompany === item?.ID;
-    console.log(item);
     return (
       <TouchableOpacity
         style={tw`flex-row items-center p-3 mb-1 bg-white shadow-sm rounded-lg`}
@@ -71,15 +53,6 @@ const CableModal = ({closeModal, proceed, selectCompany, country}) => {
           setSelectedCompany(item?.ID);
           selectCompany(item);
         }}>
-        {/* Uncomment this block if using SVG logos */}
-        {/* {item.logo_url.endsWith('.svg') ? (
-          <SvgUri width="40" height="40" uri={item.logo_url} />
-        ) : (
-          <Image
-            source={{uri: item.logo_url}}
-            style={tw`w-[40px] h-[40px] mr-3`}
-          />
-        )} */}
         <View style={tw`flex-1`}>
           <Text style={tw`text-[#292929] font-medium text-[14px]`}>
             {item?.ID}
@@ -96,19 +69,6 @@ const CableModal = ({closeModal, proceed, selectCompany, country}) => {
     );
   };
 
-  if (status === 'pending') {
-    return <Loader />;
-  }
-
-  if (error) {
-    return (
-      <View
-        style={tw`h-[55%] bg-white p-5 rounded-t-[20px] w-19/20 self-center rounded-b-10 mb-5 items-center justify-center`}>
-        <Text style={tw`text-red-500`}>Failed to load data</Text>
-      </View>
-    );
-  }
-
   return (
     <TouchableWithoutFeedback onPress={closeModal}>
       <View style={tw`flex-1 justify-end`}>
@@ -123,11 +83,11 @@ const CableModal = ({closeModal, proceed, selectCompany, country}) => {
 
             <View style={tw`flex-1 mt-4`}>
               <Text style={tw`text-[#292929] font-medium text-[18px]`}>
-                Select Tv
+                Select TV
               </Text>
 
               <TextInput
-                placeholder="Search tv"
+                placeholder="Search TV"
                 placeholderTextColor="gray"
                 value={searchText}
                 onChangeText={setSearchText}

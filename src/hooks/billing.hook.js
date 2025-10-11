@@ -2,6 +2,91 @@ import {useQuery, useMutation} from '@tanstack/react-query';
 import billingServices from '../services/billing.service';
 import {_errorPrompt} from '../utils';
 
+export const useBpBillerProvider = id => {
+  return useQuery({
+    queryKey: ['billerProviders'],
+    queryFn: async () => {
+      const data = await billingServices.getBillerBpProviders();
+
+      return data;
+    },
+    staleTime: 1000 * 60 * 2,
+    cacheTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    retry: 1,
+    onSuccess: data => {
+      console.log('Biller Products fetched:', data);
+      return data;
+    },
+    onError: error => {
+      _errorPrompt(error.message);
+    },
+    enabled: !!id,
+  });
+};
+export const useBpPerfomanceMetrics = () => {
+  return useQuery({
+    queryKey: ['servicePerformance'],
+    queryFn: async () => {
+      const response = await billingServices.BpPerfomanceMetrics();
+      return response?.data?.data || [];
+    },
+    staleTime: 1000 * 60 * 2,
+    cacheTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    retry: 1,
+    onError: error => {
+      _errorPrompt(error.message || 'Failed to fetch service performance');
+    },
+  });
+};
+export const useGetBpDataPlans = provider => {
+  return useQuery({
+    queryKey: ['BPDataPlans', provider],
+    queryFn: async () => {
+      if (!provider) {
+        return [];
+      }
+      const response = await billingServices.getBpDataPlans(provider);
+      console.log(response, 'response');
+
+      return response || [];
+    },
+    staleTime: 1000 * 60 * 2,
+    cacheTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    retry: 1,
+    onError: error => {
+      console.error('Failed to fetch Data Plans:', error.message || error);
+    },
+  });
+};
+export const useBpCheckMeter = () => {
+  return useMutation({
+    mutationFn: payload => billingServices.BpCheckMeter(payload),
+    onSuccess: data => {
+      if (data) {
+        return data;
+      }
+    },
+    onError: error => {
+      // _errorPrompt(error.message);
+    },
+  });
+};
+export const useBpAirtime = () => {
+  return useMutation({
+    mutationFn: payload => billingServices.BpAirtime(payload),
+    onSuccess: data => {
+      if (data) {
+        return data;
+      }
+    },
+    onError: error => {
+      _errorPrompt(error.message);
+    },
+  });
+};
 /**
  *
  * @param {string} id
@@ -26,31 +111,43 @@ export const useBillerProducts = id => {
     enabled: !!id,
   });
 };
-export const useBillerGetCable = () => {
+export const useBillerGetCable = provider => {
   return useQuery({
-    queryKey: ['billerCables'],
+    queryKey: ['billerCables', provider],
     queryFn: async () => {
-      const data = await billingServices.getBillerCables();
-
+      if (!provider) {
+        throw new Error('Provider is required');
+      }
+      const data = await billingServices.getBillerCables(provider);
       return data;
     },
+    staleTime: 1000 * 60 * 2,
+    cacheTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    retry: 1,
+    enabled: !!provider,
     onSuccess: data => {
-      console.log('Cables Products fetched:', data);
+      console.log(`Cable products for ${provider} fetched successfully:`, data);
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error?.message || 'Failed to fetch cable products');
     },
   });
 };
-export const useGetSLCablePlans = () => {
+
+export const useGetSLCablePlans = ({enabled = true} = {}) => {
   return useQuery({
     queryKey: ['billerSLCables'],
     queryFn: async () => {
       const data = await billingServices.getSLCablesPlan();
-
       return data;
     },
+    enabled,
+    staleTime: 1000 * 60 * 2,
+    cacheTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    retry: 1,
     onSuccess: data => {
       console.log('Cables Products fetched:', data);
       return data;
@@ -60,6 +157,7 @@ export const useGetSLCablePlans = () => {
     },
   });
 };
+
 export const useBillerByCategory = id => {
   return useQuery({
     queryKey: ['billerBycategory', id],
@@ -84,24 +182,6 @@ export const useNbBillerProvider = id => {
     queryKey: ['billerProviders'],
     queryFn: async () => {
       const data = await billingServices.getBillerNbProviders();
-
-      return data;
-    },
-    onSuccess: data => {
-      console.log('Biller Products fetched:', data);
-      return data;
-    },
-    onError: error => {
-      _errorPrompt(error.message);
-    },
-    enabled: !!id,
-  });
-};
-export const useBpBillerProvider = id => {
-  return useQuery({
-    queryKey: ['billerProviders'],
-    queryFn: async () => {
-      const data = await billingServices.getBillerBpProviders();
 
       return data;
     },
@@ -148,6 +228,7 @@ export const useFundWallet = () => {
     },
   });
 };
+
 export const useSpBillPayment = () => {
   return useMutation({
     mutationFn: async data => {
@@ -197,6 +278,7 @@ export const useBillPay = () => {
     },
   });
 };
+
 export const useCablePay = () => {
   return useMutation({
     mutationFn: payload => billingServices.cablePay(payload),
