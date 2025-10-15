@@ -1,4 +1,4 @@
-package com.rdx.BillsByBlowmoney
+package com.rdx.blowpay
 
 import android.app.Application
 import com.facebook.react.PackageList
