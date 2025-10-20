@@ -84,8 +84,8 @@ const TopupModal = ({closeModal, accountData, country}) => {
                   style={tw`mt-6 p-4 rounded-2xl bg-[#F9FAFB] border border-[#E5E7EB] shadow-sm`}>
                   <Text style={tw`text-[#000] font-semibold text-[15px] mb-3`}>
                     {account.source === 'cashonrails'
-                      ? '💠 CashOnRails Account'
-                      : `🏦 ${account.source} Account`}
+                      ? '💠 Account 1'
+                      : `🏦 Account 2`}
                   </Text>
                   <View style={tw`mb-3`}>
                     <Text style={tw`text-[#A5A5A5] text-[12px]`}>

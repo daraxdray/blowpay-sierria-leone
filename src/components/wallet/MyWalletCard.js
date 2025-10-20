@@ -22,7 +22,6 @@ const WalletCard = ({handleAdd, country}) => {
       return 'NAN';
     }
     const parsedBalance = parseFloat(balance);
-    console.log('Parsed Balance:', parsedBalance);
     return isNaN(parsedBalance)
       ? 'NAN'
       : (parsedBalance / 100).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');

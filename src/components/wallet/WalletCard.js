@@ -16,10 +16,15 @@ import {getCurrencySymbol} from '../../utils/format';
 
 const WalletCard = ({handleAdd, country, accountData, balanceData}) => {
   const [cachedAccountNumber, setCachedAccountNumber] = useState(null);
-  const accList = accountData?.data || [];
-  const cashonrailsAcc = accList.find(acc => acc.source === 'cashonrails');
-  const selectedAcc = cashonrailsAcc || accList[0] || {};
+  const accList = accountData || [];
 
+  let selectedAcc;
+  if (country?.toLowerCase() !== 'sierra leone') {
+    const cashonrailsAcc = accList.find(acc => acc.source === 'cashonrails');
+    selectedAcc = cashonrailsAcc || accList[0] || {};
+  } else {
+    selectedAcc = accList[0] || {};
+  }
   const userBalance = balanceData?.data || {};
 
   const formatBalance = balance => {
@@ -75,7 +80,7 @@ const WalletCard = ({handleAdd, country, accountData, balanceData}) => {
         <WalletCardSVG width={'115%'} height="115%" style={tw`absolute`} />
 
         <View
-          style={tw`flex-row justify-between items-center py-6 px-6 ${
+          style={tw`flex-row justify-between items-center py-6 px-5 ${
             isIpad() ? 'w-[35%]' : 'w-90%'
           }`}>
           <View style={tw`flex-1 pb-3`}>

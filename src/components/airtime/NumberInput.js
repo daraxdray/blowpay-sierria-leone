@@ -223,6 +223,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     color: 'black',
     height: 40,
+    placeholderTextColor: '#9C9C9C',
   },
   modalBackdrop: {
     flex: 1,

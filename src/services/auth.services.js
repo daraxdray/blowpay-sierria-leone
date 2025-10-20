@@ -157,7 +157,7 @@ class AuthServices {
   }
 
   KYC(payload) {
-    console.log({payload});
+    console.log({payload}, 'payload in service');
     return request('/kyc/complete', 'POST', payload, true);
   }
   updateUser(payload) {

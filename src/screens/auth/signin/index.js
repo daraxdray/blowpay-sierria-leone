@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useContext} from 'react';
+import React, {useState, useContext} from 'react';
 import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
 import Toast from 'react-native-toast-message';
 import {styles} from './style';
@@ -48,13 +48,15 @@ const Signin = props => {
     loginUser(userData, {
       onSuccess: async data => {
         if (data.data != null) {
+          console.log(data, '🌍 login data received:');
+
           try {
             if (data?.data?.country) {
               await AsyncStorage.setItem('userCountry', data.data.country);
             }
-            await AsyncStorage.setItem('userCountry', data.data.country);
+            await AsyncStorage.setItem('userKyc', String(data.data.isKycSet));
             await AsyncStorage.setItem('Login', JSON.stringify(data.data));
-            console.log('🌍 Country saved:', data.data.country);
+            console.log('🌍 data saved:', data);
             await reloadAuth();
 
             const det = await getUserPincode();

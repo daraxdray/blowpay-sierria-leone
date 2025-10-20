@@ -13,14 +13,32 @@ import {BLACK, WHITE} from '../../../global/theme';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {CustomButton} from '../../../global/components';
 import useBiometricAuth from '../../../hooks/biometric.hook';
+import {CommonActions} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Biometric = props => {
   const navigation = props.navigation;
   const {navigateHome, createKey} = useBiometricAuth();
 
-  const activate = () => {
-    createKey();
-    navigateHome('residence-screen');
+  const activate = async () => {
+    await createKey();
+    try {
+      const storedKyc = await AsyncStorage.getItem('userKyc');
+      const kyc = storedKyc ? JSON.parse(storedKyc) : null;
+
+      if (kyc) {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{name: 'bottom-tab'}],
+          }),
+        );
+      } else {
+        navigateHome('residence-screen');
+      }
+    } catch (error) {
+      console.error('Error reading KYC data:', error);
+    }
   };
 
   return (

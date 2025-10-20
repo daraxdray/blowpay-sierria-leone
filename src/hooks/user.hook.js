@@ -14,7 +14,9 @@ export const useGetUser = () => {
       const data = await userService.getUser();
       return data;
     },
-
+    staleTime: 1000 * 60 * 5, // 5 mins
+    cacheTime: 1000 * 60 * 10, // 10 mins
+    refetchOnWindowFocus: false,
     onSuccess: data => {
       console.log('user fetched:', data);
       return data;
@@ -46,6 +48,9 @@ export const useCreateUserAcc = () => {
       const response = await userService.CreateAcc(payload);
       return response?.data;
     },
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
     onSuccess: data => {
       _successPrompt('Virtual account created successfully!');
       console.log('✅ Created Virtual Account:', data);

@@ -164,7 +164,7 @@ const Electricity = props => {
                 Meter Number
               </Text>
               <TextInput
-                style={tw`border border-[#D0D5DD] rounded-lg mt-2 p-3 text-[14px]`}
+                style={tw`border border-[#D0D5DD] rounded-lg mt-2 p-3 text-[14px] placeholder:text-gray-400`}
                 placeholder="Enter meter number"
                 keyboardType="numeric"
                 value={selectedMeter}

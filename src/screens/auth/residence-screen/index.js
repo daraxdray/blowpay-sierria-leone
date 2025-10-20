@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -19,22 +19,33 @@ import IdSelectorModal from '../../../components/modals/IdSelectorModal';
 import {useKYC} from '../../../hooks/auth.hook';
 import {CustomButton} from '../../../global/components';
 import Toast from 'react-native-toast-message';
+import {useDispatch, useSelector} from 'react-redux';
+import {updateKyc} from '../../../contexts/actions/user';
 
 const ResidenceScreen = ({navigation, route}) => {
   const {idNumber, expiryDate, documentImage, documentType, selfieImage} =
     route?.params || {};
-
-  const [country, setCountry] = useState('');
+  const dispatch = useDispatch();
+  const {kyc} = useSelector(state => state.user);
+  const [country, setCountry] = useState(kyc.country || '');
+  const [phoneNumber, setPhoneNumber] = useState(kyc.phoneNumber || '');
   const [validCountry, setValidCountry] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalId, setModalId] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCountries, setFilteredCountries] = useState(countryList);
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [validPhone, setValidPhone] = useState(false);
 
   const {mutate: submitKYC, status} = useKYC();
 
+  useEffect(() => {
+    dispatch(updateKyc({country, phoneNumber}));
+  }, [country, phoneNumber, dispatch]);
+  useEffect(() => {
+    if (kyc.country) setValidCountry(true);
+    if (kyc.phoneNumber && /^\d{7,15}$/.test(kyc.phoneNumber))
+      setValidPhone(true);
+  }, [kyc]);
   const handlePhoneChange = text => {
     setPhoneNumber(text);
     setValidPhone(/^\d{7,15}$/.test(text));

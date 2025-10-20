@@ -61,7 +61,6 @@ const HomeTab = props => {
   const {data: userAcc, refetch: refetchUserAcc, status} = useGetUserAcc();
   const {mutate: createUserAcc, status: createStatus} = useCreateUserAcc();
   const [advertModalVisible, setAdvertModalVisible] = useState(true);
-console.log(country);
 
   const loadUserData = async () => {
     try {
@@ -75,8 +74,7 @@ console.log(country);
   };
   useEffect(() => {
     const checkAndCreateAccount = async () => {
-      // Only proceed if country is Sierra Leone
-      if (country?.toLowerCase() !== 'sierra leone') {
+      if (country?.toLowerCase() === 'sierra leone') {
         console.log(
           '⏭️ Skipping account creation - country is not Sierra Leone',
         );

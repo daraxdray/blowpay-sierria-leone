@@ -14,6 +14,7 @@ import TransactionDetails from '../../../components/modals/TransactionDetails';
 import Recent from '../../../components/wallet/Recent';
 import Loader from '../../../components/modals/Loader';
 import {AuthContext} from '../../../global/wrappers/AuthProvider';
+import {useGetUserAcc} from '../../../hooks/user.hook';
 
 const WalletTab = props => {
   const navigation = props.navigation;
@@ -21,6 +22,7 @@ const WalletTab = props => {
   const [deatailModalVisible, setDetailsModalVisible] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const {country} = useContext(AuthContext);
+  const {data: userAcc, status: accstatus} = useGetUserAcc();
   const [selectedTransactionId, setSelectedTransactionId] = useState(null);
 
   const openModal = () => {
@@ -69,7 +71,7 @@ const WalletTab = props => {
     }
   }, [data]);
 
-  if (status === 'pending') {
+  if (status || accstatus === 'pending') {
     <Loader />;
   }
   return (
@@ -150,7 +152,11 @@ const WalletTab = props => {
           visible={modalVisible}
           onRequestClose={closeModal}>
           <View style={tw`flex-1 justify-end bg-black bg-opacity-50`}>
-            <TopupModal closeModal={closeModal} />
+            <TopupModal
+              accountData={userAcc}
+              country={country}
+              closeModal={closeModal}
+            />
           </View>
         </Modal>
         <Modal

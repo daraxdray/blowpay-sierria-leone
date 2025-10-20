@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useContext} from 'react';
 import {
   View,
   Text,
@@ -7,21 +7,24 @@ import {
   TouchableOpacity,
   Modal,
 } from 'react-native';
-import { ScreenView } from '../../../../global/wrappers';
-import { WHITE } from '../../../../global/theme';
+import {ScreenView} from '../../../../global/wrappers';
+import {WHITE} from '../../../../global/theme';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Header from '../../../../global/components/Header';
 import tw from 'twrnc';
 import Amount from '../../../../components/airtime/Amount';
-import { CustomButton } from '../../../../global/components';
+import {CustomButton} from '../../../../global/components';
 import BettingModal from '../../../../components/modals/BettingModal';
 import Toast from 'react-native-toast-message';
-import { useBettingValidate, useBettingFund } from '../../../../hooks/billing.hook';
+import {useBettingValidate} from '../../../../hooks/billing.hook';
 import Loader from '../../../../components/modals/Loader';
-import { styles } from './style';
+import {AuthContext} from '../../../../global/wrappers/AuthProvider';
+import {styles} from './style';
+import ServiceUnavailable from '../../../../components/SierraLeone/ServiceUnavailable';
 
 const FundBetting = props => {
   const navigation = props.navigation;
+  const {country} = useContext(AuthContext);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [customerId, setCustomerId] = useState('');
@@ -29,8 +32,9 @@ const FundBetting = props => {
   const [userDetails, setUserDetails] = useState('');
   const [userError, setUserError] = useState('');
   const [isValidationSuccessful, setIsValidationSuccessful] = useState(false);
-  
-  const { mutate: validateBetting, status: validateStatus } = useBettingValidate();
+
+  const {mutate: validateBetting, status: validateStatus} =
+    useBettingValidate();
 
   const openModal = () => {
     setModalVisible(true);
@@ -60,16 +64,18 @@ const FundBetting = props => {
       return;
     }
 
-    if(!validateAmount(amount)){ return false};
+    if (!validateAmount(amount)) {
+      return false;
+    }
 
     // Prepare the data for payment
     const paymentData = {
       customerId: customerId,
       bettingCompany: selectedProvider.PRODUCT_CODE,
-      amount: parseFloat(amount)
+      amount: parseFloat(amount),
     };
 
-    console.log("PAYMENT DATA", paymentData);
+    console.log('PAYMENT DATA', paymentData);
 
     navigation.navigate('BettingPaymentPin', paymentData);
   };
@@ -82,15 +88,18 @@ const FundBetting = props => {
         bettingCompany: selectedProvider.PRODUCT_CODE,
         // amount: parseFloat(amount)
       };
-      
-      console.log("VALIDATE", userValidate);
+
+      console.log('VALIDATE', userValidate);
 
       validateBetting(userValidate, {
         onSuccess: async response => {
           try {
-            if (response && response.data && response.data.customer_name && 
-                !response.data.customer_name.includes("Error")) {
-              
+            if (
+              response &&
+              response.data &&
+              response.data.customer_name &&
+              !response.data.customer_name.includes('Error')
+            ) {
               Toast.show({
                 type: 'success',
                 text1: 'Validation Successful',
@@ -117,7 +126,7 @@ const FundBetting = props => {
             setIsValidationSuccessful(false);
           }
         },
-        onError: (error) => {
+        onError: error => {
           console.log('Validation error:', error);
           Toast.show({
             text1: 'Validation Failed',
@@ -130,12 +139,12 @@ const FundBetting = props => {
   };
 
   // Validate amount is within provider's min and max limits
-  const validateAmount = (value) => {
+  const validateAmount = value => {
     if (!selectedProvider) return;
-    
+
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return;
-    
+
     if (numValue < selectedProvider.MINAMOUNT) {
       Toast.show({
         type: 'error',
@@ -144,7 +153,7 @@ const FundBetting = props => {
       });
       return false;
     }
-    
+
     if (numValue > selectedProvider.MAXAMOUNT) {
       Toast.show({
         type: 'error',
@@ -153,14 +162,30 @@ const FundBetting = props => {
       });
       return false;
     }
-    
+
     return true;
   };
 
-  const handleAmountChange = (value) => {
- 
+  const handleAmountChange = value => {
     setAmount(value);
   };
+  if (country?.toLowerCase() === 'sierra leone') {
+    return (
+      <ScreenView style={styles.container} light color={WHITE}>
+        <Header
+          navigation={() => {
+            navigation.goBack();
+          }}
+          ImageSource={require('../../../../../assets/icons/filter.png')}
+          title="Betting"
+          showIcon={false}
+          iconName="add-circle"
+          imagePress={() => console.log('Second Icon Pressed')}
+        />
+        <ServiceUnavailable />
+      </ScreenView>
+    );
+  }
 
   return (
     <ScreenView style={styles.container} light color={WHITE}>
@@ -219,7 +244,7 @@ const FundBetting = props => {
                   <Text style={tw`text-[12px] text-red-500`}>{userError}</Text>
                 </View>
               ) : (
-                <View></View>
+                <View />
               )}
             </View>
           </View>
@@ -231,7 +256,8 @@ const FundBetting = props => {
             />
             {selectedProvider && (
               <Text style={tw`text-gray-600 text-[12px] text-center`}>
-                Min: ₦{selectedProvider.MINAMOUNT} | Max: ₦{selectedProvider.MAXAMOUNT}
+                Min: ₦{selectedProvider.MINAMOUNT} | Max: ₦
+                {selectedProvider.MAXAMOUNT}
               </Text>
             )}
           </View>

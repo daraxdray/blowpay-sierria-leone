@@ -1,9 +1,11 @@
 import {View, Text, TouchableOpacity} from 'react-native';
-import React from 'react';
+import React, {useContext} from 'react';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {PanGestureHandler} from 'react-native-gesture-handler';
 import {useNavigation} from '@react-navigation/native';
+import {AuthContext} from '../../global/wrappers/AuthProvider';
+import {getCurrencySymbol} from '../../utils/format';
 
 const ConfirmDataModal = ({closeModal, data, phoneNumber, providerStatus}) => {
   const handleSwipeDown = ({nativeEvent}) => {
@@ -11,7 +13,7 @@ const ConfirmDataModal = ({closeModal, data, phoneNumber, providerStatus}) => {
       closeModal();
     }
   };
-
+  const {country} = useContext(AuthContext);
   const navigation = useNavigation();
   return (
     <PanGestureHandler onGestureEvent={handleSwipeDown}>
@@ -32,7 +34,7 @@ const ConfirmDataModal = ({closeModal, data, phoneNumber, providerStatus}) => {
           </View>
           <View style={tw`flex items-center`}>
             <Text style={tw`text-[#1C5BFF] font-bold text-[16px]`}>
-              NGN{' '}
+              {getCurrencySymbol(country)}
               {parseFloat(data?.price)
                 .toFixed(2)
                 .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
@@ -50,7 +52,7 @@ const ConfirmDataModal = ({closeModal, data, phoneNumber, providerStatus}) => {
                 Amount
               </Text>
               <Text style={tw`text-[#000000] font-medium text-[11px]`}>
-                NGN{' '}
+                {getCurrencySymbol(country)}
                 {parseFloat(data?.price)
                   .toFixed(2)
                   .replace(/\d(?=(\d{3})+\.)/g, '$&,')}

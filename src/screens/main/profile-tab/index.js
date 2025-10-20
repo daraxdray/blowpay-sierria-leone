@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -10,24 +10,20 @@ import {
   Linking,
   Platform,
 } from 'react-native';
-import { styles } from './style';
-import { ScreenView } from '../../../global/wrappers';
-import { WHITE } from '../../../global/theme';
-import ProfileBGSVG from '../../../../assets/svgs/ProfileBG.svg';
+import {styles} from './style';
+import {ScreenView} from '../../../global/wrappers';
+import {WHITE} from '../../../global/theme';
 import Header from '../../../global/components/Header';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import ProfilleSVG from '../../../../assets/svgs/Profille.svg';
 import OptionsSVG from '../../../../assets/svgs/Options.svg';
-import ReferSVG from '../../../../assets/svgs/Refer.svg';
 import Options from '../../../components/profile/Optons';
 import SecurityModal from '../../../components/modals/SecurityModal';
 import HelpModal from '../../../components/modals/HelpModal';
 import LogoutModal from '../../../components/modals/LogoutModal';
-import { useGetVitualAcc } from '../../../hooks/virtual.hook';
+import {useGetVitualAcc} from '../../../hooks/virtual.hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import VerifyPhoneComponent from './verifyPhone';
-import { Link } from '@react-navigation/native';
 import AppConstant from '../../../constants/data/appConstant';
 
 const ProfileTab = props => {
@@ -36,9 +32,12 @@ const ProfileTab = props => {
   const [phoneModalVisible, setPhoneModalVisible] = useState(false);
   const [helpModalVisible, setHelpModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-  const { data, isLoading, error } = useGetVitualAcc();
+  const {data} = useGetVitualAcc();
   const [user, setUser] = useState({});
-  const socialImage = Platform.OS == 'ios' ||  AppConstant.isAmazonStore ?require('../../../../assets/images/social_blowpay.jpeg'):require('../../../../assets/images/social_blowmoney.png');
+  const socialImage =
+    Platform.OS == 'ios' || AppConstant.isAmazonStore
+      ? require('../../../../assets/images/social_blowpay.jpeg')
+      : require('../../../../assets/images/social_blowmoney.png');
   const openModal = () => {
     setModalVisible(true);
   };
@@ -46,9 +45,12 @@ const ProfileTab = props => {
     setModalVisible(false);
   };
   const gotoDelete = () => {
-    const url = Platform.OS === 'ios' || AppConstant.isAmazonStore? 'https://BlowPay.app/request-account-deletion' : 'http://billsbyblowmoney.com/request-account-deletion';
+    const url =
+      Platform.OS === 'ios' || AppConstant.isAmazonStore
+        ? 'https://BlowPay.app/request-account-deletion'
+        : 'http://billsbyblowmoney.com/request-account-deletion';
     Linking.openURL(url);
-  }
+  };
   const openHelpModal = () => {
     setHelpModalVisible(true);
   };
@@ -68,7 +70,7 @@ const ProfileTab = props => {
     const fetchUserData = async () => {
       try {
         const storedUserData = await AsyncStorage.getItem('userData');
-        
+
         if (storedUserData) {
           setUser(JSON.parse(storedUserData));
         }
@@ -104,7 +106,7 @@ const ProfileTab = props => {
       <ImageBackground
         source={require('../../../../assets/images/layout-profile.png')}
         style={tw`absolute inset-0 h-80`} // Use 'absolute' and 'inset-0' for full coverage
-        resizeMode="cover"           // Adjust how the image fits
+        resizeMode="cover" // Adjust how the image fits
       />
 
       <View style={tw`px-3 pt-2`}>
@@ -129,7 +131,13 @@ const ProfileTab = props => {
             {/* <ProfilleSVG /> */}
             <Image
               source={socialImage}
-              style={{ width: 50, height: 50, borderRadius: 25 , backgroundColor:'black', borderRadius:30}}
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 25,
+                backgroundColor: 'black',
+                borderRadius: 30,
+              }}
             />
           </TouchableOpacity>
           <View style={tw`items-center pl-4`}>
@@ -145,24 +153,24 @@ const ProfileTab = props => {
           </View>
         </View>
         <View style={tw`flex items-center mt-12`}>
-          {!user?.user?.phoneVerified ? <View style={tw`bg-[#FFF8FB] p-5 w-[367.55px] gap-4 rounded-[16px] `}>
-
-
-            <View style={tw`items-center`}>
-              <View style={tw`flex-row items-center`}>
-                <Text
-                  style={tw`text-[#000000] font-bold text-center text-[14px] leading-[24px]`}>
-                  Verified
-                </Text>
-                <Ionicons
-                  name="checkmark-done-circle"
-                  size={12}
-                  color="#008abf"
-                  style={tw`mb-2`}
-                />
+          {!user?.user?.phoneVerified ? (
+            <View
+              style={tw`bg-[#FFF8FB] p-5 w-[367.55px] gap-4 rounded-[16px] `}>
+              <View style={tw`items-center`}>
+                <View style={tw`flex-row items-center`}>
+                  <Text
+                    style={tw`text-[#000000] font-bold text-center text-[14px] leading-[24px]`}>
+                    Verified
+                  </Text>
+                  <Ionicons
+                    name="checkmark-done-circle"
+                    size={12}
+                    color="#008abf"
+                    style={tw`mb-2`}
+                  />
+                </View>
               </View>
-            </View>
-            {/* <TouchableOpacity
+              {/* <TouchableOpacity
               onPress={() => setPhoneModalVisible(true)}
               disabled={true}
               style={tw` flex flex-row items-center bg-[#FFFFFF] p-2 gap-2 self-center rounded-md`}>
@@ -175,8 +183,10 @@ const ProfileTab = props => {
                 Verified
               </Text>
             </TouchableOpacity> */}
-          </View> :
-            <View style={tw`bg-[#FFF8FB] p-5 w-[367.55px] gap-4 rounded-[16px] `}>
+            </View>
+          ) : (
+            <View
+              style={tw`bg-[#FFF8FB] p-5 w-[367.55px] gap-4 rounded-[16px] `}>
               <Text
                 style={tw`text-[#000000] font-bold text-[14px] pl-4 leading-[24px]`}>
                 Your phone has been verified.
@@ -192,7 +202,8 @@ const ProfileTab = props => {
                   Verified
                 </Text>
               </TouchableOpacity>
-            </View>}
+            </View>
+          )}
         </View>
 
         <View style={styles.view1}>
@@ -286,7 +297,10 @@ const ProfileTab = props => {
             visible={phoneModalVisible}
             onRequestClose={() => setPhoneModalVisible(false)}>
             <View style={tw`flex-1 justify-end bg-black bg-opacity-50`}>
-              <VerifyPhoneComponent phone={user.phone} closeModal={closePhoneModal} />
+              <VerifyPhoneComponent
+                phone={user.phone}
+                closeModal={closePhoneModal}
+              />
             </View>
           </Modal>
         </View>

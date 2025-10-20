@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useState} from 'react';
 import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
 import {styles} from './style';
 import {ScreenView} from '../../../global/wrappers';
@@ -16,6 +16,7 @@ import {saveUserCredentials} from '../../../utils/storage';
 import {useGetUser} from '../../../hooks/user.hook';
 import {CustomButton} from '../../../global/components';
 import useBiometricAuth from '../../../hooks/biometric.hook';
+
 const ConfirmPin = props => {
   const navigation = props.navigation;
   const {mutate: confirmPasscode, status} = useConfirmPasscode();
@@ -40,14 +41,28 @@ const ConfirmPin = props => {
       onSuccess: async data => {
         if (data) {
           try {
-            // await AsyncStorage.setItem('Login', JSON.stringify(data));
             dispatch(loginSuccess());
-
-            const email = await AsyncStorage.getItem('authEmail');
-            saveUserCredentials(email, userData.passcode);
+            const kyc = JSON.parse(await AsyncStorage.getItem('userKyc'));
+            const storedLogin = await AsyncStorage.getItem('Login');
+            const userDataFromStorage = storedLogin
+              ? JSON.parse(storedLogin)
+              : null;
+            if (userDataFromStorage?.emailAddress && userData.passcode) {
+              saveUserCredentials(
+                userDataFromStorage.emailAddress,
+                userData.passcode,
+              );
+            }
 
             if (!keyFound && isBiometricExist) {
               navigation.navigate('biometric-screen');
+            } else if (kyc) {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{name: 'bottom-tab'}],
+                }),
+              );
             } else {
               navigation.dispatch(
                 CommonActions.reset({
@@ -99,7 +114,6 @@ const ConfirmPin = props => {
 
           <View style={styles.v2}>
             <OTPTextView
-              ref={e => (otpRef = e)}
               inputCellLength={1}
               containerStyle={styles.containerOtp}
               textInputStyle={styles.inputOtp}

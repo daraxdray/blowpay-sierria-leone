@@ -93,7 +93,7 @@ export const styles = StyleSheet.create({
     // borderWidth: 1,
   },
   inputOtp: {
-    padding: 15,
+    padding: 5,
     marginHorizontal: 3,
     borderWidth: 1,
     borderRadius: 10,

@@ -19,7 +19,6 @@ import {
   Signup,
   StatusReminder,
 } from '../../screens/auth';
-
 import BottomTab from '../bottomTab';
 import TransactionPinScreen from '../../screens/main/home-tab/transactionPin';
 import Receipt from '../../screens/main/home-tab/transactionPin/receipt';

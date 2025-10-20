@@ -1,48 +1,46 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import {View, Text, TouchableOpacity} from 'react-native';
 import React from 'react';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import { useNavigation } from '@react-navigation/native';
-import { useLogout } from '../../hooks/auth.hook';
+import {PanGestureHandler} from 'react-native-gesture-handler';
+import {useNavigation} from '@react-navigation/native';
+import {useLogout} from '../../hooks/auth.hook';
 import Toast from 'react-native-toast-message';
 import Loader from './Loader';
-import { CommonActions } from '@react-navigation/native';
-import { logout } from '../../contexts/actions/user';
-import { useDispatch, useSelector } from 'react-redux';
+import {CommonActions} from '@react-navigation/native';
+import {logout} from '../../contexts/actions/user';
+import {useDispatch, useSelector} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LogoutModal = ({ closeModal }) => {
-  const { isAuthenticated } = useSelector((state) => state.user);
-  const handleSwipeDown = ({ nativeEvent }) => {
+const LogoutModal = ({closeModal}) => {
+  const {isAuthenticated} = useSelector(state => state.user);
+  const handleSwipeDown = ({nativeEvent}) => {
     if (nativeEvent.translationY > 50) {
       closeModal();
     }
   };
   const navigation = useNavigation();
-  const { mutate, status } = useLogout();
+  const {mutate, status} = useLogout();
   const dispatch = useDispatch();
 
   const handleLogout = () => {
-
-
-
     try {
       AsyncStorage.removeItem('bPK');
       AsyncStorage.removeItem('bmEnabled');
-      AsyncStorage.removeItem('Login')
-      AsyncStorage.removeItem('userData')
+      AsyncStorage.removeItem('Login');
+      AsyncStorage.removeItem('balance');
+      AsyncStorage.removeItem('userData');
       dispatch(logout());
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: 'walkthrough-screen' }],
+          routes: [{name: 'walkthrough-screen'}],
         }),
       );
-      Toast.show({text1:"You have logged out successfully"})
+      Toast.show({text1: 'You have logged out successfully'});
       mutate({});
     } catch (error) {
-      console.error("An unexpected error occurred:", error);
+      console.error('An unexpected error occurred:', error);
     }
   };
   return (
@@ -68,10 +66,8 @@ const LogoutModal = ({ closeModal }) => {
           <View style={tw` pb-4 px-2 rounded-[8px] gap-4`}>
             <TouchableOpacity
               onPress={() => {
-
                 handleLogout();
                 closeModal();
-
               }}
               style={tw`bg-[#FF114A] rounded-[16px] px-3 py-3 flex w-full items-center flex-row justify-center `}>
               <Text style={tw`text-white font-medium text-[14px]`}>

@@ -15,6 +15,7 @@ import ConfirmDataModal from '../../../../components/modals/ConfirmDataModal';
 import ContactListModal from '../../../../components/modals/ContactListModal';
 import NetworkPerformance from '../../../../components/airtime/NetworkPerformance';
 import {AuthContext} from '../../../../global/wrappers/AuthProvider';
+import ServiceUnavailable from '../../../../components/SierraLeone/ServiceUnavailable';
 
 const Data = props => {
   const {navigation} = props;
@@ -152,7 +153,21 @@ const Data = props => {
   if (status === 'pending') {
     return <Loader />;
   }
-
+  if (country?.toLowerCase() === 'sierra leone') {
+    return (
+      <ScreenView style={styles.container} light color={WHITE}>
+        <Header
+          navigation={() => navigation.goBack()}
+          ImageSource={require('../../../../../assets/icons/filter.png')}
+          title="Data Purchase"
+          iconName="add-circle"
+          imagePress={() => console.log('Second Icon Pressed')}
+          setShowModal={setShowModal}
+        />
+        <ServiceUnavailable />
+      </ScreenView>
+    );
+  }
   return (
     <ScreenView style={styles.container} light color={WHITE}>
       <View style={styles.view1}>
@@ -165,6 +180,7 @@ const Data = props => {
           imagePress={() => console.log('Second Icon Pressed')}
           setShowModal={setShowModal}
         />
+
         <NumberInput
           phoneNumber={phoneNumber}
           setPhoneNumber={setPhoneNumber}
