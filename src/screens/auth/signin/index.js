@@ -56,6 +56,7 @@ const Signin = props => {
             }
             await AsyncStorage.setItem('userKyc', String(data.data.isKycSet));
             await AsyncStorage.setItem('Login', JSON.stringify(data.data));
+            await AsyncStorage.setItem('authEmail', userData.emailAddress);
             console.log('🌍 data saved:', data);
             await reloadAuth();
 
