@@ -106,6 +106,8 @@ const ElectricPaymentPin = ({navigation, route}) => {
 
     electricBill(userInfo, {
       onSuccess: DataResponse => {
+        console.log(DataResponse);
+
         if (DataResponse) {
           navigation.dispatch(
             CommonActions.reset({
@@ -142,8 +144,27 @@ const ElectricPaymentPin = ({navigation, route}) => {
           transferError?.response?.data?.error ||
           transferError?.response?.data?.message ||
           'Error: Electricity purchase failed. Please try again.';
-        showToast(errorMessage);
-        navigation.navigate('PaymentError', {screenError: errorMessage});
+
+        if (errorMessage?.toLowerCase().includes('successful transaction')) {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'PaymentSucess',
+                  params: {
+                    message:
+                      'Your payment was successful. Get token from transaction history.',
+                    data: transferError?.response?.data,
+                  },
+                },
+              ],
+            }),
+          );
+        } else {
+          showToast(errorMessage);
+          navigation.navigate('PaymentError', {screenError: errorMessage});
+        }
       },
     });
   };
