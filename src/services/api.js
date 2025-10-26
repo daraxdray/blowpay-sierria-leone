@@ -1,6 +1,7 @@
 // import {API_URL, BASE_URL} from '@env';
 // import CookieManager from '@react-native-cookies/cookies';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
 
 /**
  * Object Request Header
@@ -144,14 +145,29 @@ export async function request(url, method, payload = {}, form = false) {
     }
     return response.data;
   } catch (err) {
-    console.error(`Request Error Data at ${url}: `, err.response.data);
-    //handle logout when request does not authorize;
-    if (
-      err.response.status === 401 &&
-      err.response?.data?.message === 'Unauthorized'
-    ) {
-      return err.response.data;
+    const status = err.response?.status;
+    const message = err.response?.data || 'Something went wrong';
+
+    if (status === 429 && typeof message === 'string') {
+      Toast.show({
+        type: 'error',
+        text1: 'Too Many Requests wait a moment',
+        text2: message,
+      });
+    } else if (status === 401) {
+      Toast.show({
+        type: 'error',
+        text1: 'Unauthorized',
+        text2: 'Your session expired. Please log in again.',
+      });
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: typeof message === 'string' ? message : 'Something went wrong.',
+      });
     }
-    throw err;
+
+    throw err; // rethrow if needed
   }
 }

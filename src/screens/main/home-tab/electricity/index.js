@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 import React, {useState, useContext} from 'react';
 import {
   View,
@@ -27,6 +28,7 @@ import {
   useBpCheckMeter,
 } from '../../../../hooks/billing.hook';
 import {AuthContext} from '../../../../global/wrappers/AuthProvider';
+import NetworkPerformance from '../../../../components/airtime/NetworkPerformance';
 
 const Electricity = props => {
   const {navigation} = props;
@@ -128,7 +130,7 @@ const Electricity = props => {
             showMeter={true}
           />
         ) : (
-          <View style={tw`gap-6`}>
+          <View style={tw`gap-2`}>
             <View>
               <Text style={tw`text-gray-700 font-semibold text-[14px]`}>
                 Service Provider
@@ -144,6 +146,14 @@ const Electricity = props => {
                 <Ionicons name="chevron-down" size={14} />
               </TouchableOpacity>
             </View>
+            <NetworkPerformance
+              phoneNumber={selectedMeter}
+              country={country}
+              selectedProvider={selectedProvider}
+              onStatusChange={status =>
+                console.log('⚙️ Performance Status:', status)
+              }
+            />
             {/* <View>
               <Text style={tw`text-gray-700 font-semibold text-[14px]`}>
                 Account/Meter Type
@@ -160,7 +170,7 @@ const Electricity = props => {
               </TouchableOpacity>
             </View> */}
             <View>
-              <Text style={tw`text-gray-700 font-semibold text-[14px]`}>
+              <Text style={tw`text-gray-700 font-semibold text-[14px] mt-2`}>
                 Meter Number
               </Text>
               <TextInput

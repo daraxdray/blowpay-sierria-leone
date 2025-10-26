@@ -24,23 +24,22 @@ const ElectModal = ({
   const [formattedCompanies, setformattedCompanies] = useState([]);
   const billerId = 'UTILITYBILLS';
   const {data, isLoading, error} = useBpBillerProvider(billerId);
+  console.log(data);
+
   useEffect(() => {
     if (country === 'Sierra Leone') {
-      console.log('⚡ Sierra Leone detected → forcing EDSA');
       setformattedCompanies([{ID: 'EDSA', NAME: 'EDSA'}]);
     }
     if (data?.data && country !== 'Sierra Leone') {
       const formatResponse = response => {
-        return Object.keys(response)
-          .filter(key => response[key] === true)
-          .map(key => ({
-            ID: key,
-            NAME: key,
-          }));
+        return Object.keys(response).map(key => ({
+          ID: key,
+          NAME: key,
+          STATUS: response[key],
+        }));
       };
 
       const formatted = formatResponse(data?.data);
-      console.log('✅ formatted companies:', formatted);
       setformattedCompanies(formatted);
     }
   }, [data, data?.data, country]);

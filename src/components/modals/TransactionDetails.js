@@ -1,28 +1,26 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   View,
   Text,
   TouchableOpacity,
   Image,
-  TextInput,
-  Alert,
   Platform,
   Share,
   PermissionsAndroid,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import React, { useEffect, useState, useRef } from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import tw from 'twrnc';
 import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { CustomButton } from '../../global/components';
-import { BLACK, WHITE } from '../../global/theme';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import { useGetTransaction, useGetTxToken } from '../../hooks/transactions.hook';
+import {CustomButton} from '../../global/components';
+import {BLACK, WHITE} from '../../global/theme';
+import {PanGestureHandler} from 'react-native-gesture-handler';
+import {useGetTransaction, useGetTxToken} from '../../hooks/transactions.hook';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Loader from './Loader';
-import { formatTime } from '../../constants/data/Transaction';
-import { navigate } from '../../routes/root/RootNavigation';
+import {navigate} from '../../routes/root/RootNavigation';
 import RNFS from 'react-native-fs';
 // Add the following imports for PDF generation
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
@@ -32,9 +30,9 @@ import Appicon from '../../../assets/svgs/logo_ios.svg';
 import Appicon2 from '../../../assets/svgs/logo.svg';
 // import ReactNativeBlobUtil from 'react-native-blob-util';
 
-const TransactionDetails = ({ closeModal, transactionId }) => {
-  const { data, status } = useGetTransaction(transactionId);
-  const { mutate, status: gettingToken } = useGetTxToken();
+const TransactionDetails = ({closeModal, transactionId}) => {
+  const {data, status} = useGetTransaction(transactionId);
+  const {mutate, status: gettingToken} = useGetTxToken();
   const userData = data?.data || {};
   const message = data?.message;
   const [token, setToken] = useState('');
@@ -43,7 +41,7 @@ const TransactionDetails = ({ closeModal, transactionId }) => {
   const receiptRef = useRef(null);
   // State for token fetch time
   const [tokenFetchTime, setTokenFetchTime] = useState(null);
-  
+
   // Update token fetch time when token changes or is fetched
   useEffect(() => {
     if (token && !tokenFetchTime) {
@@ -54,7 +52,7 @@ const TransactionDetails = ({ closeModal, transactionId }) => {
     Clipboard.setString(text);
     Toast.show({
       text1: 'Copied',
-      text2: text+' has been copied to clipboard',
+      text2: text + ' has been copied to clipboard',
     });
   };
 
@@ -66,48 +64,53 @@ const TransactionDetails = ({ closeModal, transactionId }) => {
     closeModal();
   };
 
-  const handleSwipeDown = ({ nativeEvent }) => {
+  const handleSwipeDown = ({nativeEvent}) => {
     if (nativeEvent.translationY > 50) {
       closeModal();
     }
   };
 
   const requestNewToken = () => {
+    console.log(transactionId, 'transactionId');
+
     mutate(transactionId, {
-      onSuccess: (suc) => {
-        console.log('====================================');
-        console.log(suc?.data?.result);
-        if (suc?.data?.result?.status) {
+      onSuccess: suc => {
+        console.log(suc, '==================================== help');
+        if (suc?.data) {
           Toast.show({
             type: 'success',
             text1: 'Success',
             text2: 'Token fetched.',
-
           });
-          setToken(suc?.data?.result?.data?.token);
+          setToken(suc?.data?.token);
           return;
         } else {
           setToken(null);
+          Toast.show({
+            type: 'error',
+            text1: 'error',
+            text2: 'No token available for this transaction.',
+          });
         }
       },
-      onError: (err) => {
-        console.log('====================================');
+      onError: err => {
         console.log(err);
-        console.log('====================================');
-      }
+
+        console.log(err);
+      },
     });
   };
 
-  const gotoService = (data) => {
+  const gotoService = data => {
     switch (data?.description) {
-      case "Transfer":
+      case 'Transfer':
         navigate('SendBills', data);
         return;
-      case "Electricity":
-        navigate("");
+      case 'Electricity':
+        navigate('');
         return;
       default:
-        navigate("");
+        navigate('');
     }
   };
 
@@ -141,13 +144,22 @@ const TransactionDetails = ({ closeModal, transactionId }) => {
       : formatTime(userData?.flutterwaveResponse?.transaction_date);
 
     const amount = userData?.amount
-      ? `₦${parseFloat(userData?.amount / 100).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`
-      : `₦${parseFloat(userData?.flutterwaveResponse?.amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+      ? `₦${parseFloat(userData?.amount / 100)
+          .toFixed(2)
+          .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`
+      : `₦${parseFloat(userData?.flutterwaveResponse?.amount)
+          .toFixed(2)
+          .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
 
-    const description = userData?.description || userData?.flutterwaveResponse?.product || 'Transaction';
-    const status = userData?.status || userData?.transaction?.status || 'Unknown';
+    const description =
+      userData?.description ||
+      userData?.flutterwaveResponse?.product ||
+      'Transaction';
+    const status =
+      userData?.status || userData?.transaction?.status || 'Unknown';
     const id = userData?.id || userData?.transaction?.id || 'Unknown';
-    const meterToken = userData?.metadata?.token || token?.replace("/PIN", '') || '';
+    const meterToken =
+      userData?.metadata?.token || token?.replace('/PIN', '') || '';
     const meterNumber = userData?.metadata?.meterno || '';
     const rechargeToken = userData?.flutterwaveResponse?.extra || '';
 
@@ -215,11 +227,19 @@ const TransactionDetails = ({ closeModal, transactionId }) => {
               <div style="text-align: center; display: flex; flex-direction: column; align-items: center; margin-bottom: 10px;">
                 <div style="width: 60px; height: 60px; background-color: #FF114A; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
                   <div style="color: black; font-weight: bold; font-size: 24px;">
-                    ${Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BP' : 'BM'}
+                    ${
+                      Platform.OS === 'ios' || AppConstant.isAmazonStore
+                        ? 'BP'
+                        : 'BM'
+                    }
                   </div>
                 </div>
               </div>
-              <h2 style="color: red;">${Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BlowPay' : 'BillsByBlowMoney'}</h2>
+              <h2 style="color: red;">${
+                Platform.OS === 'ios' || AppConstant.isAmazonStore
+                  ? 'BlowPay'
+                  : 'BillsByBlowMoney'
+              }</h2>
               <p>Transaction Receipt</p>
             </div>
             <div class="content">
@@ -243,23 +263,35 @@ const TransactionDetails = ({ closeModal, transactionId }) => {
                 <span class="label">Date</span>
                 <span class="value">${transactionDate}</span>
               </div>
-              ${meterNumber ? `
+              ${
+                meterNumber
+                  ? `
               <div class="item">
                 <span class="label">Meter Number</span>
                 <span class="value">${meterNumber}</span>
               </div>
-              ` : ''}
-              ${meterToken ? `
+              `
+                  : ''
+              }
+              ${
+                meterToken
+                  ? `
               <div class="token">
                 <span>Token: ${meterToken}</span>
               </div>
-              ` : ''}
-              ${rechargeToken ? `
+              `
+                  : ''
+              }
+              ${
+                rechargeToken
+                  ? `
               <div class="item">
                 <span class="label">Recharge Token</span>
                 <span class="value">${rechargeToken}</span>
               </div>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
             <div class="footer">
               <p>Receipt generated from BlowMoney App</p>
@@ -280,7 +312,8 @@ const TransactionDetails = ({ closeModal, transactionId }) => {
       // Generate a unique filename
       const timestamp = new Date().getTime();
       const id = userData?.id || userData?.transaction?.id || 'unknown';
-      const prefix = Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BP' : 'BM';
+      const prefix =
+        Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BP' : 'BM';
       const fileName = `${prefix}_Receipt_${id.slice(-4)}_${timestamp}`;
 
       // Create PDF
@@ -296,7 +329,6 @@ const TransactionDetails = ({ closeModal, transactionId }) => {
       // On Android, save to Downloads folder for better accessibility
       if (Platform.OS === 'android') {
         try {
-
           const downloadPath = `${RNFS.DownloadDirectoryPath}/${fileName}.pdf`;
 
           // Copy from cache to downloads
@@ -318,8 +350,15 @@ const TransactionDetails = ({ closeModal, transactionId }) => {
       // Share the PDF
       await Share.share({
         title: 'Transaction Receipt',
-        message: `${Platform.OS == 'ios' || AppConstant.isAmazonStore ? 'BLowpay' : 'BillsByBlowmoney'} Transaction Receipt`,
-        url: Platform.OS === 'ios' ? `file://${file.filePath}` : `file://${file.filePath}`,
+        message: `${
+          Platform.OS == 'ios' || AppConstant.isAmazonStore
+            ? 'BLowpay'
+            : 'BillsByBlowmoney'
+        } Transaction Receipt`,
+        url:
+          Platform.OS === 'ios'
+            ? `file://${file.filePath}`
+            : `file://${file.filePath}`,
       });
 
       return file.filePath;
@@ -338,15 +377,26 @@ const TransactionDetails = ({ closeModal, transactionId }) => {
         : formatTime(userData?.flutterwaveResponse?.transaction_date);
 
       const amount = userData?.amount
-        ? `₦${parseFloat(userData?.amount / 100).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`
-        : `₦${parseFloat(userData?.flutterwaveResponse?.amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+        ? `₦${parseFloat(userData?.amount / 100)
+            .toFixed(2)
+            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`
+        : `₦${parseFloat(userData?.flutterwaveResponse?.amount)
+            .toFixed(2)
+            .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
 
-      const description = userData?.description || userData?.flutterwaveResponse?.product || 'Transaction';
-      const status = userData?.status || userData?.transaction?.status || 'Unknown';
+      const description =
+        userData?.description ||
+        userData?.flutterwaveResponse?.product ||
+        'Transaction';
+      const status =
+        userData?.status || userData?.transaction?.status || 'Unknown';
       const id = userData?.id || userData?.transaction?.id || 'Unknown';
 
       // Create a plain text receipt
-      const appName = Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BlowPay' : 'BillsByBlowMoney';
+      const appName =
+        Platform.OS === 'ios' || AppConstant.isAmazonStore
+          ? 'BlowPay'
+          : 'BillsByBlowMoney';
       const textReceipt = `
 ${appName} Transaction Receipt
 ---------------------------
@@ -355,16 +405,29 @@ Description: ${description}
 Status: ${status}
 Transaction ID: ${id}
 Date: ${transactionDate}
-${userData?.metadata?.meterno ? `Meter Number: ${userData?.metadata?.meterno}` : ''}
-${userData?.metadata?.token ? `Token: ${userData?.metadata?.token || token?.replace("/PIN", '')}` : ''}
-${userData?.flutterwaveResponse?.extra ? `Recharge Token: ${userData?.flutterwaveResponse?.extra}` : ''}
+${
+  userData?.metadata?.meterno
+    ? `Meter Number: ${userData?.metadata?.meterno}`
+    : ''
+}
+${
+  userData?.metadata?.token
+    ? `Token: ${userData?.metadata?.token || token?.replace('/PIN', '')}`
+    : ''
+}
+${
+  userData?.flutterwaveResponse?.extra
+    ? `Recharge Token: ${userData?.flutterwaveResponse?.extra}`
+    : ''
+}
 ---------------------------
 Receipt generated from ${appName} App
       `;
 
       // Generate a unique filename based on transaction ID and date
       const timestamp = new Date().getTime();
-      const prefix = Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BP' : 'BM';
+      const prefix =
+        Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BP' : 'BM';
       const fileName = `${prefix}_Receipt_${id.slice(-4)}_${timestamp}.txt`;
 
       // Save path - in Downloads folder
@@ -425,7 +488,7 @@ Receipt generated from ${appName} App
       // Option to view the file (particularly useful for PDF)
       if (shareFormat === 'pdf') {
         try {
-          await FileViewer.open(filePath, { showOpenWithDialog: true });
+          await FileViewer.open(filePath, {showOpenWithDialog: true});
         } catch (viewerError) {
           console.log('Error opening file viewer:', viewerError);
           // Continue even if viewer fails
@@ -455,12 +518,14 @@ Receipt generated from ${appName} App
     Toast.show({
       type: 'info',
       text1: `Format: ${shareFormat === 'pdf' ? 'Text' : 'PDF'}`,
-      text2: `Receipt will be shared as ${shareFormat === 'pdf' ? 'text' : 'PDF'}`,
+      text2: `Receipt will be shared as ${
+        shareFormat === 'pdf' ? 'text' : 'PDF'
+      }`,
     });
   };
 
   // Helper functions
-  const getStatusColor = (status) => {
+  const getStatusColor = status => {
     if (!status) return 'bg-gray-400';
 
     const statusLower = status.toLowerCase();
@@ -468,13 +533,17 @@ Receipt generated from ${appName} App
       return 'bg-green-500';
     } else if (statusLower.includes('pend') || statusLower === 'processing') {
       return 'bg-yellow-500';
-    } else if (statusLower.includes('fail') || statusLower === 'declined' || statusLower === 'cancelled') {
+    } else if (
+      statusLower.includes('fail') ||
+      statusLower === 'declined' ||
+      statusLower === 'cancelled'
+    ) {
       return 'bg-red-500';
     }
     return 'bg-gray-400';
   };
 
-  const formatTime = (timestamp) => {
+  const formatTime = timestamp => {
     if (!timestamp) return 'N/A';
 
     try {
@@ -485,7 +554,7 @@ Receipt generated from ${appName} App
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        hour12: true
+        hour12: true,
       });
     } catch (error) {
       console.error('Error formatting timestamp:', error);
@@ -497,164 +566,197 @@ Receipt generated from ${appName} App
     <PanGestureHandler onGestureEvent={handleSwipeDown}>
       <View
         style={tw` bg-white p-5 rounded-t-[20px] w-19/20 self-center rounded-b-10  gap-3 justify-between h-[85%]`}>
-          <View style={tw` flex flex-row items-center justify-between`}>
-            <TouchableOpacity
-              style={tw`p-1 bg-black items-center justify-center rounded-full w-[30px] h-[30px]`}
-              activeOpacity={0.65}
-              onPress={closeModal}>
-              <Ionicons name="chevron-back" size={13} color={WHITE} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={tw`p-1 bg-gray-200 items-center justify-center rounded-full px-3 h-[30px] flex-row`}
-              activeOpacity={0.65}
-              onPress={toggleShareFormat}>
-              <Text style={tw`text-[10px] text-black mr-1`}>
-                {shareFormat.toUpperCase()}
-              </Text>
-              <Ionicons name="swap-horizontal" size={13} color={BLACK} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={tw`p-1 bg-black items-center justify-center rounded-full w-[30px] h-[30px]`}
-              activeOpacity={0.65}
-              disabled={isSharing}
-              onPress={shareTransaction}>
-              <Ionicons name={isSharing ? "cloud-download-outline" : "download-outline"} size={13} color={WHITE} />
-            </TouchableOpacity>
-          </View>
+        <View style={tw` flex flex-row items-center justify-between`}>
+          <TouchableOpacity
+            style={tw`p-1 bg-black items-center justify-center rounded-full w-[30px] h-[30px]`}
+            activeOpacity={0.65}
+            onPress={closeModal}>
+            <Ionicons name="chevron-back" size={13} color={WHITE} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={tw`p-1 bg-gray-200 items-center justify-center rounded-full px-3 h-[30px] flex-row`}
+            activeOpacity={0.65}
+            onPress={toggleShareFormat}>
+            <Text style={tw`text-[10px] text-black mr-1`}>
+              {shareFormat.toUpperCase()}
+            </Text>
+            <Ionicons name="swap-horizontal" size={13} color={BLACK} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={tw`p-1 bg-black items-center justify-center rounded-full w-[30px] h-[30px]`}
+            activeOpacity={0.65}
+            disabled={isSharing}
+            onPress={shareTransaction}>
+            <Ionicons
+              name={isSharing ? 'cloud-download-outline' : 'download-outline'}
+              size={13}
+              color={WHITE}
+            />
+          </TouchableOpacity>
+        </View>
 
-          <View style={tw`mt-4 gap-3`}>
-            <View style={tw`flex items-center flex-row justify-center`}>
-              <View style={tw`mr-2`}>
-                {Platform.OS === 'ios' || AppConstant.isAmazonStore ?
-                  <Appicon width={24} height={24} /> :
-                  <Appicon2 width={24} height={24} />
-                }
-              </View>
-              <Text style={tw`text-[#101828] font-medium text-[19px]`}>
-                Transaction Details
-              </Text>
-            </View>
-          </View>
-
-          <View style={tw`mt-2 gap-2 h-[90%]`}>
-            <ScrollView
-              ref={receiptRef}
-              style={tw`border-[0.5px] border-[#D0D5DD] p-2 rounded-[8px] gap-3 mb-30 bg-white`}>
-              {message === 'FAILED' ? (
-                <View style={tw`p-4 bg-[#FEF2F2] border-l-4 border-[#EF4444] rounded-[8px]`}>
-                  <Text style={tw`text-[#B91C1C] font-medium text-[14px]`}>
-                    Oops! Something went wrong. Please try again in a moment.
-                    If the issue persists, contact support.
-                  </Text>
-                </View>
+        <View style={tw`mt-4 gap-3`}>
+          <View style={tw`flex items-center flex-row justify-center`}>
+            <View style={tw`mr-2`}>
+              {Platform.OS === 'ios' || AppConstant.isAmazonStore ? (
+                <Appicon width={24} height={24} />
               ) : (
-                <View style={tw`border-[0.5px] bg-[#F8F8FA] border-[#D0D5DD] p-3 py-6 rounded-[8px] gap-6`}>
-                  {/* Amount Section */}
+                <Appicon2 width={24} height={24} />
+              )}
+            </View>
+            <Text style={tw`text-[#101828] font-medium text-[19px]`}>
+              Transaction Details
+            </Text>
+          </View>
+        </View>
+
+        <View style={tw`mt-2 gap-2 h-[90%]`}>
+          <ScrollView
+            ref={receiptRef}
+            style={tw`border-[0.5px] border-[#D0D5DD] p-2 rounded-[8px] gap-3 mb-30 bg-white`}>
+            {message === 'FAILED' ? (
+              <View
+                style={tw`p-4 bg-[#FEF2F2] border-l-4 border-[#EF4444] rounded-[8px]`}>
+                <Text style={tw`text-[#B91C1C] font-medium text-[14px]`}>
+                  Oops! Something went wrong. Please try again in a moment. If
+                  the issue persists, contact support.
+                </Text>
+              </View>
+            ) : (
+              <View
+                style={tw`border-[0.5px] bg-[#F8F8FA] border-[#D0D5DD] p-3 py-6 rounded-[8px] gap-6`}>
+                {/* Amount Section */}
+                <View style={tw`flex flex-row items-center justify-between`}>
+                  <View>
+                    <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
+                      Amount
+                    </Text>
+                    <Text style={tw`text-[#000000] font-medium text-[15px]`}>
+                      ₦
+                      {parseFloat(
+                        userData?.amount
+                          ? userData?.amount / 100
+                          : userData?.flutterwaveResponse?.amount,
+                      )
+                        .toFixed(2)
+                        .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      copyToClipboard(
+                        parseFloat(
+                          userData?.amount
+                            ? userData?.amount / 100
+                            : userData?.flutterwaveResponse?.amount,
+                        )
+                          .toFixed(2)
+                          .replace(/\d(?=(\d{3})+\.)/g, '$&,'),
+                      )
+                    }>
+                    <Image
+                      source={require('../../../assets/icons/copy.png')}
+                      style={{width: 20, height: 20}}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Description Section */}
+                <View style={tw`flex flex-row items-center justify-between`}>
+                  <View>
+                    <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
+                      Description
+                    </Text>
+                    <Text style={tw`text-[#000000] font-medium text-[15px]`}>
+                      {userData?.description ||
+                        userData?.flutterwaveResponse?.product ||
+                        'N/A'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Status Section */}
+                <View style={tw`flex flex-row items-center justify-between`}>
+                  <View>
+                    <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
+                      Status
+                    </Text>
+                    <View style={tw`flex flex-row items-center`}>
+                      <View
+                        style={tw`h-2 w-2 rounded-full mr-2 ${getStatusColor(
+                          userData?.status || userData?.transaction?.status,
+                        )}`}
+                      />
+                      <Text style={tw`text-[#000000] font-medium text-[15px]`}>
+                        {userData?.status ||
+                          userData?.transaction?.status ||
+                          'N/A'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Transaction ID Section */}
+                <View style={tw`flex flex-row items-center justify-between`}>
+                  <View>
+                    <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
+                      Transaction ID
+                    </Text>
+                    <Text style={tw`text-[#000000] font-medium text-[15px]`}>
+                      {userData?.id || userData?.transaction?.id || 'N/A'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      copyToClipboard(userData?.id || userData?.transaction?.id)
+                    }>
+                    <Image
+                      source={require('../../../assets/icons/copy.png')}
+                      style={{width: 20, height: 20}}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Time Section */}
+                <View style={tw`flex flex-row items-center justify-between`}>
+                  <View>
+                    <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
+                      Time
+                    </Text>
+                    <Text style={tw`text-[#000000] font-medium text-[15px]`}>
+                      {formatTime(
+                        userData?.updatedAt ||
+                          userData?.flutterwaveResponse?.transaction_date,
+                      )}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Extra Recharge Token if available */}
+                {userData?.flutterwaveResponse?.extra && (
                   <View style={tw`flex flex-row items-center justify-between`}>
                     <View>
                       <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
-                        Amount
+                        Recharge Token
                       </Text>
                       <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                        ₦{parseFloat(userData?.amount ? userData?.amount / 100 : userData?.flutterwaveResponse?.amount)
-                          .toFixed(2)
-                          .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+                        {userData?.flutterwaveResponse?.extra}
                       </Text>
                     </View>
                     <TouchableOpacity
-                      onPress={() => copyToClipboard(
-                        parseFloat(userData?.amount ? userData?.amount / 100 : userData?.flutterwaveResponse?.amount)
-                          .toFixed(2)
-                          .replace(/\d(?=(\d{3})+\.)/g, '$&,')
-                      )}>
+                      onPress={() =>
+                        copyToClipboard(userData?.flutterwaveResponse?.extra)
+                      }>
                       <Image
                         source={require('../../../assets/icons/copy.png')}
-                        style={{ width: 20, height: 20 }}
+                        style={{width: 20, height: 20}}
                       />
                     </TouchableOpacity>
                   </View>
+                )}
 
-                  {/* Description Section */}
-                  <View style={tw`flex flex-row items-center justify-between`}>
-                    <View>
-                      <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
-                        Description
-                      </Text>
-                      <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                        {userData?.description || userData?.flutterwaveResponse?.product || 'N/A'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Status Section */}
-                  <View style={tw`flex flex-row items-center justify-between`}>
-                    <View>
-                      <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
-                        Status
-                      </Text>
-                      <View style={tw`flex flex-row items-center`}>
-                        <View style={tw`h-2 w-2 rounded-full mr-2 ${getStatusColor(userData?.status || userData?.transaction?.status)}`} />
-                        <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                          {userData?.status || userData?.transaction?.status || 'N/A'}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Transaction ID Section */}
-                  <View style={tw`flex flex-row items-center justify-between`}>
-                    <View>
-                      <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
-                        Transaction ID
-                      </Text>
-                      <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                        {userData?.id || userData?.transaction?.id || 'N/A'}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => copyToClipboard(userData?.id || userData?.transaction?.id)}>
-                      <Image
-                        source={require('../../../assets/icons/copy.png')}
-                        style={{ width: 20, height: 20 }}
-                      />
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Time Section */}
-                  <View style={tw`flex flex-row items-center justify-between`}>
-                    <View>
-                      <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
-                        Time
-                      </Text>
-                      <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                        {formatTime(userData?.updatedAt || userData?.flutterwaveResponse?.transaction_date)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Extra Recharge Token if available */}
-                  {userData?.flutterwaveResponse?.extra && (
-                    <View style={tw`flex flex-row items-center justify-between`}>
-                      <View>
-                        <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
-                          Recharge Token
-                        </Text>
-                        <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                          {userData?.flutterwaveResponse?.extra}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => copyToClipboard(userData?.flutterwaveResponse?.extra)}>
-                        <Image
-                          source={require('../../../assets/icons/copy.png')}
-                          style={{ width: 20, height: 20 }}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {/* Improved Token Section */}
-                  {/* {userData?.metadata?.meterno && (
+                {/* Improved Token Section */}
+                {/* {userData?.metadata?.meterno && (
                     <View style={tw`mt-2 border-t border-[#E5E7EB] pt-4`}>
                       <View style={tw`flex flex-row items-center justify-between mb-2`}>
                         <Text style={tw`text-[#4B5563] font-semibold text-[14px]`}>
@@ -739,102 +841,147 @@ Receipt generated from ${appName} App
                       )}
                     </View>
                   )} */}
-                  {userData?.description == "Electricity" && (
-                    <View style={tw`mt-2 border-t border-[#E5E7EB] pt-4`}>
-                      <View style={tw`flex flex-row items-center justify-between mb-2`}>
-                        <Text style={tw`text-[#4B5563] font-semibold text-[14px]`}>
-                          Token Information
+                {userData?.description == 'Electricity' && (
+                  <View style={tw`mt-2 border-t border-[#E5E7EB] pt-4`}>
+                    <View
+                      style={tw`flex flex-row items-center justify-between mb-2`}>
+                      <Text
+                        style={tw`text-[#4B5563] font-semibold text-[14px]`}>
+                        Token Information
+                      </Text>
+                    </View>
+
+                    <View
+                      style={tw`flex flex-row items-center justify-between mb-2`}>
+                      <View>
+                        <Text
+                          style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
+                          Meter Number
+                        </Text>
+                        <Text
+                          style={tw`text-[#000000] font-medium text-[15px]`}>
+                          {userData?.metadata?.meterno}
                         </Text>
                       </View>
+                      <TouchableOpacity
+                        onPress={() =>
+                          copyToClipboard(userData?.metadata?.meterno)
+                        }>
+                        <Image
+                          source={require('../../../assets/icons/copy.png')}
+                          style={{width: 20, height: 20}}
+                        />
+                      </TouchableOpacity>
+                    </View>
 
-                      <View style={tw`flex flex-row items-center justify-between mb-2`}>
-                        <View>
-                          <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
-                            Meter Number
-                          </Text>
-                          <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                            {userData?.metadata?.meterno}
-                          </Text>
-                        </View>
-                        <TouchableOpacity onPress={() => copyToClipboard(userData?.metadata?.meterno)}>
-                          <Image
-                            source={require('../../../assets/icons/copy.png')}
-                            style={{ width: 20, height: 20 }}
-                          />
-                        </TouchableOpacity>
-                      </View>
-
-                      {userData?.metadata?.token || token ? (
-                        <View style={tw`bg-[#FEF3C7] border-l-4 border-[#F59E0B] p-4 rounded-[8px] mb-2`}>
-                          <View style={tw`flex flex-row items-center justify-between`}>
-                            <View style={tw`flex-1`}>
-                              <Text style={tw`text-[#78350F] font-normal text-[12px] mb-1`}>
-                                Generated Token
+                    {userData?.metadata?.token || token ? (
+                      <View
+                        style={tw`bg-[#FEF3C7] border-l-4 border-[#F59E0B] p-4 rounded-[8px] mb-2`}>
+                        <View
+                          style={tw`flex flex-row items-center justify-between`}>
+                          <View style={tw`flex-1`}>
+                            <Text
+                              style={tw`text-[#78350F] font-normal text-[12px] mb-1`}>
+                              Generated Token
+                            </Text>
+                            <Text
+                              style={tw`text-[#000000] font-bold text-[13px]`}>
+                              {userData?.metadata?.token ||
+                                token?.replace('/PIN', '')}
+                            </Text>
+                            {tokenFetchTime && (
+                              <Text
+                                style={tw`text-[#78350F] font-normal text-[10px] mt-1`}>
+                                Generated at: {tokenFetchTime}
                               </Text>
-                              <Text style={tw`text-[#000000] font-bold text-[13px]`}>
-                                {userData?.metadata?.token || token?.replace("/PIN", '')}
-                              </Text>
-                              {tokenFetchTime && (
-                                <Text style={tw`text-[#78350F] font-normal text-[10px] mt-1`}>
-                                  Generated at: {tokenFetchTime}
-                                </Text>
-                              )}
-                            </View>
-                            <TouchableOpacity
-                              style={tw`ml-2`}
-                              onPress={() => copyToClipboard(userData?.metadata?.token || token?.replace("/PIN", ''))}>
-                              <Image
-                                source={require('../../../assets/icons/copy.png')}
-                                style={{ width: 24, height: 24 }}
-                              />
-                            </TouchableOpacity>
+                            )}
                           </View>
+                          <TouchableOpacity
+                            style={tw`ml-2`}
+                            onPress={() =>
+                              copyToClipboard(
+                                userData?.metadata?.token ||
+                                  token?.replace('/PIN', ''),
+                              )
+                            }>
+                            <Image
+                              source={require('../../../assets/icons/copy.png')}
+                              style={{width: 24, height: 24}}
+                            />
+                          </TouchableOpacity>
                         </View>
-                      ) : (
-                        <View style={tw`border border-[#D1D5DB] rounded-[8px] p-4 mb-2`}>
-                          <View style={tw`flex flex-row items-center justify-between`}>
+                      </View>
+                    ) : (
+                      userData?.status?.toLowerCase() !== 'failed' && (
+                        <View
+                          style={tw`border border-[#D1D5DB] rounded-[8px] p-4 mb-2`}>
+                          <View
+                            style={tw`flex flex-row items-center justify-between`}>
                             <View style={tw`flex-1`}>
-                              <Text style={tw`text-[#4B5563] font-medium text-[14px]`}>
+                              <Text
+                                style={tw`text-[#4B5563] font-medium text-[14px]`}>
                                 No token available
                               </Text>
                               <Text style={tw`text-[#6B7280] text-[12px] mt-1`}>
                                 Click the button to fetch your token
                               </Text>
                             </View>
+
                             <TouchableOpacity
-                              style={tw`ml-2 bg-[#10B981] px-3 py-2 rounded-[6px] ${gettingToken === 'pending' ? 'opacity-70' : ''}`}
+                              style={tw`ml-2 bg-[#10B981] px-3 py-2 rounded-[6px] ${
+                                gettingToken === 'pending' ? 'opacity-70' : ''
+                              }`}
                               disabled={gettingToken === 'pending'}
                               onPress={() => requestNewToken()}>
                               {gettingToken === 'pending' ? (
                                 <View style={tw`flex flex-row items-center`}>
-                                  <ActivityIndicator size="small" color="#ffffff" style={tw`mr-1`} />
-                                  <Text style={tw`text-white font-medium text-[12px]`}>Fetching...</Text>
+                                  <ActivityIndicator
+                                    size="small"
+                                    color="#ffffff"
+                                    style={tw`mr-1`}
+                                  />
+                                  <Text
+                                    style={tw`text-white font-medium text-[12px]`}>
+                                    Fetching...
+                                  </Text>
                                 </View>
                               ) : (
-                                <Text style={tw`text-white font-medium text-[12px]`}>Fetch Token</Text>
+                                <Text
+                                  style={tw`text-white font-medium text-[12px]`}>
+                                  Fetch Token
+                                </Text>
                               )}
                             </TouchableOpacity>
                           </View>
+
                           {gettingToken === 'failed' && (
                             <Text style={tw`text-[#EF4444] text-[12px] mt-2`}>
                               Failed to fetch token. Please try again.
                             </Text>
                           )}
                         </View>
-                      )}
-                    </View>
-                  )}
+                      )
+                    )}
+                  </View>
+                )}
 
-                  {/* Dynamic Metadata Section */}
-                  {userData?.metadata && Object.keys(userData.metadata).length > 0 && (
+                {/* Dynamic Metadata Section */}
+                {userData?.metadata &&
+                  Object.keys(userData.metadata).length > 0 && (
                     <View style={tw`mt-2 border-t border-[#E5E7EB] pt-4`}>
-                      <Text style={tw`text-[#4B5563] font-semibold text-[14px] mb-3`}>
+                      <Text
+                        style={tw`text-[#4B5563] font-semibold text-[14px] mb-3`}>
                         Additional Information
                       </Text>
 
                       {Object.entries(userData.metadata).map(([key, value]) => {
                         // Skip wallet balance or empty values or already displayed meterno
-                        if (key === 'walletbalance' || !value || key === 'meterno' || key === 'token') {
+                        if (
+                          key === 'walletbalance' ||
+                          !value ||
+                          key === 'meterno' ||
+                          key === 'token'
+                        ) {
                           return null;
                         }
 
@@ -856,20 +1003,27 @@ Receipt generated from ${appName} App
                         }
 
                         return (
-                          <View key={key} style={tw`flex flex-row items-center justify-between mb-3`}>
+                          <View
+                            key={key}
+                            style={tw`flex flex-row items-center justify-between mb-3`}>
                             <View style={tw`flex-1`}>
-                              <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
+                              <Text
+                                style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
                                 {formattedKey}
                               </Text>
-                              <Text style={tw`text-[#000000] font-medium text-[15px]`}>
+                              <Text
+                                style={tw`text-[#000000] font-medium text-[15px]`}>
                                 {displayValue.toString()}
                               </Text>
                             </View>
                             {canCopy && (
-                              <TouchableOpacity onPress={() => copyToClipboard(displayValue.toString())}>
+                              <TouchableOpacity
+                                onPress={() =>
+                                  copyToClipboard(displayValue.toString())
+                                }>
                                 <Image
                                   source={require('../../../assets/icons/copy.png')}
-                                  style={{ width: 20, height: 20 }}
+                                  style={{width: 20, height: 20}}
                                 />
                               </TouchableOpacity>
                             )}
@@ -878,17 +1032,20 @@ Receipt generated from ${appName} App
                       })}
                     </View>
                   )}
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        
+              </View>
+            )}
+          </ScrollView>
+        </View>
 
         <View style={tw`pb-5`}>
           <CustomButton onPress={done} text={'Done'} style={tw`bg-[#FF114A]`} />
-          {isSharing && <Text style={tw`text-center text-xs text-gray-500 mt-2`}>
-            {shareFormat === 'pdf' ? 'Creating PDF receipt...' : 'Preparing text receipt...'}
-          </Text>}
+          {isSharing && (
+            <Text style={tw`text-center text-xs text-gray-500 mt-2`}>
+              {shareFormat === 'pdf'
+                ? 'Creating PDF receipt...'
+                : 'Preparing text receipt...'}
+            </Text>
+          )}
         </View>
         {status === 'pending' && <Loader />}
       </View>

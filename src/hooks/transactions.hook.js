@@ -77,6 +77,8 @@ export const useGetTxToken = () => {
       }
     },
     onError: error => {
+      // console.log(error, 'useGetTxToken error');
+
       _errorPrompt(error.message);
     },
   });

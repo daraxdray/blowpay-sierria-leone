@@ -99,7 +99,7 @@ const Recent = ({description = '', country}) => {
               type={item.type}
             />
           )}
-          contentContainerStyle={{paddingBottom: 230}}
+          // contentContainerStyle={{paddingBottom: 230}}
         />
       ) : cachedTransactions && cachedTransactions.length > 0 ? (
         <FlatList
@@ -126,7 +126,7 @@ const Recent = ({description = '', country}) => {
               type={item.type}
             />
           )}
-          ntainerStyle={{paddingBottom: 20}}
+          containerStyle={{paddingBottom: 20}}
         />
       ) : (
         <View style={tw`flex justify-center items-center gap-2 my-[8%] w-full`}>

@@ -127,6 +127,13 @@ const ElectricPaymentPin = ({navigation, route}) => {
             DataResponse?.error ||
             'Electricity purchase failed. Please try again.';
           showToast(screenError);
+          console.log(
+            DataResponse,
+            'DataResponse',
+            DataResponse?.error,
+            'error',
+          );
+
           navigation.navigate('PaymentError', {screenError});
         }
       },
