@@ -136,11 +136,16 @@ const RootNav = props => {
           initialRouteName={
             isAuthenticated ? 'bottom-tab' : 'walkthrough-screen'
           }>
-          <Screen
-            name={'TransactionPinScreen'}
-            component={TransactionPinScreen}
-            options={screenOptions}
-          />
+          {isAuthenticated ? (
+            <Screen
+              name={'TransactionPinScreen'}
+              component={TransactionPinScreen}
+              options={screenOptions}
+            />
+          ) : (
+            console.log('jeeeje')
+          )}
+
           <Screen
             name={'walkthrough-screen'}
             component={Walkthrough}

@@ -47,19 +47,16 @@ export const saveUserCredentials = async (email, pincode) => {
 export const getUserPincode = async () => {
   const email = await AsyncStorage.getItem('authEmail');
   try {
-    // Retrieve the credentials from Keychain
     const credentials = await Keychain.getGenericPassword({
       service: baseUrl + email, // Match the service name used in saveUserCredentials
     });
 
     if (credentials) {
-      console.log('Retrieved credentials:', credentials);
       return {
         email: credentials.username,
         pincode: credentials.password,
       };
     } else {
-      console.log('No credentials stored');
       return null;
     }
   } catch (error) {

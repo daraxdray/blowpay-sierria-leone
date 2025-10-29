@@ -74,6 +74,19 @@ export const useBpCheckMeter = () => {
     },
   });
 };
+export const useBpCheckCable = () => {
+  return useMutation({
+    mutationFn: payload => billingServices.bpCableValidate(payload),
+    onSuccess: data => {
+      if (data) {
+        return data;
+      }
+    },
+    onError: error => {
+      // _errorPrompt(error.message);
+    },
+  });
+};
 export const useBpAirtime = () => {
   return useMutation({
     mutationFn: payload => billingServices.BpAirtime(payload),
@@ -267,7 +280,7 @@ export const useBettingFund = () => {
  */
 export const useBillPay = () => {
   return useMutation({
-    mutationFn: payload => billingServices.billPay(payload),
+    mutationFn: payload => billingServices.dataPay(payload),
     onSuccess: data => {
       if (data) {
         return data;

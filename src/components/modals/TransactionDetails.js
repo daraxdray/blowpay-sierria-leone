@@ -28,6 +28,7 @@ import FileViewer from 'react-native-file-viewer';
 import AppConstant from '../../constants/data/appConstant';
 import Appicon from '../../../assets/svgs/logo_ios.svg';
 import Appicon2 from '../../../assets/svgs/logo.svg';
+import {generateReceiptHTML} from '../wallet/generateRecept';
 // import ReactNativeBlobUtil from 'react-native-blob-util';
 
 const TransactionDetails = ({closeModal, transactionId}) => {
@@ -119,6 +120,21 @@ const TransactionDetails = ({closeModal, transactionId}) => {
     if (Platform.OS !== 'android') return true;
 
     try {
+      const apiLevel = Platform.Version;
+
+      // Android 13+ (API 33+) uses different permissions
+      if (apiLevel >= 33) {
+        // No permission needed for Downloads folder on Android 13+
+        return true;
+      }
+
+      // Android 10-12 (API 29-32)
+      if (apiLevel >= 29) {
+        // Scoped storage - no permission needed for app-specific directories
+        return true;
+      }
+
+      // Android 9 and below (API 28-)
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
         {
@@ -132,182 +148,23 @@ const TransactionDetails = ({closeModal, transactionId}) => {
 
       return granted === PermissionsAndroid.RESULTS.GRANTED;
     } catch (err) {
-      console.warn(err);
+      console.warn('Permission error:', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Permission Error',
+        text2: err.message || 'Unable to request storage permission',
+      });
       return false;
     }
   };
 
   // Create HTML for PDF Receipt
-  const generateReceiptHTML = () => {
-    const transactionDate = userData?.updatedAt
-      ? formatTime(userData?.updatedAt)
-      : formatTime(userData?.flutterwaveResponse?.transaction_date);
-
-    const amount = userData?.amount
-      ? `₦${parseFloat(userData?.amount / 100)
-          .toFixed(2)
-          .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`
-      : `₦${parseFloat(userData?.flutterwaveResponse?.amount)
-          .toFixed(2)
-          .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
-
-    const description =
-      userData?.description ||
-      userData?.flutterwaveResponse?.product ||
-      'Transaction';
-    const status =
-      userData?.status || userData?.transaction?.status || 'Unknown';
-    const id = userData?.id || userData?.transaction?.id || 'Unknown';
-    const meterToken =
-      userData?.metadata?.token || token?.replace('/PIN', '') || '';
-    const meterNumber = userData?.metadata?.meterno || '';
-    const rechargeToken = userData?.flutterwaveResponse?.extra || '';
-
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>BlowMoney Receipt</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: 0;
-              padding: 20px;
-              color: #333;
-            }
-            .receipt {
-              max-width: 100%;
-              margin: 0 auto;
-              border: 1px solid #ddd;
-              border-radius: 10px;
-              overflow: hidden;
-            }
-            .header {
-              background-color: #FF114A;
-              color: white;
-              padding: 15px;
-              text-align: center;
-            }
-            .content {
-              padding: 20px;
-            }
-            .item {
-              display: flex;
-              justify-content: space-between;
-              padding: 10px 0;
-              border-bottom: 1px solid #eee;
-            }
-            .label {
-              color: #666;
-              font-size: 14px;
-            }
-            .value {
-              font-weight: bold;
-              font-size: 16px;
-            }
-            .token {
-              background-color: #FEF3C7;
-              border-left: 4px solid #F59E0B;
-              padding: 10px;
-              margin: 15px 0;
-              font-weight: bold;
-            }
-            .footer {
-              text-align: center;
-              margin-top: 20px;
-              font-size: 12px;
-              color: #999;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="receipt">
-            <div class="header">
-              <div style="text-align: center; display: flex; flex-direction: column; align-items: center; margin-bottom: 10px;">
-                <div style="width: 60px; height: 60px; background-color: #FF114A; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-                  <div style="color: black; font-weight: bold; font-size: 24px;">
-                    ${
-                      Platform.OS === 'ios' || AppConstant.isAmazonStore
-                        ? 'BP'
-                        : 'BM'
-                    }
-                  </div>
-                </div>
-              </div>
-              <h2 style="color: red;">${
-                Platform.OS === 'ios' || AppConstant.isAmazonStore
-                  ? 'BlowPay'
-                  : 'BillsByBlowMoney'
-              }</h2>
-              <p>Transaction Receipt</p>
-            </div>
-            <div class="content">
-              <div class="item">
-                <span class="label">Amount</span>
-                <span class="value">${amount}</span>
-              </div>
-              <div class="item">
-                <span class="label">Description</span>
-                <span class="value">${description}</span>
-              </div>
-              <div class="item">
-                <span class="label">Status</span>
-                <span class="value">${status}</span>
-              </div>
-              <div class="item">
-                <span class="label">Transaction ID</span>
-                <span class="value">${id}</span>
-              </div>
-              <div class="item">
-                <span class="label">Date</span>
-                <span class="value">${transactionDate}</span>
-              </div>
-              ${
-                meterNumber
-                  ? `
-              <div class="item">
-                <span class="label">Meter Number</span>
-                <span class="value">${meterNumber}</span>
-              </div>
-              `
-                  : ''
-              }
-              ${
-                meterToken
-                  ? `
-              <div class="token">
-                <span>Token: ${meterToken}</span>
-              </div>
-              `
-                  : ''
-              }
-              ${
-                rechargeToken
-                  ? `
-              <div class="item">
-                <span class="label">Recharge Token</span>
-                <span class="value">${rechargeToken}</span>
-              </div>
-              `
-                  : ''
-              }
-            </div>
-            <div class="footer">
-              <p>Receipt generated from BlowMoney App</p>
-              <p>Thank you for using BlowMoney!</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-  };
 
   // Function to create and share receipt as PDF
   const createAndSharePDF = async () => {
     try {
       // Generate HTML content
-      const htmlContent = generateReceiptHTML();
+      const htmlContent = generateReceiptHTML(userData, formatTime, token);
 
       // Generate a unique filename
       const timestamp = new Date().getTime();
@@ -316,54 +173,115 @@ const TransactionDetails = ({closeModal, transactionId}) => {
         Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BP' : 'BM';
       const fileName = `${prefix}_Receipt_${id.slice(-4)}_${timestamp}`;
 
-      // Create PDF
+      // Create PDF with updated options
       const options = {
         html: htmlContent,
         fileName: fileName,
-        directory: 'Documents',
+        directory: Platform.OS === 'android' ? 'Downloads' : 'Documents',
         base64: false,
       };
 
+      console.log('Creating PDF with options:', options);
       const file = await RNHTMLtoPDF.convert(options);
+      console.log('PDF created at:', file.filePath);
 
-      // On Android, save to Downloads folder for better accessibility
+      let shareFilePath = file.filePath;
+
+      // On Android, ensure file is in Downloads folder
       if (Platform.OS === 'android') {
         try {
           const downloadPath = `${RNFS.DownloadDirectoryPath}/${fileName}.pdf`;
+          console.log('Attempting to copy to:', downloadPath);
 
-          // Copy from cache to downloads
-          await RNFS.copyFile(file.filePath, downloadPath);
+          // Check if source file exists
+          const fileExists = await RNFS.exists(file.filePath);
+          console.log('Source file exists:', fileExists);
 
-          // Update file path to the Downloads path
-          file.filePath = downloadPath;
+          if (fileExists) {
+            // Copy to downloads folder
+            await RNFS.copyFile(file.filePath, downloadPath);
+            console.log('File copied successfully to Downloads');
 
+            // Verify the copy was successful
+            const downloadExists = await RNFS.exists(downloadPath);
+            if (downloadExists) {
+              shareFilePath = downloadPath;
+
+              Toast.show({
+                type: 'success',
+                text1: 'Receipt Saved',
+                text2: `PDF saved to Downloads/${fileName}.pdf`,
+                visibilityTime: 4000,
+              });
+            } else {
+              console.warn('Downloaded file not found after copy');
+            }
+          } else {
+            console.warn('Source PDF file not found');
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'PDF file was not created properly',
+            });
+          }
+        } catch (copyError) {
+          console.error('Error copying file to Downloads:', copyError);
+          // Continue with original path if copy fails
           Toast.show({
-            type: 'success',
-            text1: 'Receipt Saved',
-            text2: `PDF saved to Downloads/${fileName}.pdf`,
+            type: 'warning',
+            text1: 'Partial Success',
+            text2: 'PDF created but may not be in Downloads folder',
           });
-        } catch (e) {
-          console.log('Error copying file:', e);
         }
       }
 
+      // Prepare share URL with correct format
+      let shareUrl = shareFilePath;
+
+      // On Android, remove file:// prefix if present and add it back
+      if (Platform.OS === 'android') {
+        shareUrl = shareFilePath.replace('file://', '');
+        shareUrl = `file://${shareUrl}`;
+      } else {
+        // iOS
+        shareUrl = `file://${shareFilePath}`;
+      }
+
+      console.log('Sharing file from:', shareUrl);
+
       // Share the PDF
-      await Share.share({
-        title: 'Transaction Receipt',
-        message: `${
-          Platform.OS == 'ios' || AppConstant.isAmazonStore
-            ? 'BLowpay'
-            : 'BillsByBlowmoney'
-        } Transaction Receipt`,
-        url:
-          Platform.OS === 'ios'
-            ? `file://${file.filePath}`
-            : `file://${file.filePath}`,
+      const shareResult = await Share.share(
+        {
+          title: 'Transaction Receipt',
+          message: `${
+            Platform.OS === 'ios' || AppConstant.isAmazonStore
+              ? 'BlowPay'
+              : 'BillsByBlowmoney'
+          } Transaction Receipt`,
+          url: shareUrl,
+        },
+        {
+          // Android specific options
+          dialogTitle: 'Share Transaction Receipt',
+          subject: 'Transaction Receipt',
+        },
+      );
+
+      console.log('Share result:', shareResult);
+
+      return shareFilePath;
+    } catch (error) {
+      console.error('PDF creation failed:', error);
+      console.error('Error stack:', error.stack);
+
+      // Show detailed error to user
+      Toast.show({
+        type: 'error',
+        text1: 'PDF Creation Failed',
+        text2: error.message || 'Unable to create PDF receipt',
+        visibilityTime: 5000,
       });
 
-      return file.filePath;
-    } catch (error) {
-      console.error('PDF creation failed', error);
       throw error;
     }
   };
@@ -422,9 +340,9 @@ ${
 }
 ---------------------------
 Receipt generated from ${appName} App
-      `;
+    `;
 
-      // Generate a unique filename based on transaction ID and date
+      // Generate a unique filename
       const timestamp = new Date().getTime();
       const prefix =
         Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BP' : 'BM';
@@ -433,25 +351,50 @@ Receipt generated from ${appName} App
       // Save path - in Downloads folder
       const path = `${RNFS.DownloadDirectoryPath}/${fileName}`;
 
+      console.log('Writing text file to:', path);
+
       // Write the text file
       await RNFS.writeFile(path, textReceipt, 'utf8');
 
-      // Show success message
-      Toast.show({
-        type: 'success',
-        text1: 'Receipt Saved',
-        text2: `Receipt saved to Downloads/${fileName}`,
-      });
+      // Verify file was written
+      const fileExists = await RNFS.exists(path);
+      console.log('Text file created:', fileExists);
 
-      // Share the receipt text
-      await Share.share({
-        title: 'Transaction Receipt',
-        message: textReceipt,
-      });
+      if (fileExists) {
+        Toast.show({
+          type: 'success',
+          text1: 'Receipt Saved',
+          text2: `Receipt saved to Downloads/${fileName}`,
+          visibilityTime: 4000,
+        });
+      }
+
+      // Share the receipt text (message only for Android, url for iOS)
+      if (Platform.OS === 'android') {
+        await Share.share({
+          title: 'Transaction Receipt',
+          message: textReceipt,
+        });
+      } else {
+        await Share.share({
+          title: 'Transaction Receipt',
+          message: textReceipt,
+          url: `file://${path}`,
+        });
+      }
 
       return path;
     } catch (error) {
-      console.error('Text file creation failed', error);
+      console.error('Text file creation failed:', error);
+      console.error('Error stack:', error.stack);
+
+      Toast.show({
+        type: 'error',
+        text1: 'File Creation Failed',
+        text2: error.message || 'Unable to create text receipt',
+        visibilityTime: 5000,
+      });
+
       throw error;
     }
   };
@@ -461,9 +404,10 @@ Receipt generated from ${appName} App
     if (isSharing) return;
 
     setIsSharing(true);
+
     try {
+      // Request permission first
       if (Platform.OS === 'android') {
-        // Request storage permission
         const hasPermission = await requestStoragePermission();
         if (!hasPermission) {
           Toast.show({
@@ -486,27 +430,32 @@ Receipt generated from ${appName} App
       }
 
       // Option to view the file (particularly useful for PDF)
-      if (shareFormat === 'pdf') {
+      if (shareFormat === 'pdf' && Platform.OS === 'android') {
         try {
-          await FileViewer.open(filePath, {showOpenWithDialog: true});
+          // Wait a moment for the file to be fully written
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          await FileViewer.open(filePath, {
+            showOpenWithDialog: true,
+            showAppsSuggestions: true,
+          });
         } catch (viewerError) {
           console.log('Error opening file viewer:', viewerError);
-          // Continue even if viewer fails
+          // Don't show error - file was still created successfully
         }
       }
 
       Toast.show({
         type: 'success',
-        text1: 'Receipt Shared',
-        text2: 'Transaction receipt has been shared successfully',
+        text1: 'Success',
+        text2: `Receipt ${
+          shareFormat === 'pdf' ? 'PDF' : 'file'
+        } created successfully`,
+        visibilityTime: 3000,
       });
     } catch (error) {
-      console.log('Error sharing:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Sharing Failed',
-        text2: 'Unable to share the receipt. Please try again.',
-      });
+      console.error('Error in shareTransaction:', error);
+      // Error toast already shown in individual functions
     } finally {
       setIsSharing(false);
     }

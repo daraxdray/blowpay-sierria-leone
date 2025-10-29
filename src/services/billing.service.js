@@ -62,7 +62,7 @@ class BillingServices {
     );
   }
   BpCheckMeter(payload) {
-    console.log(payload, 'payload');
+    // console.log(payload, 'payload');
     return request(
       '/billers/bp/check-meter',
       'POST',
@@ -106,7 +106,7 @@ class BillingServices {
     );
   }
   fundWallet(data) {
-    console.log(data, 'payload');
+    // console.log(data, 'payload');
 
     return request(
       '/virtual-account/sle/fund',
@@ -163,8 +163,26 @@ class BillingServices {
       undefined,
     );
   }
+  async bpCableValidate(payload) {
+    console.log('Payload:', payload);
+    try {
+      const response = await request(
+        '/billers/nb/cable/validate',
+        'POST',
+        payload,
+        undefined,
+        undefined,
+        undefined,
+      );
+      console.log('Response:', response); // <-- log response here
+      return response;
+    } catch (error) {
+      console.error('Error in bpCableValidate:', error);
+      throw error; // rethrow if needed
+    }
+  }
   nbCableValidate(payload) {
-    // console.log({payload});
+    console.log({payload});
     return request(
       '/billers/nb/cable/validate/',
       'POST',
@@ -220,6 +238,17 @@ class BillingServices {
     // console.log({payload});
     return request(
       '/billers/orders/create',
+      'POST',
+      payload,
+      undefined,
+      undefined,
+      undefined,
+    );
+  }
+  dataPay(payload) {
+    console.log(payload, 'payload');
+    return request(
+      '/billers/bp/vend-data',
       'POST',
       payload,
       undefined,

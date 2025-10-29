@@ -11,7 +11,7 @@ import {useConfirmPasscode} from '../../../../../hooks/auth.hook';
 import {useBillPay} from '../../../../../hooks/billing.hook';
 import Loader from '../../../../../components/modals/Loader';
 import {CommonActions} from '@react-navigation/native';
-import CustomToast from '../../../../../global/components/CustomToast';
+import Toast from 'react-native-toast-message';
 import {useGetVitualBalance} from '../../../../../hooks/virtual.hook';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
@@ -24,27 +24,23 @@ const DataPaymentPin = props => {
   const {mutate: confirmPasscode, status} = useConfirmPasscode();
   const {mutate: dataBill, status: billStatus} = useBillPay();
   const [otp, setOtp] = useState();
-  const [toastVisible, setToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState('error');
   const {data: balanceData} = useGetVitualBalance();
   const userBalance = balanceData?.data?.balance / 100;
 
   const userInfo = {
     provider: providerStatus?.name,
     amount: selectedPlan?.price,
-    itemCode: selectedPlan?.code,
+    tariffClass: selectedPlan?.code,
     phone: phoneNumber,
   };
 
   const showToast = (message, type = 'error') => {
-    setToastMessage(message);
-    setToastType(type);
-    setToastVisible(true);
-
-    setTimeout(() => {
-      setToastVisible(false);
-    }, 3000);
+    Toast.show({
+      type,
+      text1: typeof message === 'string' ? message : JSON.stringify(message),
+      visibilityTime: 3000,
+      position: 'top',
+    });
   };
 
   const handleVerify = () => {
@@ -72,7 +68,12 @@ const DataPaymentPin = props => {
           const screenError =
             data?.error || 'Passcode confirmation failed. Please try again.';
           showToast(screenError);
-          navigation.navigate('PaymentError', {screenError});
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{name: 'PaymentSucess'}],
+            }),
+          );
         }
       },
       onError: error => {
@@ -80,7 +81,9 @@ const DataPaymentPin = props => {
           error?.response?.data?.message ||
           error?.response?.data?.error ||
           'An error occurred. Please try again.';
-        showToast(errorMessage);
+        showToast(errorMessage, 'jjujjejdjdjj');
+        console.log(errorMessage, 'errormessage');
+
         navigation.navigate('PaymentError', {screenError: errorMessage});
       },
     });
@@ -179,7 +182,7 @@ const DataPaymentPin = props => {
         </View>
       </ScrollView>
       {(status === 'pending' || billStatus === 'pending') && <Loader />}
-      {toastVisible && <CustomToast message={toastMessage} type={toastType} />}
+      <Toast />
     </ScreenView>
   );
 };

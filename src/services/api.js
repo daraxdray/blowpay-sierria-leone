@@ -155,11 +155,6 @@ export async function request(url, method, payload = {}, form = false) {
         text2: message,
       });
     } else if (status === 401) {
-      Toast.show({
-        type: 'error',
-        text1: 'Unauthorized',
-        text2: 'Your session expired. Please log in again.',
-      });
     } else {
       Toast.show({
         type: 'error',

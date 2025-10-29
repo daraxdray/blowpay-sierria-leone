@@ -7,26 +7,27 @@ import React, {
   useCallback,
 } from 'react';
 import {AppState} from 'react-native';
-import {useNavigation, CommonActions} from '@react-navigation/native';
+import {
+  CommonActions,
+  useNavigationContainerRef,
+} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useGetUser} from '../../hooks/user.hook';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({children}) => {
-  const navigation = useNavigation();
+  const navigationRef = useNavigationContainerRef();
   const INACTIVITY_TIMEOUT = (1 * 60 * 1000) / 2;
   const lastActiveRef = useRef(Date.now());
-  const {data: user, refetch: refetchUser} = useGetUser(); // 👈 added refetch
+  const {data: user, refetch: refetchUser} = useGetUser();
   const [country, setCountry] = useState('Nigeria');
 
   // 🧠 Refetch user or AsyncStorage after Signin
   const reloadAuth = useCallback(async () => {
     try {
-      // 1️⃣ Check for user update from API first
       await refetchUser();
 
-      // 2️⃣ Fallback to AsyncStorage (in case user API isn't available yet)
       const storedCountry = await AsyncStorage.getItem('userCountry');
       if (storedCountry) setCountry(storedCountry);
     } catch (err) {
@@ -40,7 +41,6 @@ export const AuthProvider = ({children}) => {
     }
   }, [user]);
 
-  // ⏱️ Inactivity Logic
   useEffect(() => {
     const subscription = AppState.addEventListener(
       'change',
@@ -83,10 +83,12 @@ export const AuthProvider = ({children}) => {
   };
 
   const handleInactivity = async () => {
+    const navigation = navigationRef.current;
+    if (!navigation) return;
+
     await AsyncStorage.removeItem('backgroundTime');
     const isLoggedIn = JSON.parse(await AsyncStorage.getItem('Login'));
-    const currentRoute =
-      navigation.getState().routes[navigation.getState().index];
+    const currentRoute = navigation.getCurrentRoute();
 
     if (isLoggedIn) {
       if (isLoggedIn?.status === 'inactive') {
@@ -100,7 +102,7 @@ export const AuthProvider = ({children}) => {
             routes: [
               {
                 name: 'TransactionPinScreen',
-                params: {currentRoute: currentRoute.name},
+                params: {currentRoute: currentRoute?.name},
               },
             ],
           }),
@@ -112,7 +114,7 @@ export const AuthProvider = ({children}) => {
             routes: [
               {
                 name: 'create-pin-screen',
-                params: {currentRoute: currentRoute.name},
+                params: {currentRoute: currentRoute?.name},
               },
             ],
           }),
