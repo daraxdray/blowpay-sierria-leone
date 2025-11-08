@@ -1,29 +1,28 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { styles } from './style';
-import { ScreenView } from '../../../global/wrappers';
-import { BLACK, PRIMARY_COLOR, WHITE } from '../../../global/theme';
+import React, {useState} from 'react';
+import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
+import {styles} from './style';
+import {ScreenView} from '../../../global/wrappers';
+import {BLACK, PRIMARY_COLOR, WHITE} from '../../../global/theme';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import OTPTextView from 'react-native-otp-textinput';
-import { useConfirmPasscode } from '../../../hooks/auth.hook';
+import {useConfirmPasscode} from '../../../hooks/auth.hook';
 import Toast from 'react-native-toast-message';
 import Loader from '../../../components/modals/Loader';
-import { CommonActions } from '@react-navigation/native';
+import {CommonActions} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useDispatch } from 'react-redux';
-import { loginSuccess } from '../../../contexts/actions/user';
-import { saveUserCredentials } from '../../../utils/storage';
-import { useGetUser } from '../../../hooks/user.hook';
-import { CustomButton } from '../../../global/components';
+import {useDispatch} from 'react-redux';
+import {loginSuccess} from '../../../contexts/actions/user';
+import {saveUserCredentials} from '../../../utils/storage';
+import {useGetUser} from '../../../hooks/user.hook';
+import {CustomButton} from '../../../global/components';
 import useBiometricAuth from '../../../hooks/biometric.hook';
+
 const ConfirmPin = props => {
   const navigation = props.navigation;
-  let otpRef = useRef(null);
-  const { mutate: confirmPasscode, status } = useConfirmPasscode();
-  const { data: user, status: fetchingUser } = useGetUser();
+  const {mutate: confirmPasscode, status} = useConfirmPasscode();
+  const {data: user, status: fetchingUser} = useGetUser();
   const [otp, setOtp] = useState();
-  const [loading, setLoading] = useState(false);
-  const { isBiometricExist, keyFound, handleBiometricAuth, deleteKey } = useBiometricAuth();
+  const {isBiometricExist, keyFound} = useBiometricAuth();
   const dispatch = useDispatch();
   const _setOtp = value => {
     setOtp(value);
@@ -42,24 +41,36 @@ const ConfirmPin = props => {
       onSuccess: async data => {
         if (data) {
           try {
-
-            // await AsyncStorage.setItem('Login', JSON.stringify(data));
-            dispatch(loginSuccess())
-
-            const email = await AsyncStorage.getItem('authEmail');
-            saveUserCredentials(email, userData.passcode);
+            dispatch(loginSuccess());
+            const kyc = JSON.parse(await AsyncStorage.getItem('userKyc'));
+            const storedLogin = await AsyncStorage.getItem('Login');
+            const userDataFromStorage = storedLogin
+              ? JSON.parse(storedLogin)
+              : null;
+            if (userDataFromStorage?.emailAddress && userData.passcode) {
+              saveUserCredentials(
+                userDataFromStorage.emailAddress,
+                userData.passcode,
+              );
+            }
 
             if (!keyFound && isBiometricExist) {
-              navigation.navigate('biometric-screen')
+              navigation.navigate('biometric-screen');
+            } else if (kyc) {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{name: 'bottom-tab'}],
+                }),
+              );
             } else {
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
-                  routes: [{ name: 'bottom-tab' }],
+                  routes: [{name: 'residence-screen'}],
                 }),
               );
             }
-
           } catch (error) {
             console.error('Failed to save user data', error);
           }
@@ -103,7 +114,6 @@ const ConfirmPin = props => {
 
           <View style={styles.v2}>
             <OTPTextView
-              ref={e => (otpRef = e)}
               inputCellLength={1}
               containerStyle={styles.containerOtp}
               textInputStyle={styles.inputOtp}
@@ -115,20 +125,21 @@ const ConfirmPin = props => {
             />
           </View>
 
-          {!user?.data?.isPasscodeSet && <View style={styles.v3}>
-            <Text style={[styles.text13, { alignSelf: 'center' }]}>You will need to set pin </Text>
-            <CustomButton
-              onPress={() => navigation.navigate('create-pin-screen')}
-              style={styles.btn1}
-              text={"Set New Pin"}
-            />
-          </View>}
+          {!user?.data?.isPasscodeSet && (
+            <View style={styles.v3}>
+              <Text style={[styles.text13]}>You will need to set pin </Text>
+              <CustomButton
+                onPress={() => navigation.navigate('create-pin-screen')}
+                style={styles.btn1}
+                text={'Set New Pin'}
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
-      {(status === 'pending' || fetchingUser == 'pending') && <Loader />}
+      {(status === 'pending' || fetchingUser === 'pending') && <Loader />}
     </ScreenView>
   );
 };
 
 export default ConfirmPin;
-

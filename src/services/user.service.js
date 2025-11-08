@@ -1,4 +1,4 @@
-import { request } from './api';
+import {request} from './api';
 
 class UserServices {
   /**
@@ -8,6 +8,26 @@ class UserServices {
   getUser() {
     return request('/user/me', 'GET', undefined, false, false, false);
   }
+  getUserAcc() {
+    return request(
+      '/virtual-account/source',
+      'GET',
+      undefined,
+      false,
+      false,
+      false,
+    );
+  }
+  CreateAcc(Payload) {
+    return request(
+      '/virtual-account',
+      'POST',
+      Payload,
+      undefined,
+      undefined,
+      undefined,
+    );
+  }
 
   /**
    *
@@ -15,10 +35,9 @@ class UserServices {
    * @return {Promise<*>}
    */
   editUser(payload) {
-    console.log({ payload });
+    console.log({payload});
     return request('/user', 'PATCH', payload, undefined, undefined, undefined);
   }
-
 
   /**
    *
@@ -26,11 +45,10 @@ class UserServices {
    * @return {Promise<*>}
    */
   sendOtpForPin() {
-
     return request(
       '/passcode/forgot',
       'POST',
-        undefined,
+      undefined,
       undefined,
       undefined,
       undefined,
@@ -43,7 +61,7 @@ class UserServices {
    * @return {Promise<*>}
    */
   resetPasscode(payload) {
-    console.log({ payload });
+    console.log({payload});
     return request(
       '/passcode/reset',
       'POST',
@@ -53,11 +71,6 @@ class UserServices {
       undefined,
     );
   }
-  
-
-
 }
-
-
 
 export default new UserServices();

@@ -18,6 +18,7 @@ import Loader from '../../../../components/modals/Loader';
 
 const EditProfile = props => {
   const {data} = useGetUser();
+  console.log(data, 'data');
   const {mutate, status} = useEditUser();
   const navigation = props.navigation;
 

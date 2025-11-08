@@ -165,6 +165,8 @@ const TransactionPinScreen = props => {
       return await getUserPincode();
     }
     checkUserPin().then((res) => {
+
+      
       if (res) {
         setUseBio(true);
       }

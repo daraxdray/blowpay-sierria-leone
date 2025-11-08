@@ -35,8 +35,8 @@ const Refer = props => {
           </Text>
           <Text style={tw`text-[#A5A5A5] font-normal text-[14px]`}>
             Blow Pay’s better with friends. The more people you refer using your
-            link, the more you earn. You’ll both get NGN100 when they sign up
-            and make a card payment. we can stop or change this at any time.
+            link, the more you earn. You’ll both get money when they sign up and
+            make a card payment. we can stop or change this at any time.
           </Text>
           <View style={tw` w-full self-center rounded-10 mb-5 gap-3`}>
             <View style={tw`gap-3 p-2 pt-4`}>
@@ -61,7 +61,7 @@ const Refer = props => {
                     Total earned
                   </Text>
                   <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                    NGN0.00
+                    0.00
                   </Text>
                 </TouchableOpacity>
               </View>

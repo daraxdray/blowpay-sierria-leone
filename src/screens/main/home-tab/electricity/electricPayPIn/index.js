@@ -1,122 +1,127 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
-import { styles } from './style';
-import { ScreenView } from '../../../../../global/wrappers';
-import { PRIMARY_COLOR, WHITE } from '../../../../../global/theme';
+import React, {useState} from 'react';
+import {View, Text, ScrollView} from 'react-native';
+import {styles} from './style';
+import {ScreenView} from '../../../../../global/wrappers';
+import {PRIMARY_COLOR, WHITE} from '../../../../../global/theme';
 import Header from '../../../../../global/components/Header';
 import tw from 'twrnc';
 import OTPTextView from 'react-native-otp-textinput';
-import { CustomButton } from '../../../../../global/components';
-import { useConfirmPasscode } from '../../../../../hooks/auth.hook';
-import { useBillPay, useBillValidate, useByPBillPay, useNbBillPay } from '../../../../../hooks/billing.hook';
+import {CustomButton} from '../../../../../global/components';
+import {useConfirmPasscode} from '../../../../../hooks/auth.hook';
+import {
+  useByPBillPay,
+  useSpBillPayment,
+} from '../../../../../hooks/billing.hook';
 import Loader from '../../../../../components/modals/Loader';
-import { CommonActions } from '@react-navigation/native';
+import {CommonActions} from '@react-navigation/native';
 import CustomToast from '../../../../../global/components/CustomToast';
-import { useGetVitualBalance } from '../../../../../hooks/virtual.hook';
+import {useGetVitualBalance} from '../../../../../hooks/virtual.hook';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
+import {unformatAmount, getCurrencySymbol} from '../../../../../utils/format';
 
-const ElectricPaymentPin = ({ navigation, route }) => {
-  const { selectedProvider, selectedMeter, selectedAmount, selectedPayment,phoneNumber } = route.params;
-  // const isPrepaid = selectedPayment.name.toLowerCase().includes('prepaid');
-  // const filteredData = data.data.filter(biller =>
-  //   isPrepaid
-  //     ? biller.biller_name.toLowerCase().includes('prepaid')
-  //     : biller.biller_name.toLowerCase().includes('postpaid'),
-  // );
-  const unformatAmount = formattedValue => formattedValue.replace(/,/g, '');
+const ElectricPaymentPin = ({navigation, route}) => {
+  const {selectedProvider, selectedMeter, selectedAmount, country} =
+    route.params;
+
   const rawValue = unformatAmount(selectedAmount);
-  const { data: balanceData, refetch: refetchBalance } = useGetVitualBalance();
+
+  const {data: balanceData} = useGetVitualBalance();
   const userBalance = balanceData?.data?.balance / 100;
 
-  const { mutate: confirmPasscode, status: passcodeStatus } =
+  const {mutate: confirmPasscode, status: passcodeStatus} =
     useConfirmPasscode();
-  
-  const { mutate: electricBill, status: billStatus } = useByPBillPay();
-  const [otp, setOtp] = useState('');
+  const {mutate: electricBill, status: billStatus} = useByPBillPay();
+  const {mutate: buyAirtime, status: spBillStatus} = useSpBillPayment();
 
+  const [otp, setOtp] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('error');
-
-  const { isBiometricExist, } = useBiometricAuth();
-
-  // const userValidate = {
-  //   billerCode: filteredData[0]?.biller_code,
-  //   itemCode: filteredData[0]?.item_code,
-  //   customer: selectedMeter,
-  //   description: "Electricity"
-  // };
+  const {isBiometricExist} = useBiometricAuth();
 
   const showToast = (message, type = 'error') => {
     setToastMessage(message);
     setToastType(type);
     setToastVisible(true);
-
-    setTimeout(() => {
-      setToastVisible(false);
-    }, 3000);
+    setTimeout(() => setToastVisible(false), 3000);
   };
-
-  const handleVerify = (otpInput) => {
+  console.log(
+    selectedProvider,
+    'selectedProvider',
+    selectedMeter,
+    'selectedMeter',
+    rawValue,
+    'selectedAmount',
+  );
+  const handleVerify = otpInput => {
     if (userBalance < rawValue) {
       const screenError = 'Insufficient funds. Please top up your account.';
       showToast(screenError);
-      navigation.navigate('PaymentError', { screenError });
+      navigation.navigate('PaymentError', {screenError});
       return;
     }
-    
-    if (otpInput.length === 6) {
-      // const userInfo = {
-      //   billerCode: filteredData[0]?.biller_code,
-      //   amountEntered: rawValue,
-      //   customerId: selectedMeter,
-      //   itemCode: filteredData[0]?.item_code,
-      //   description: "Electricity"
-      // };
 
-      confirmPasscode(
-        { passcode: otpInput },
-        {
-          onSuccess: data => {
-            if (data) {
-              completeTransaction()
-            } else {
-
-              const screenError =
-                data?.error ||
-                data?.message ||
-                'Passcode confirmation failed. Please try again.';
-              showToast(screenError);
-              navigation.navigate('PaymentError', { screenError });
-            }
-          },
-          onError: error => {
-            const errorMessage =
-              error?.response?.data?.message ||
-              'An error occurred. Please try again.';
-            showToast(errorMessage);
-            navigation.navigate('PaymentError', { screenError: errorMessage });
-          },
-        },
-      );
-    } else {
+    if (otpInput.length !== 6) {
       const screenError = 'Please enter a valid 6-digit passcode.';
       showToast(screenError);
-      navigation.navigate('PaymentError', { screenError });
+      navigation.navigate('PaymentError', {screenError});
+      return;
     }
+
+    confirmPasscode(
+      {passcode: otpInput},
+      {
+        onSuccess: data => {
+          if (data?.message) {
+            if (country === 'Sierra Leone') {
+              completeTransactionSL();
+            } else {
+              completeTransaction();
+            }
+          } else {
+            const screenError =
+              data?.error || 'Passcode confirmation failed. Please try again.';
+            showToast(screenError);
+            navigation.navigate('PaymentError', {screenError});
+          }
+        },
+        onError: error => {
+          const errorMessage =
+            error?.response?.data?.message ||
+            'An error occurred. Please try again.';
+          showToast(errorMessage);
+          navigation.navigate('PaymentError', {screenError: errorMessage});
+        },
+      },
+    );
   };
 
-  const processBillPayment = userInfo => {
+  const completeTransaction = () => {
+    const userInfo = {
+      disco: selectedProvider?.ID,
+      amount: rawValue,
+      meter: selectedMeter,
+    };
+
     electricBill(userInfo, {
       onSuccess: DataResponse => {
+        console.log(DataResponse);
+
         if (DataResponse) {
-          console.log("RESPONSE",DataResponse)
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: 'PaymentSucess' ,
-                params:{message:"Your payment was successful, Get token by using transaction history", data: DataResponse?.data}}],
+              routes: [
+                {
+                  name: 'PaymentSucess',
+                  params: {
+                    message:
+                      'Your payment was successful. Get token from transaction history.',
+                    data: DataResponse?.data,
+                  },
+                },
+              ],
             }),
           );
         } else {
@@ -124,65 +129,92 @@ const ElectricPaymentPin = ({ navigation, route }) => {
             DataResponse?.error ||
             'Electricity purchase failed. Please try again.';
           showToast(screenError);
-          navigation.navigate('PaymentError', { screenError });
+          console.log(
+            DataResponse,
+            'DataResponse',
+            DataResponse?.error,
+            'error',
+          );
 
-
+          navigation.navigate('PaymentError', {screenError});
         }
       },
       onError: transferError => {
-        console.log(transferError?.response?.data )
-
         const errorMessage =
-        transferError?.error ||
-        transferError?.response?.data?.error || 
+          transferError?.response?.data?.error ||
           transferError?.response?.data?.message ||
           'Error: Electricity purchase failed. Please try again.';
-        showToast(errorMessage);
-        navigation.navigate('PaymentError', { screenError: errorMessage });
+
+        if (errorMessage?.toLowerCase().includes('successful transaction')) {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'PaymentSucess',
+                  params: {
+                    message:
+                      'Your payment was successful. Get token from transaction history.',
+                    data: transferError?.response?.data,
+                  },
+                },
+              ],
+            }),
+          );
+        } else {
+          showToast(errorMessage);
+          navigation.navigate('PaymentError', {screenError: errorMessage});
+        }
+      },
+    });
+  };
+  const completeTransactionSL = () => {
+    const payload = {
+      category: 'EDSA',
+      amount: rawValue,
+      recipient: selectedMeter,
+    };
+
+    buyAirtime(payload, {
+      onSuccess: res => {
+        if (res) {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'PaymentSucess',
+                  params: {
+                    message: 'Your electricity payment was successful.',
+                    data: res?.data,
+                  },
+                },
+              ],
+            }),
+          );
+        } else {
+          const screenError = res?.error || 'Payment failed. Please try again.';
+          showToast(screenError);
+          navigation.navigate('PaymentError', {screenError});
+        }
+      },
+      onError: error => {
+        const screenError =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          'Payment failed. Please try again.';
+        showToast(screenError);
+        navigation.navigate('PaymentError', {screenError});
       },
     });
   };
 
-  const makeTransaction = () => {
-    if (userBalance < rawValue) {
-      const screenError = 'Insufficient funds. Please top up your account.';
-      showToast(screenError);
-      navigation.navigate('PaymentError', { screenError });
-      return;
+  const handleOtp = otpInput => {
+    setOtp(otpInput);
+    if (otpInput.length === 6) {
+      handleVerify(otpInput);
     }
-    completeTransaction()
-
-  }
-
-  const completeTransaction = () => {
-    //NELOBYTE
-    // const userInfo = {
-    //   electricCompany: selectedProvider?.ID,
-    //   amount: rawValue,
-    //   meterNo: selectedMeter,
-    //   meterType:selectedPayment,
-    //   phoneNumber:phoneNumber
-    // };
-
-    const userInfo = {
-      disco: selectedProvider?.ID,
-      amount: rawValue,
-      meter: selectedMeter,
-      // meterType:selectedPayment,
-      phoneNumber:phoneNumber
-    };
-
-    console.log(userInfo);
-    processBillPayment(userInfo);
-   
-  }
-
-  const handleOtp = (otpInput)=>{
-    setOtp(otpInput)
-    if(otpInput.length == 6){
-      handleVerify(otpInput)
-    }
-  }
+  };
 
   return (
     <ScreenView style={styles.container} light color={WHITE}>
@@ -193,8 +225,6 @@ const ElectricPaymentPin = ({ navigation, route }) => {
             ImageSource={require('../../../../../../assets/icons/filter.png')}
             title=""
             showIcon={false}
-            iconName="add-circle"
-            imagePress={() => { }}
           />
           <View style={tw`flex items-center gap-3`}>
             <Text style={tw`text-[#2D2D2D] font-semibold text-[24px]`}>
@@ -219,25 +249,33 @@ const ElectricPaymentPin = ({ navigation, route }) => {
 
           {isBiometricExist && (
             <View
-              style={tw`mt-8  flex flex-row items-center justify-center p-4  rounded-lg mt-[300]`}
-            >
-              <BiometricComponent signin={true} onComplete={makeTransaction} />
+              style={tw`mt-8 flex flex-row items-center justify-center p-4 rounded-lg mt-[300]`}>
+              <BiometricComponent
+                signin={true}
+                onComplete={() => {
+                  if (country === 'Sierra Leone') {
+                    completeTransactionSL();
+                  } else {
+                    completeTransaction();
+                  }
+                }}
+              />
             </View>
           )}
+
           <View style={tw`pb-5 w-full mt-10`}>
             <CustomButton
-              onPress={()=>{}}
+              onPress={() => handleVerify(otp)}
               style={styles.btn1}
-              text={`Pay ₦${selectedAmount}`}
-              
+              text={`Pay ${getCurrencySymbol(country)}${selectedAmount}`}
             />
           </View>
         </View>
       </ScrollView>
 
       {(passcodeStatus === 'pending' ||
-        
-        billStatus === 'pending') && <Loader />}
+        billStatus === 'pending' ||
+        spBillStatus === 'pending') && <Loader />}
 
       {toastVisible && <CustomToast message={toastMessage} type={toastType} />}
     </ScreenView>

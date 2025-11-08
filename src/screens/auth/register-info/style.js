@@ -1,11 +1,17 @@
 import {StyleSheet} from 'react-native';
-import {GREY, WHITE, SEMI_PRIMARY_COLOR, BLACK, HEIGHT} from '../../../global/theme';
+import {
+  GREY,
+  WHITE,
+  SEMI_PRIMARY_COLOR,
+  BLACK,
+  HEIGHT,
+} from '../../../global/theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: WHITE,
-    height:HEIGHT
+    height: HEIGHT,
   },
   viewContainer: {
     padding: 20,
@@ -68,6 +74,7 @@ export const styles = StyleSheet.create({
   rowView: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginLeft: -10,
     marginBottom: 10,
   },
   icon: {

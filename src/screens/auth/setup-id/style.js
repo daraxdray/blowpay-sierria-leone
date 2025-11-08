@@ -1,17 +1,14 @@
-import {Platform, StyleSheet} from 'react-native';
+import {StyleSheet} from 'react-native';
 import {
   BLACK,
   GREY,
   GREY_LIGHT2,
   HEIGHT,
-  MILK,
-  SECONDARY_COLOR,
   SEMI_PRIMARY_COLOR,
   WHITE,
   WIDTH,
 } from '../../../global/theme';
 import {
-  open_sans_bold,
   satoshi,
   satoshi_black,
   satoshi_bold,
@@ -37,7 +34,7 @@ export const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    // marginTop: 20,
     height: HEIGHT - 100,
     paddingBottom: 20,
   },
@@ -74,7 +71,7 @@ export const styles = StyleSheet.create({
   v2: {
     flexGrow: 1,
     marginVertical: 20,
-    alignItems: 'center',
+    // alignItems: 'center',
     width: '100%',
     gap: 8,
     // justifyContent: 'center',
@@ -100,9 +97,10 @@ export const styles = StyleSheet.create({
   },
   inputCont1: {
     width: '100%',
-    borderRadius: 12,
     padding: 10,
     borderWidth: 0.7,
+    borderRadius: 15,
+    paddingVertical: 15,
     borderColor: '#ececec',
     fontSize: 12,
     color: 'black',

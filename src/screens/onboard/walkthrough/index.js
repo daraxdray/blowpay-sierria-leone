@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, StatusBar } from 'react-native';
-import { styles } from './style';
-import { ScreenView } from '../../../global/wrappers';
+import React, {useEffect, useRef, useState} from 'react';
+import {View, Text, ScrollView, StatusBar} from 'react-native';
+import {styles} from './style';
+import {ScreenView} from '../../../global/wrappers';
 import LinearGradient from 'react-native-linear-gradient';
 import {
   GREY,
@@ -15,19 +15,19 @@ import {
   WIDTH,
 } from '../../../global/theme';
 import Carousel from 'react-native-reanimated-carousel';
-import { Carouseltem } from '../../../components/onboard';
-import { CarouselData } from '../../../constants/onboard';
-import { CustomButton } from '../../../global/components';
-import { useSelector } from 'react-redux';
-import { CommonActions } from '@react-navigation/native';
-import { useGetUser } from '../../../hooks/user.hook';
+import {Carouseltem} from '../../../components/onboard';
+import {CarouselData} from '../../../constants/onboard';
+import {CustomButton} from '../../../global/components';
+import {useSelector} from 'react-redux';
+import {CommonActions} from '@react-navigation/native';
+import {useGetUser} from '../../../hooks/user.hook';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Walkthrough = props => {
   const navigation = props.navigation;
-  const { isAuthenticated,  } = useSelector((state) => state.user);
+  const {isAuthenticated} = useSelector(state => state.user);
   const carouselRef = useRef(null);
-  const { data: user, status: fetchingUser } = useGetUser();
+  const {data: user, status: fetchingUser} = useGetUser();
 
   // States
   const [index, setIndex] = useState(0);
@@ -39,19 +39,20 @@ const Walkthrough = props => {
     }
   };
 
-  const gotoDashboard = ()=>{
-
-    if(user?.message == "Unauthorized" || user?.data == undefined){
-      navigation.navigate('TransactionPinScreen',{params:{"currentRoute":"walkthrough-screen"}})
-    }else{
+  const gotoDashboard = () => {
+    if (user?.message == 'Unauthorized' || user?.data == undefined) {
+      navigation.navigate('TransactionPinScreen', {
+        params: {currentRoute: 'walkthrough-screen'},
+      });
+    } else {
       navigation.dispatch(
-          CommonActions.reset({
-              index: 0,
-              routes: [{name: 'bottom-tab'}],
-            }),
-          );  
-        }
-  }
+        CommonActions.reset({
+          index: 0,
+          routes: [{name: 'bottom-tab'}],
+        }),
+      );
+    }
+  };
   useEffect(() => {
     return () => {
       _constructor();
@@ -75,7 +76,6 @@ const Walkthrough = props => {
         >
           <View style={styles.view1}>
             <View style={styles.carouselContainer}>
-             
               <Carousel
                 ref={carouselRef}
                 loop
@@ -84,8 +84,8 @@ const Walkthrough = props => {
                 autoPlay={false}
                 data={CarouselData}
                 scrollAnimationDuration={1000}
-                onSnapToItem={(index) => setIndex(index)}
-                renderItem={({ item, index }) => (
+                onSnapToItem={index => setIndex(index)}
+                renderItem={({item, index}) => (
                   <Carouseltem key={item.id} item={item} index={index} />
                 )}
                 mode="parallax"
@@ -93,8 +93,6 @@ const Walkthrough = props => {
                   parallaxScrollingScale: 0.9,
                   parallaxScrollingOffset: 50,
                 }}
-                
-                
               />
 
               {/* <Pagination
@@ -123,30 +121,31 @@ const Walkthrough = props => {
             </View>
 
             <View style={styles.v12}>
-              {!isAuthenticated ?
+              {!isAuthenticated ? (
                 <>
                   <CustomButton
                     text={'Sign in'}
                     light
                     onPress={() => navigation.navigate('signin-screen')}
-                    style={{ width: '38%', borderRadius: 20 }}
+                    style={{width: '38%', borderRadius: 20}}
                   />
 
                   <CustomButton
                     text={'Create an Account'}
                     // onPress={() => navigation.navigate('signup-screen')}
                     onPress={() => navigation.navigate('register-info-screen')}
-                    style={{ width: '38%', borderRadius: 20, marginRight: 20 }}
-                  /></> :
-                  <>
-                
+                    style={{width: '38%', borderRadius: 20, marginRight: 20}}
+                  />
+                </>
+              ) : (
+                <>
                   <CustomButton
                     text={'Goto Dashboard'}
                     onPress={gotoDashboard}
-                    style={{ width: '80%', borderRadius: 20, marginRight: 20 }}
+                    style={{width: '80%', borderRadius: 20, marginRight: 20}}
                   />
-                  </>
-              }
+                </>
+              )}
             </View>
           </View>
         </ScrollView>

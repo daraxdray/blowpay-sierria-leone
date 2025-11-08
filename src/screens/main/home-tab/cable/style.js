@@ -1,5 +1,5 @@
-import {Platform, StyleSheet} from 'react-native';
-import {HEIGHT, MILK, WHITE, WIDTH} from '../../../../global/theme';
+import {StyleSheet} from 'react-native';
+import {HEIGHT, MILK, WIDTH} from '../../../../global/theme';
 
 export const styles = StyleSheet.create({
   container: {

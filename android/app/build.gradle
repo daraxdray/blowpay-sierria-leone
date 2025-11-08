@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -77,9 +78,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.rdx.BillsByBlowmoney"
+    namespace "com.rdx.blowpay"
     defaultConfig {
-        applicationId "com.rdx.BillsByBlowmoney"
+        applicationId "com.rdx.blowpay"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -92,6 +93,10 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+    }
+      lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
     }
     buildTypes {
         debug {

@@ -1,21 +1,12 @@
-import React, { useEffect } from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React from 'react';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import CustomTab from '../../components/routes/CustomTab';
-import {
-  HomeTab,
-  ProfileTab,
-  TransactionTab,
-  TransferTab,
-  WalletTab,
-} from '../../screens/main';
-import { screenOptions } from '../../global/routes';
+import {HomeTab, ProfileTab, WalletTab} from '../../screens/main';
+import {screenOptions} from '../../global/routes';
 import SendBills from '../../screens/main/home-tab/SendBills';
-import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../../contexts/actions/user';
-import { useNavigation } from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
-const { Navigator, Screen } = Tab;
+const {Navigator, Screen} = Tab;
 
 const home = require('../../../assets/svgs/home.svg');
 const profile = require('../../../assets/svgs/profile.svg');
@@ -26,18 +17,13 @@ const home_live = require('../../../assets/svgs/home_live.svg');
 const profile_live = require('../../../assets/svgs/profile_live.svg');
 const wallet_live = require('../../../assets/svgs/wallet_live.svg');
 const swap_live = require('../../../assets/svgs/swap_live.svg');
-import {CommonActions} from '@react-navigation/native';
 const BottomTab = props => {
-  const { isAuthenticated, } = useSelector((state) => state.user);
-  // const dispatch = useDispatch();
-  const navigation = useNavigation();
-  
   return (
     <Navigator
       screenOptions={screenOptions}
       tabBar={props => <CustomTab {...props} />}
       initialRouteName={'HomeTab'}
-      sceneContainerStyle={{ backgroundColor: 'grey' }}>
+      sceneContainerStyle={{backgroundColor: 'grey'}}>
       <Screen
         name={'HomeTab'}
         component={HomeTab}

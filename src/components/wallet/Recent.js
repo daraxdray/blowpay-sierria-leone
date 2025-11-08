@@ -1,18 +1,19 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
-import {Image, StyleSheet, Text, View, FlatList, Modal} from 'react-native';
+import {Image, Text, View, FlatList, Modal} from 'react-native';
 import tw from 'twrnc';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import AddfundSVG from '../../../assets/svgs/Addfund.svg';
 import TransactionItem from './TransactionItem';
 import {formatTime} from '../../constants/data/Transaction';
 import {useGetTransactions} from '../../hooks/transactions.hook';
 import TransactionDetails from '../modals/TransactionDetails';
+import {getCurrencySymbol} from '../../utils/format';
 
-const Recent = ({description = ''}) => {
-  
-  const {data: transactionsData,refetch} = useGetTransactions(description);
-  const [transactions,setTransactions] = useState([]);
-  const [cachedTransactions, setCachedTransactions] = useState([]);
+const Recent = ({description = '', country}) => {
+  const {data: transactionsData, refetch} = useGetTransactions(description);
+  const [transactions, setTransactions] = useState([]);
+  const [cachedTransactions] = useState([]);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedTransactionId, setSelectedTransactionId] = useState(null);
 
@@ -29,7 +30,6 @@ const Recent = ({description = ''}) => {
     openDetailModal();
   };
 
-  
   // const loadCachedTransactions = async () => {
   //   // try {
   //   //   const cached = await AsyncStorage.getItem('transactions');
@@ -55,24 +55,23 @@ const Recent = ({description = ''}) => {
   // };
 
   useEffect(() => {
-    setTransactions(transactionsData?.data)
+    setTransactions(transactionsData?.data);
   }, [transactionsData]);
   useEffect(() => {
-    refetch()
+    refetch();
   }, [description]);
 
   useEffect(() => {
-    
     if (transactions && transactions.length > 0) {
       // saveCachedTransactions();
-      console.log(transactions)
+      console.log(transactions);
     }
   }, [transactions]);
 
   return (
     <View style={tw`bg-[#FFFFFF] p-5 mt-5 pb-[100] rounded-[20px] gap-2 flex `}>
       <Text style={tw`text-[14px] font-bold text-[#374151]`}>
-        Recent Activity 
+        Recent Activity
       </Text>
 
       {transactions && transactions.length > 0 ? (
@@ -84,17 +83,23 @@ const Recent = ({description = ''}) => {
             <TransactionItem
               Icon={AddfundSVG}
               time={formatTime(item.createdAt)}
-              description={`${item.metadata?  item.description + ' - ' +(item.metadata.network || '') : (item.description || '')}`}
-              amount={parseFloat(item.amount / 100)
+              description={`${
+                item.metadata
+                  ? item.description + ' - ' + (item.metadata.network || '')
+                  : item.description || ''
+              }`}
+              amount={`${getCurrencySymbol(country)}${parseFloat(
+                item.amount / 100,
+              )
                 .toFixed(2)
-                .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+                .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`}
               amountColor={item.type === 'debit' ? '#F04343' : '#10B981'}
               details={() => handleDetails(item)}
-              txId ={item.id}
+              txId={item.id}
               type={item.type}
             />
           )}
-          contentContainerStyle={{ paddingBottom: 230 }}
+          // contentContainerStyle={{paddingBottom: 230}}
         />
       ) : cachedTransactions && cachedTransactions.length > 0 ? (
         <FlatList
@@ -105,16 +110,23 @@ const Recent = ({description = ''}) => {
             <TransactionItem
               Icon={AddfundSVG}
               time={formatTime(item.createdAt)}
-              description={item.description}
-              amount={parseFloat(item.amount / 100)
+              description={`${
+                item.metadata
+                  ? item.description + ' - ' + (item.metadata.network || '')
+                  : item.description || ''
+              }`}
+              amount={`${getCurrencySymbol(country)}${parseFloat(
+                item.amount / 100,
+              )
                 .toFixed(2)
-                .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
+                .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`}
               amountColor={item.type === 'debit' ? '#F04343' : '#10B981'}
               details={() => handleDetails(item)}
-              txId ={item.id}
+              txId={item.id}
+              type={item.type}
             />
           )}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          containerStyle={{paddingBottom: 20}}
         />
       ) : (
         <View style={tw`flex justify-center items-center gap-2 my-[8%] w-full`}>
@@ -151,5 +163,3 @@ const Recent = ({description = ''}) => {
 };
 
 export default Recent;
-
-const styles = StyleSheet.create({});

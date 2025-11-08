@@ -1,3 +1,5 @@
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useEffect, useState} from 'react';
 import {
   ImageBackground,
@@ -8,20 +10,27 @@ import {
   Dimensions,
 } from 'react-native';
 import tw from 'twrnc';
-import {useGetVitualAcc, useGetVitualBalance} from '../../hooks/virtual.hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WalletCardSVG from '../../../assets/svgs/WalletCard.svg';
+import {getCurrencySymbol} from '../../utils/format';
 
-const WalletCard = ({handleAdd}) => {
-  const {data: accountData} = useGetVitualAcc();
-  const {data: balanceData, refetch: refetchBalance} = useGetVitualBalance();
+const WalletCard = ({handleAdd, country, accountData, balanceData}) => {
   const [cachedAccountNumber, setCachedAccountNumber] = useState(null);
-  const [cachedBalance, setCachedBalance] = useState(null);
+  const accList = accountData || [];
 
-  const userData = accountData?.data || {};
+  let selectedAcc;
+  if (country?.toLowerCase() !== 'sierra leone') {
+    const cashonrailsAcc = accList.find(acc => acc.source === 'cashonrails');
+    selectedAcc = cashonrailsAcc || accList[0] || {};
+  } else {
+    selectedAcc = accList[0] || {};
+  }
   const userBalance = balanceData?.data || {};
+
   const formatBalance = balance => {
-    if (balance === undefined || balance === null) return 'NAN';
+    if (balance === undefined || balance === null) {
+      return 'NAN';
+    }
     const parsedBalance = parseFloat(balance);
     return isNaN(parsedBalance)
       ? 'NAN'
@@ -31,18 +40,16 @@ const WalletCard = ({handleAdd}) => {
   const loadCachedData = async () => {
     try {
       const cachedAcc = await AsyncStorage.getItem('accountNumber');
-      const cachedBal = await AsyncStorage.getItem('balance');
       if (cachedAcc) {
-        setCachedAccountNumber(cachedAcc);
+        setCachedAccountNumber(JSON.parse(cachedAcc));
       }
-      if (cachedBal) {
-        setCachedBalance(cachedBal);
-      }
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error loading cached data:', error);
+    }
   };
   const saveCachedData = async () => {
     try {
-      const accountNumber = userData?.accountNumber || 'NAN';
+      const accountNumber = selectedAcc?.accountNumber || 'NAN';
       const balance = userBalance?.balance || 'NAN';
       await AsyncStorage.setItem(
         'accountNumber',
@@ -57,22 +64,25 @@ const WalletCard = ({handleAdd}) => {
   }, []);
 
   useEffect(() => {
-    if (userData?.accountNumber && userBalance?.balance) {
+    if (selectedAcc?.accountNumber && userBalance?.balance) {
       saveCachedData();
     }
-  }, [userData, userBalance]);
+  }, [selectedAcc, userBalance]);
 
   const isIpad = () => {
-    const { width, height } = Dimensions.get('window');
+    const {width, height} = Dimensions.get('window');
     return (width >= 768 && height >= 1024) || (width >= 1024 && height >= 768);
   };
 
   return (
     <View style={tw`mt-5 flex items-center p-2`}>
       <View style={tw`w-full relative items-center justify-center`}>
-        <WalletCardSVG width={"110%"} height="110%" style={tw`absolute`} />
+        <WalletCardSVG width={'115%'} height="115%" style={tw`absolute`} />
 
-        <View style={tw`flex-row justify-between items-center py-6 px-6 ${isIpad() ? 'w-[35%]' : 'w-90%'}`}>
+        <View
+          style={tw`flex-row justify-between items-center py-6 px-5 ${
+            isIpad() ? 'w-[35%]' : 'w-90%'
+          }`}>
           <View style={tw`flex-1 pb-3`}>
             <ImageBackground
               source={require('../../../assets/images/Rectangle.png')}
@@ -85,7 +95,8 @@ const WalletCard = ({handleAdd}) => {
                   style={{width: 25, height: 25}}
                 />
                 <Text style={tw`text-white text-[12px] font-medium`}>
-                  Acc: {userData?.accountNumber || cachedAccountNumber || 'NAN'}
+                  Acc:{' '}
+                  {selectedAcc?.accountNumber || cachedAccountNumber || 'N/A'}
                 </Text>
                 <Image
                   source={require('../../../assets/icons/arrowDown.png')}
@@ -96,7 +107,7 @@ const WalletCard = ({handleAdd}) => {
             </ImageBackground>
 
             <Text style={tw`text-white text-[20px] font-bold mt-3 pl-4`}>
-              NGN{' '}
+              {getCurrencySymbol(country)}
               {formatBalance(userBalance?.balance) === 'NAN'
                 ? '******'
                 : formatBalance(userBalance?.balance)}

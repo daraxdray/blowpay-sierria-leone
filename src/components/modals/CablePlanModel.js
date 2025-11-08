@@ -1,45 +1,78 @@
-import React, {useState} from 'react';
+/* eslint-disable no-shadow */
+import React, {useState, useMemo} from 'react';
 import {View, Text, TouchableOpacity, TextInput, FlatList} from 'react-native';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {CustomButton} from '../../global/components';
 import {PanGestureHandler} from 'react-native-gesture-handler';
-import {useBillerGetCable, useBillerProducts} from '../../hooks/billing.hook';
+import {useGetSLCablePlans, useBillerGetCable} from '../../hooks/billing.hook';
 import Loader from './Loader';
 
-const CablePlanModal = ({closeModal, proceed, item, selectOption, products = []}) => {
-  const {data, isLoading, error} = useBillerGetCable();
+const CablePlanModal = ({
+  closeModal,
+  proceed,
+  item,
+  selectOption,
+  products = [],
+  country,
+}) => {
   const [searchText, setSearchText] = useState('');
   const [selectedCompany, setSelectedCompany] = useState(null);
-  const formattedAmount = new Intl.NumberFormat();
+  const isSierraLeone = country?.toLowerCase() === 'sierra leone';
+  const {
+    data: slData,
+    status,
+    error: slError,
+  } = useGetSLCablePlans({
+    enabled: isSierraLeone,
+  });
+  const {
+    data: cableData,
+    error: cableError,
+    status: Bpstatus,
+  } = useBillerGetCable(products?.ID);
 
-  console.log("CABLES",data)
-  const filteredCompanies =
-  products
-      ? products.filter(company =>
-          company.PACKAGE_NAME.toLowerCase().includes(searchText?.toLowerCase()),
-        )
-      : [];
-  const handleSwipeDown = ({nativeEvent}) => {
-    if (nativeEvent.translationY > 50) {
-      closeModal();
+  const plans = useMemo(() => {
+    if (isSierraLeone) {
+      return (
+        slData?.data?.packages?.map((p, index) => ({
+          PACKAGE_ID: p.service_slug || `sl_${index}`,
+          PACKAGE_NAME: p.name,
+          PACKAGE_AMOUNT: p.price,
+        })) || []
+      );
     }
-  };
+    const dataList = cableData?.data?.data || [];
+    if (!Array.isArray(dataList)) {
+      return [];
+    }
+    return dataList.map((p, index) => ({
+      PACKAGE_ID: p.code || p.product_id || `pkg_${index}`,
+      PACKAGE_NAME: p.desc || p.product_name || 'Unknown Plan',
+      PACKAGE_AMOUNT: p.price || p.amount || 0,
+    }));
+  }, [isSierraLeone, slData?.data, cableData?.data]);
+
+  const filteredCompanies = plans.filter(plan =>
+    plan.PACKAGE_NAME?.toLowerCase()?.includes(searchText?.toLowerCase()),
+  );
 
   const renderCompany = ({item}) => {
     const isSelected = selectedCompany === item.PACKAGE_ID;
-
     return (
       <TouchableOpacity
         style={tw`flex-row items-center p-3 mb-1 bg-white shadow-sm rounded-lg`}
         onPress={() => {
           setSelectedCompany(item.PACKAGE_ID);
           selectOption(item);
-          closeModal()
+          closeModal();
         }}>
         <View style={tw`flex-1`}>
           <Text style={tw`text-[#292929] font-medium text-[14px]`}>
             {item?.PACKAGE_NAME}
+          </Text>
+          <Text style={tw`text-gray-500 text-[13px]`}>
+            ₦{item?.PACKAGE_AMOUNT?.toLocaleString()}
           </Text>
         </View>
         <View
@@ -52,17 +85,20 @@ const CablePlanModal = ({closeModal, proceed, item, selectOption, products = []}
       </TouchableOpacity>
     );
   };
-
-  if (isLoading) {
-    return <Loader />;
+  if (isSierraLeone && slError) {
+    return <Text>Error loading Sierra Leone plans.</Text>;
   }
-
-  if (error) {
-    return <Text>Error loading companies.</Text>;
+  if (!isSierraLeone && cableError) {
+    return <Text Text> Error loading cable plans.</Text>;
   }
-
+  if (country?.toLowerCase() === 'sierra leone' && status === 'pending') {
+    <Loader />;
+  }
+  if (country?.toLowerCase() === !'sierra leone' && Bpstatus === 'pending') {
+    <Loader />;
+  }
   return (
-    <PanGestureHandler onGestureEvent={handleSwipeDown}>
+    <PanGestureHandler>
       <View
         style={tw`h-[95%] bg-white p-5 rounded-t-[20px] w-19/20 self-center rounded-b-10 mb-5`}>
         <View style={tw`items-center justify-center`}>
@@ -75,7 +111,7 @@ const CablePlanModal = ({closeModal, proceed, item, selectOption, products = []}
           </Text>
 
           <TextInput
-            placeholder="Search company"
+            placeholder="Search plan"
             value={searchText}
             onChangeText={setSearchText}
             style={tw`rounded-lg text-black p-3 mt-2 border-[0.1] bg-white`}

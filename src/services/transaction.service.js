@@ -6,7 +6,14 @@ class TransactionServices {
    * @return {Promise<*>}
    */
   getTransactions(description) {
-    return request(`/transactions?description=${description}`, 'GET', undefined, false, false, false);
+    return request(
+      `/transactions?description=${description}`,
+      'GET',
+      undefined,
+      false,
+      false,
+      false,
+    );
   }
   getTransaction(id) {
     return request(
@@ -45,7 +52,7 @@ class TransactionServices {
   // }
   getTxToken(id) {
     return request(
-      `/billers/bp/re-query/${id}`,//:id
+      `/billers/bp/re-query/${id}`, //:id
       'GET',
       undefined,
       false,

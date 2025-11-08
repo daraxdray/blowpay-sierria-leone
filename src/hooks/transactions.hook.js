@@ -1,5 +1,5 @@
 import {useMutation, useQuery} from '@tanstack/react-query';
-import {_errorPrompt, _successPrompt} from '../utils';
+import {_errorPrompt} from '../utils';
 import transactionService from '../services/transaction.service';
 
 /**
@@ -7,21 +7,23 @@ import transactionService from '../services/transaction.service';
  * @return {Promise<*>}
  * @private
  */
-export const useGetTransactions = (description) => {
+export const useGetTransactions = description => {
   return useQuery({
     queryKey: [description],
     queryFn: async () => {
       const data = await transactionService.getTransactions(description);
-      
       return data;
     },
-
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     onSuccess: data => {
       console.log('Transactions fetched:', data);
       return data;
     },
     onError: error => {
-      console.log("ERRORORORORORO");
+      console.log('ERRORORORORORO');
       _errorPrompt(error.message);
     },
   });
@@ -31,7 +33,7 @@ export const useGetTransaction = id => {
     queryKey: ['Transaction', id],
     queryFn: async () => {
       const data = await transactionService.getTransaction(id);
-      
+
       return data;
     },
 
@@ -75,6 +77,8 @@ export const useGetTxToken = () => {
       }
     },
     onError: error => {
+      // console.log(error, 'useGetTxToken error');
+
       _errorPrompt(error.message);
     },
   });

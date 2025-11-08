@@ -21,7 +21,7 @@ const CreatePin = props => {
   //   const load = async ()=>{
   //     const isLoggedIn = JSON.parse( await AsyncStorage.getItem('Login'));
   //     if(isLoggedIn){
-          
+
   //       if(isLoggedIn?.status == 'inactive'){
   //         navigation.navigate('otp-screen', { emailAddress: isLoggedIn?.emailAddress, });
   //       }
@@ -29,8 +29,6 @@ const CreatePin = props => {
   //   }
   //   load()
   // },[])
-
-  
 
   const _setOtp = value => {
     console.log('OTP Value:', value); // Check what's being logged here
@@ -50,7 +48,7 @@ const CreatePin = props => {
       onSuccess: data => {
         if (data) {
           navigation.navigate('ConfirmPin');
-          
+
           Toast.show({
             type: 'success',
             text1: 'Passcode Creation sucessful',
@@ -67,10 +65,10 @@ const CreatePin = props => {
         Toast.show({
           type: 'error',
           text1: 'Passcode Creation ',
-          text2: 
-          error?.response.data.error ||
-          error?.message ||
-           'An error occurred. Please try again.',
+          text2:
+            error?.response.data.error ||
+            error?.message ||
+            'An error occurred. Please try again.',
         });
       },
     });
@@ -97,7 +95,7 @@ const CreatePin = props => {
 
           <View style={styles.v2}>
             <OTPTextView
-              ref={e => (otpRef = e)}
+              ref={otpRef}
               inputCellLength={1}
               containerStyle={styles.containerOtp}
               textInputStyle={styles.inputOtp}
@@ -111,7 +109,7 @@ const CreatePin = props => {
 
           <View style={styles.v3}>
             {/* <Text style={styles.text13}>Resend Code <Text style={{color: PRIMARY_COLOR}}>59:23</Text> </Text>*/}
-               {/* <CustomButton*/}
+            {/* <CustomButton*/}
             {/*        onPress={() => navigation.navigate('otp-screen')}*/}
             {/*        style={styles.btn1}*/}
             {/*        text={"Submit Email"}*/}

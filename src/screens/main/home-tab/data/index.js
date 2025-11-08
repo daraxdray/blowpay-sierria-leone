@@ -1,13 +1,5 @@
-import React, {useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Image,
-  ScrollView,
-  Modal,
-  TouchableOpacity,
-} from 'react-native';
+import React, {useState, useEffect, useContext} from 'react';
+import {View, Text, Image, ScrollView, Modal} from 'react-native';
 import {styles} from './style';
 import {ScreenView} from '../../../../global/wrappers';
 import {WHITE} from '../../../../global/theme';
@@ -16,22 +8,29 @@ import tw from 'twrnc';
 import NumberInput from '../../../../components/airtime/NumberInput';
 import Tabs from '../../../../components/payWithQr/Tabs';
 import PlansList from '../../../../components/airtime/Plans';
-import {useBillerProducts} from '../../../../hooks/billing.hook';
+import {useGetBpDataPlans} from '../../../../hooks/billing.hook';
 import Loader from '../../../../components/modals/Loader';
 import Toast from 'react-native-toast-message';
 import ConfirmDataModal from '../../../../components/modals/ConfirmDataModal';
 import ContactListModal from '../../../../components/modals/ContactListModal';
+import NetworkPerformance from '../../../../components/airtime/NetworkPerformance';
+import {AuthContext} from '../../../../global/wrappers/AuthProvider';
+import ServiceUnavailable from '../../../../components/SierraLeone/ServiceUnavailable';
 
 const Data = props => {
   const {navigation} = props;
+  const {country} = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('Hot');
-  const [billerId, setBillerId] = useState('BIL108');
   const [airtimeProducts, setAirtimeProducts] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [showModal,setShowModal] = useState(false);
-  const [contactIndex,setContactIndex] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [contactIndex, setContactIndex] = useState(null);
+  const [providerStatus, setProviderStatus] = useState(null);
+  const serviceProvider = providerStatus?.name || 'MTN';
+
+  const {data: dataPlans, error, status} = useGetBpDataPlans(serviceProvider);
 
   const tabs = [
     'Hot',
@@ -43,15 +42,14 @@ const Data = props => {
     'Yearly',
   ];
 
-  const {data, isLoading, error} = useBillerProducts(billerId);
-
   useEffect(() => {
-    if (data && Array.isArray(data.data)) {
-      const products = data.data.filter(product => product.is_data);
+    if (Array.isArray(dataPlans?.data?.data)) {
+      const products = dataPlans.data.data;
       setAirtimeProducts(products);
+    } else {
+      console.log('no products found in dataPlans');
     }
-  }, [data]);
-
+  }, [dataPlans]);
   const handlePlanSelect = plan => {
     if (phoneNumber.length !== 11) {
       Toast.show({
@@ -70,10 +68,35 @@ const Data = props => {
       return <Text>No plans available</Text>;
     }
 
+    const extractValidityDays = (validity = '') => {
+      const lower = validity.toLowerCase();
+
+      if (lower.includes('day')) {
+        const match = validity.match(/(\d+)/);
+        return match ? parseInt(match[1], 10) : 1;
+      }
+
+      if (lower.includes('week')) {
+        const match = validity.match(/(\d+)/);
+        return match ? parseInt(match[1], 10) * 7 : 7;
+      }
+
+      if (lower.includes('month')) {
+        const match = validity.match(/(\d+)/);
+        return match ? parseInt(match[1], 10) * 30 : 30;
+      }
+
+      if (lower.includes('year') || lower.includes('365')) {
+        return 365;
+      }
+
+      return null;
+    };
+
     const categorizedProducts = daysRange => {
       return airtimeProducts.filter(product => {
-        const validityPeriod = parseInt(product.validity_period, 10);
-        return daysRange(validityPeriod);
+        const validityPeriod = extractValidityDays(product?.validity);
+        return validityPeriod && daysRange(validityPeriod);
       });
     };
 
@@ -88,14 +111,14 @@ const Data = props => {
       case 'Weekly':
         return (
           <PlansList
-            plans={categorizedProducts(days => days > 6 && days <= 14)}
+            plans={categorizedProducts(days => days >= 7 && days < 14)}
             onPlanSelect={handlePlanSelect}
           />
         );
       case 'Monthly':
         return (
           <PlansList
-            plans={categorizedProducts(days => days > 25 && days <= 30)}
+            plans={categorizedProducts(days => days >= 25 && days <= 31)}
             onPlanSelect={handlePlanSelect}
           />
         );
@@ -109,7 +132,7 @@ const Data = props => {
       case '3-Months':
         return (
           <PlansList
-            plans={categorizedProducts(days => days > 61 && days <= 90)}
+            plans={categorizedProducts(days => days > 60 && days <= 90)}
             onPlanSelect={handlePlanSelect}
           />
         );
@@ -127,18 +150,24 @@ const Data = props => {
     }
   };
 
-  if (isLoading) {
+  if (status === 'pending') {
     return <Loader />;
   }
-
-  if (error) {
+  if (country?.toLowerCase() === 'sierra leone') {
     return (
-      <ScreenView style={tw`justify-center items-center`} light color={WHITE}>
-        
+      <ScreenView style={styles.container} light color={WHITE}>
+        <Header
+          navigation={() => navigation.goBack()}
+          ImageSource={require('../../../../../assets/icons/filter.png')}
+          title="Data Purchase"
+          iconName="add-circle"
+          imagePress={() => console.log('Second Icon Pressed')}
+          setShowModal={setShowModal}
+        />
+        <ServiceUnavailable />
       </ScreenView>
     );
   }
-
   return (
     <ScreenView style={styles.container} light color={WHITE}>
       <View style={styles.view1}>
@@ -151,37 +180,41 @@ const Data = props => {
           imagePress={() => console.log('Second Icon Pressed')}
           setShowModal={setShowModal}
         />
+
         <NumberInput
-          dataOptionSelect={setBillerId}
           phoneNumber={phoneNumber}
-          onOptionSelect={setBillerId}
           setPhoneNumber={setPhoneNumber}
-          
-          
         />
-        {error? <Text>Error fetching products</Text>:
+        <NetworkPerformance
+          phoneNumber={phoneNumber}
+          onStatusChange={setProviderStatus}
+          country={country}
+        />
+        {error ? (
+          <Text>Error fetching products</Text>
+        ) : (
           <ScrollView
-          showsVerticalScrollIndicator={false}
-          style={styles.viewContainer}>
-          <View style={tw`p-3 pt-6 gap-5`}>
-            <Text style={tw`text-gray-700 ml-5 font-semibold text-[13px]`}>
-              Flash sales
-            </Text>
-            <Tabs
-              tabs={tabs}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-            {renderPlans()}
-          </View>
-          <View style={tw`mt-5 items-center w-full`}>
-            <Image
-              source={require('../../../../../assets/images/airtimeBanner.png')}
-              style={{width: '90%'}}
-              resizeMode={'contain'}
-            />
-          </View>
-        </ScrollView>}
+            showsVerticalScrollIndicator={false}
+            style={styles.viewContainer}>
+            <View style={tw`p-3 pt-6 gap-5`}>
+              <Text style={tw`text-gray-700 ml-5 font-semibold text-[13px]`}>
+                Flash sales
+              </Text>
+              <Tabs
+                tabs={tabs}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+              />
+              {renderPlans()}
+            </View>
+            <View style={tw`mt-5 items-center w-full`}>
+              <Image
+                source={require('../../../../../assets/images/airtimeBanner.png')}
+                resizeMode={'contain'}
+              />
+            </View>
+          </ScrollView>
+        )}
       </View>
 
       <Modal
@@ -194,11 +227,17 @@ const Data = props => {
             data={selectedPlan}
             closeModal={() => setModalVisible(false)}
             phoneNumber={phoneNumber}
+            providerStatus={providerStatus}
           />
         </View>
       </Modal>
-      <ContactListModal showModal={showModal} setShowModal={setShowModal} setselectedContact={setPhoneNumber} selectedIndex={contactIndex} setSelectedIndex={setContactIndex} />
-      
+      <ContactListModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        setselectedContact={setPhoneNumber}
+        selectedIndex={contactIndex}
+        setSelectedIndex={setContactIndex}
+      />
     </ScreenView>
   );
 };

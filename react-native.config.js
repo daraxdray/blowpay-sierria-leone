@@ -7,18 +7,14 @@ module.exports = {
     },
     'react-native-view-shot': {
       platforms: {
-        android: {
-          sourceDir: '../node_modules/react-native-view-shot/android',
-        },
-        ios: {},
+        android: null,
+        ios: null,
       },
     },
   },
   project: {
     ios: {},
-    android: {  packageName:'com.rdx.BillsByBlowmoney'
-      
-    },
+    android: {packageName: 'com.rdx.blowpay'},
   },
   assets: ['./node_modules/react-native-vector-icons/Fonts'],
 };

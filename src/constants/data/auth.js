@@ -6,21 +6,21 @@ export const Tier1Req = [
   //   icon: require('../../../assets/icons/shield-face.png'),
   //   route: 'setup-id-screen',
   // },
-  {
-    id: 2,
-    title: 'Biometrics Identity Setup',
-    content:
-      'Take sometime off to set up your biometrics to enable one clic login',
-    icon: require('../../../assets/icons/faceid.png'),
-    route: 'setup-biometric-screen',
-  },
-  {
-    id: 3,
-    title: 'Residential Address',
-    content: 'Provide us with your permanent address and residential address',
-    icon: require('../../../assets/icons/setting.png'),
-    route: 'setup-address-screen',
-  },
+  // {
+  //   id: 2,
+  //   title: 'Biometrics Identity Setup',
+  //   content:
+  //     'Take sometime off to set up your biometrics to enable one clic login',
+  //   icon: require('../../../assets/icons/faceid.png'),
+  //   route: 'setup-biometric-screen',
+  // },
+  // {
+  //   id: 3,
+  //   title: 'Residential Address',
+  //   content: 'Provide us with your permanent address and residential address',
+  //   icon: require('../../../assets/icons/setting.png'),
+  //   route: 'setup-address-screen',
+  // },
 ];
 
 export const countryList = [

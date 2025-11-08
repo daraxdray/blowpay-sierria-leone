@@ -1,7 +1,6 @@
-import {useMutation, QueryClient, useQuery} from '@tanstack/react-query';
+import {useMutation, useQuery} from '@tanstack/react-query';
 import authServices from '../services/auth.services';
-
-const queryClient = new QueryClient(); // Initialize query client
+import {_errorPrompt} from '../utils';
 
 export const useRegisterUser = () => {
   return useMutation({
@@ -19,7 +18,6 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: payload => authServices.login(payload),
     onSuccess: data => {
-      
       if (data) {
         return data;
       }
@@ -70,10 +68,10 @@ export const useSendOtp = () => {
 // Hook for checking website statsu
 export const useCheckServerStatus = () => {
   return useQuery({
-    queryKey: ['serverStatus',],
+    queryKey: ['serverStatus'],
     queryFn: async () => {
       const data = await authServices.getServerStatus();
-      
+
       return data;
     },
     onSuccess: data => {
@@ -179,7 +177,7 @@ export const useResetPassword = () => {
 export const useLogout = () => {
   return useMutation({
     mutationFn: () => authServices.logout(),
-    onSuccess: (d) => {
+    onSuccess: d => {
       return d;
     },
     onError: error => {

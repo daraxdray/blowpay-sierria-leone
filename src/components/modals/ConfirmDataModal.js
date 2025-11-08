@@ -1,17 +1,19 @@
 import {View, Text, TouchableOpacity} from 'react-native';
-import React from 'react';
+import React, {useContext} from 'react';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {PanGestureHandler} from 'react-native-gesture-handler';
 import {useNavigation} from '@react-navigation/native';
+import {AuthContext} from '../../global/wrappers/AuthProvider';
+import {getCurrencySymbol} from '../../utils/format';
 
-const ConfirmDataModal = ({closeModal, data, phoneNumber}) => {
+const ConfirmDataModal = ({closeModal, data, phoneNumber, providerStatus}) => {
   const handleSwipeDown = ({nativeEvent}) => {
     if (nativeEvent.translationY > 50) {
       closeModal();
     }
   };
-
+  const {country} = useContext(AuthContext);
   const navigation = useNavigation();
   return (
     <PanGestureHandler onGestureEvent={handleSwipeDown}>
@@ -32,8 +34,8 @@ const ConfirmDataModal = ({closeModal, data, phoneNumber}) => {
           </View>
           <View style={tw`flex items-center`}>
             <Text style={tw`text-[#1C5BFF] font-bold text-[16px]`}>
-              NGN{' '}
-              {parseFloat(data?.amount)
+              {getCurrencySymbol(country)}
+              {parseFloat(data?.price)
                 .toFixed(2)
                 .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
             </Text>
@@ -50,8 +52,8 @@ const ConfirmDataModal = ({closeModal, data, phoneNumber}) => {
                 Amount
               </Text>
               <Text style={tw`text-[#000000] font-medium text-[11px]`}>
-                NGN{' '}
-                {parseFloat(data?.amount)
+                {getCurrencySymbol(country)}
+                {parseFloat(data?.price)
                   .toFixed(2)
                   .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
               </Text>
@@ -70,7 +72,11 @@ const ConfirmDataModal = ({closeModal, data, phoneNumber}) => {
             <TouchableOpacity
               onPress={() => {
                 closeModal();
-                navigation.navigate('DataPaymentPin', {data, phoneNumber});
+                navigation.navigate('DataPaymentPin', {
+                  data,
+                  phoneNumber,
+                  providerStatus,
+                });
               }}
               style={tw`bg-[#FF114A] rounded-[16px] px-3 py-3 flex w-full items-center flex-row justify-center `}>
               <Text style={tw`text-white font-medium text-[14px]`}>

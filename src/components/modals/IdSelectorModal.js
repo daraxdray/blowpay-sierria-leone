@@ -21,8 +21,9 @@ const IdSelectorModal = ({closeModal}) => {
 
   return (
     <PanGestureHandler onGestureEvent={handleSwipeDown}>
-      <View style={tw`bg-white p-5 w-19/20 self-center rounded-10 mb-5 gap-3`}>
+      <View style={tw`bg-white p-5 w-11/12 self-center rounded-2xl mb-5 gap-3`}>
         <View style={tw`gap-5 p-2 pt-4`}>
+          {/* Header */}
           <View style={tw`flex flex-row items-center justify-between`}>
             <TouchableOpacity
               style={tw`p-1 bg-[#F3F4F6] items-center justify-center rounded-full w-[30px] h-[30px]`}
@@ -36,6 +37,7 @@ const IdSelectorModal = ({closeModal}) => {
             <View style={tw`w-10`} />
           </View>
 
+          {/* Options */}
           <View
             style={tw`border border-gray-200 py-4 px-2 rounded-[8px] gap-6`}>
             <TouchableOpacity
@@ -46,6 +48,7 @@ const IdSelectorModal = ({closeModal}) => {
               </Text>
               <Ionicons name="chevron-forward" size={15} color="black" />
             </TouchableOpacity>
+
             <TouchableOpacity
               onPress={() => handleNavigation('drivers-license')}
               style={tw`bg-[#F8F8FA] rounded-[10px] px-3 py-4 flex w-full items-center flex-row justify-between border border-[#D0D5DD]`}>
@@ -54,6 +57,7 @@ const IdSelectorModal = ({closeModal}) => {
               </Text>
               <Ionicons name="chevron-forward" size={15} color="black" />
             </TouchableOpacity>
+
             <TouchableOpacity
               onPress={() => handleNavigation('national-identity-number')}
               style={tw`bg-[#F8F8FA] rounded-[10px] px-3 py-4 flex w-full items-center flex-row justify-between border border-[#D0D5DD]`}>

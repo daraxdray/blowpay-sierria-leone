@@ -1,10 +1,5 @@
-import {Platform, StyleSheet} from 'react-native';
-import {BLACK, HEIGHT, MILK, WHITE, WIDTH} from '../../../global/theme';
-import {
-  satoshi,
-  satoshi_black,
-  satoshi_bold,
-} from '../../../constants/data/fonts';
+import {StyleSheet} from 'react-native';
+import {BLACK, HEIGHT, MILK, WIDTH} from '../../../global/theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -81,6 +76,4 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  
 });

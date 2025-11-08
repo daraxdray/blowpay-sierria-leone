@@ -11,10 +11,8 @@ class AuthServices {
     return request('/auth/register', 'POST', payload, false, false, false);
   }
 
-
-
   getServerStatus() {
-    return request('/system-info', 'GET',undefined, false, false, false);
+    return request('/system-info', 'GET', undefined, false, false, false);
   }
 
   /**
@@ -26,6 +24,7 @@ class AuthServices {
   login(payload) {
     return request('/auth/login', 'POST', payload, false, false, false);
   }
+
   /**
    *
    * @param {{emailAddress: string, otp: string}} payload
@@ -49,7 +48,6 @@ class AuthServices {
    * @return {Promise<*>}
    */
   resendOtp(payload) {
-    
     return request(
       '/auth/otp/resend',
       'POST',
@@ -159,7 +157,7 @@ class AuthServices {
   }
 
   KYC(payload) {
-    console.log({payload});
+    console.log({payload}, 'payload in service');
     return request('/kyc/complete', 'POST', payload, true);
   }
   updateUser(payload) {

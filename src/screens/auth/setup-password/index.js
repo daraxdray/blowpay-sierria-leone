@@ -1,23 +1,22 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  StatusBar,
   Image,
   TextInput,
   Linking,
 } from 'react-native';
-import { styles } from './style';
-import { ScreenView } from '../../../global/wrappers';
-import { BLACK, WHITE, GREY, DARK_GREY } from '../../../global/theme';
+import {styles} from './style';
+import {ScreenView} from '../../../global/wrappers';
+import {BLACK, WHITE, GREY, DARK_GREY} from '../../../global/theme';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Formik } from 'formik';
+import {Formik} from 'formik';
 import * as Yup from 'yup';
 import Toast from 'react-native-toast-message';
-import { useRegisterUser } from '../../../hooks/auth.hook';
-import { CustomButton } from '../../../global/components';
+import {useRegisterUser} from '../../../hooks/auth.hook';
+import {CustomButton} from '../../../global/components';
 import Loader from '../../../components/modals/Loader';
 import AppConstant from '../../../constants/data/appConstant';
 
@@ -35,27 +34,21 @@ const validationSchema = Yup.object().shape({
     .required('Confirm Password is required'),
 });
 
-const PasswordConstraint = ({ label, condition }) => (
+const PasswordConstraint = ({label, condition}) => (
   <TouchableOpacity style={styles.consPass}>
-    <Text style={[styles.text14, { color: condition ? 'red' : GREY }]}>
+    <Text style={[styles.text14, {color: condition ? 'red' : GREY}]}>
       {label}
     </Text>
     <Ionicons name="checkmark" size={15} color={condition ? 'red' : GREY} />
   </TouchableOpacity>
 );
 
-const SetupPassword = ({ navigation, route }) => {
+const SetupPassword = ({navigation, route}) => {
   if (!route?.params) return null;
   const [isVisible, setIsVisible] = useState(true);
-  const {
-    firstName,
-    lastName,
-    emailAddress,
-    phoneNumber,
-    dateOfBirth,
-    username,
-  } = route.params;
-  const { mutate: registerUser, status, isLoading } = useRegisterUser();
+  const {firstName, lastName, emailAddress, dateOfBirth, username} =
+    route.params;
+  const {mutate: registerUser, status, isLoading} = useRegisterUser();
 
   const handleRegister = values => {
     const userData = {
@@ -63,7 +56,6 @@ const SetupPassword = ({ navigation, route }) => {
       lastName,
       emailAddress,
       username,
-      phoneNumber,
       dateOfBirth,
       password: values.password,
     };
@@ -72,8 +64,7 @@ const SetupPassword = ({ navigation, route }) => {
     registerUser(userData, {
       onSuccess: data => {
         if (data) {
-          
-          navigation.navigate('otp-screen', { emailAddress });
+          navigation.navigate('otp-screen', {emailAddress});
         } else {
           Toast.show({
             type: 'error',
@@ -105,7 +96,7 @@ const SetupPassword = ({ navigation, route }) => {
   });
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{flex: 1}}>
       <ScreenView style={styles.container} light color={WHITE}>
         <ScrollView style={styles.viewContainer}>
           <View style={styles.header}>
@@ -121,7 +112,7 @@ const SetupPassword = ({ navigation, route }) => {
             </View>
 
             <Formik
-              initialValues={{ password: '', confirmPassword: '' }}
+              initialValues={{password: '', confirmPassword: ''}}
               validationSchema={validationSchema}
               onSubmit={handleRegister}>
               {({
@@ -145,18 +136,21 @@ const SetupPassword = ({ navigation, route }) => {
                     {['Password', 'Confirm Password'].map((field, idx) => (
                       <View key={idx} style={styles.inputContainer}>
                         <Text style={styles.text}>{field}</Text>
-                        <View style={[
-                          { width: "100%", flexDirection: "row", alignItems: "center" },
+                        <View
+                          style={[
+                            {
+                              width: '100%',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                            },
 
-                          
-                          touched[
-                            idx === 0 ? 'password' : 'confirmPassword'
-                          ] &&
+                            touched[
+                              idx === 0 ? 'password' : 'confirmPassword'
+                            ] &&
                             errors[idx === 0 ? 'password' : 'confirmPassword']
-                            ? { borderColor: 'red' }
-                            : {},
-
-                        ]}>
+                              ? {borderColor: 'red'}
+                              : {},
+                          ]}>
                           <TextInput
                             value={
                               values[idx === 0 ? 'password' : 'confirmPassword']
@@ -170,26 +164,43 @@ const SetupPassword = ({ navigation, route }) => {
                             onBlur={handleBlur(
                               idx === 0 ? 'password' : 'confirmPassword',
                             )}
-                            style={[{width:'100%'},styles.input]}
+                            style={[{width: '100%'}, styles.input]}
                           />
                           <TouchableOpacity
-                            onPress={() => setIsVisible(prev => prev = !prev)}
-                            style={{ position: "absolute", right: 20, padding: 10, flexDirection: "row", alignItems: "center" }}
-                          >
-                            <View style={{ width: 1, backgroundColor: BLACK, height: "160%", marginRight: 15 }} />
+                            onPress={() => setIsVisible(prev => (prev = !prev))}
+                            style={{
+                              position: 'absolute',
+                              right: 20,
+                              padding: 10,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                            }}>
+                            <View
+                              style={{
+                                width: 1,
+                                backgroundColor: BLACK,
+                                height: '160%',
+                                marginRight: 15,
+                              }}
+                            />
                             <>
-                              <Ionicons name={isVisible ? "eye" : "eye-off"} color={DARK_GREY} size={15} style={{ alignSelf: "center" }} />
+                              <Ionicons
+                                name={isVisible ? 'eye' : 'eye-off'}
+                                color={DARK_GREY}
+                                size={15}
+                                style={{alignSelf: 'center'}}
+                              />
                             </>
                           </TouchableOpacity>
                         </View>
                         {touched[idx === 0 ? 'password' : 'confirmPassword'] &&
                           errors[
-                          idx === 0 ? 'password' : 'confirmPassword'
+                            idx === 0 ? 'password' : 'confirmPassword'
                           ] && (
-                            <Text style={{ color: 'red' }}>
+                            <Text style={{color: 'red'}}>
                               {
                                 errors[
-                                idx === 0 ? 'password' : 'confirmPassword'
+                                  idx === 0 ? 'password' : 'confirmPassword'
                                 ]
                               }
                             </Text>
@@ -230,17 +241,37 @@ const SetupPassword = ({ navigation, route }) => {
                         />
                         <Text style={styles.text13}>
                           By Signing up, you agree to the
-
-                          <Text style={{ textDecorationLine: 'underline' }} onPress={() => Linking.openURL(`https://${Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BlowPay.app/terms-and-conditions' : 'https://billsbyblowmoney.com/terms.html'}`)} >
+                          <Text
+                            style={{textDecorationLine: 'underline'}}
+                            onPress={() =>
+                              Linking.openURL(
+                                `https://${
+                                  Platform.OS === 'ios' ||
+                                  AppConstant.isAmazonStore
+                                    ? 'BlowPay.app/terms-and-conditions'
+                                    : 'https://billsbyblowmoney.com/terms.html'
+                                }`,
+                              )
+                            }>
                             {' '}
                             Terms of Service
                           </Text>{' '}
                           and
-                          <Text style={{ textDecorationLine: 'underline' }} onPress={() => Linking.openURL(`https://${Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BlowPay.app/terms-and-conditions/policy' : 'https://billsbyblowmoney.com/terms.html'}`)} >
+                          <Text
+                            style={{textDecorationLine: 'underline'}}
+                            onPress={() =>
+                              Linking.openURL(
+                                `https://${
+                                  Platform.OS === 'ios' ||
+                                  AppConstant.isAmazonStore
+                                    ? 'BlowPay.app/terms-and-conditions/policy'
+                                    : 'https://billsbyblowmoney.com/terms.html'
+                                }`,
+                              )
+                            }>
                             {' '}
                             Privacy Policy
                           </Text>
-
                         </Text>
                       </View>
                     </View>

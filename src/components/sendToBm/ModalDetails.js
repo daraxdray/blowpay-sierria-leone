@@ -1,21 +1,20 @@
 import {View, Text, TouchableOpacity, Image, TextInput} from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useContext} from 'react';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {CustomButton} from '../../global/components';
-import {BLACK, WHITE} from '../../global/theme';
+import {BLACK} from '../../global/theme';
 import {PanGestureHandler} from 'react-native-gesture-handler';
-import {useGetReceiver, useGetVitualBalance} from '../../hooks/virtual.hook';
+import {useGetVitualBalance} from '../../hooks/virtual.hook';
+import {AuthContext} from '../../global/wrappers/AuthProvider';
+import {getCurrencySymbol} from '../../utils/format';
 
 const ModalDetails = ({closeModal, proceed, data}) => {
   const [amount, setAmount] = useState('');
   const {data: balance} = useGetVitualBalance();
   const userBalance = balance?.data || [];
-
-  console.log(data);
-  
   const reciever = data?.user;
-  
+  const {country} = useContext(AuthContext);
   const accNum = data?.accountNumber;
 
   const handleSwipeDown = ({nativeEvent}) => {
@@ -69,7 +68,7 @@ const ModalDetails = ({closeModal, proceed, data}) => {
               Available Balance
             </Text>
             <Text style={tw`text-gray-800 font-bold text-[24px]`}>
-              NGN{' '}
+              {getCurrencySymbol(country)}
               {parseFloat(userBalance?.balance / 100)
                 .toFixed(2)
                 .replace(/\d(?=(\d{3})+\.)/g, '$&,') || 'NAN'}
@@ -82,7 +81,7 @@ const ModalDetails = ({closeModal, proceed, data}) => {
             <View style={tw`flex flex-row justify-between`}>
               <View style={tw`flex flex-row items-end gap-1`}>
                 <Text style={tw`text-gray-500 font-medium text-[16px] mb-3`}>
-                  NGN
+                  {getCurrencySymbol(country)}
                 </Text>
                 <TextInput
                   placeholder="00"
@@ -96,7 +95,7 @@ const ModalDetails = ({closeModal, proceed, data}) => {
               <View
                 style={tw`p-2 bg-[#F3F4F6] flex flex-row items-center gap-1`}>
                 <Text style={tw`text-gray-900 font-medium text-[12px] mb-1`}>
-                  NGN
+                  {getCurrencySymbol(country)}
                 </Text>
               </View>
             </View>
@@ -109,6 +108,7 @@ const ModalDetails = ({closeModal, proceed, data}) => {
               style={tw`border border-[#EFEFEF] rounded-[20px] p-3 flex-row items-center gap-3`}>
               <Image
                 source={require('../../../assets/icons/Avatar.png')}
+                // eslint-disable-next-line react-native/no-inline-styles
                 style={{width: 40, height: 40}}
               />
               <View style={tw`gap-1`}>

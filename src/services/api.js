@@ -1,9 +1,7 @@
 // import {API_URL, BASE_URL} from '@env';
-import { Platform } from 'react-native';
-import { errorSeeker, _errorPrompt } from '../utils';
 // import CookieManager from '@react-native-cookies/cookies';
 import axios from 'axios';
-
+import Toast from 'react-native-toast-message';
 
 /**
  * Object Request Header
@@ -32,13 +30,11 @@ export const requestHeader = {
 //     // console.log("=========================KNOW=============",Platform.OS)
 //     // Get cookies for the BASE_URL
 //     if(Platform.OS == "android"){
-//        cookies = await CookieManager.get('https://api.blowcloud.org'); 
+//        cookies = await CookieManager.get('https://api.blowcloud.org');
 //       //  console.log(typeof(cookies),"================+ANDROID COOKIE TYPE ",cookies)
 //     }else{
 
 //       cookies = await CookieManager.getAll(true);
-//       // console.log(typeof(cookies),"================+IOS COOKIE TYPE ",cookies)
-        
 //     }
 
 //     if (cookies) {
@@ -102,7 +98,7 @@ export const baseUrl = 'https://api.blowcloud.org/v1';
 
 export async function request(url, method, payload = {}, form = false) {
   const fullUrl = `${baseUrl}${url}`;
-// console.warn(fullUrl);
+  // console.warn(fullUrl);
   // Configure axios instance
   const axiosInstance = axios.create({
     baseURL: baseUrl,
@@ -113,16 +109,15 @@ export async function request(url, method, payload = {}, form = false) {
   });
 
   axiosInstance.interceptors.request.use(
-    (config) => {
+    config => {
       console.log('Request Headers:', config.headers);
       return config;
     },
-    (error) => {
+    error => {
       console.error('Request Error:', error);
       return Promise.reject(error);
-    }
+    },
   );
-  
 
   // axiosInstance.interceptors.request
   try {
@@ -137,30 +132,37 @@ export async function request(url, method, payload = {}, form = false) {
     if (method !== 'GET') {
       config.data = form ? payload : JSON.stringify(payload);
     }
-    
     // Make axios request
     const response = await axiosInstance(config);
-    
 
     // Automatically handles cookies, but if you need to set cookies manually
     // You can use below code to manually set cookies if needed
     const setCookieHeader = response.headers['set-cookie'];
     if (setCookieHeader) {
-
       // console.warn('Set-Cookie Header:', setCookieHeader);
-    }else{
+    } else {
       // console.warn('Headers:', response.headers);
-
     }
-    
     return response.data;
   } catch (err) {
-    console.error(`Request Error Data at ${url}: `, err.response.data);
-    
-    //handle logout when request does not authorize;
-    if(err.response.status == 401 &&  err.response?.data?.message == "Unauthorized"){
-      return err.response.data;
+    const status = err.response?.status;
+    const message = err.response?.data || 'Something went wrong';
+
+    if (status === 429 && typeof message === 'string') {
+      Toast.show({
+        type: 'error',
+        text1: 'Too Many Requests wait a moment',
+        text2: message,
+      });
+    } else if (status === 401) {
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: typeof message === 'string' ? message : 'Something went wrong.',
+      });
     }
-    throw err;
+
+    throw err; // rethrow if needed
   }
 }

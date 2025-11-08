@@ -1,20 +1,14 @@
-import { View, Text, TouchableOpacity, Linking, Platform } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import {View, Text, TouchableOpacity, Linking, Platform} from 'react-native';
+import React, {useEffect, useState} from 'react';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import { useNavigation } from '@react-navigation/native';
+import {PanGestureHandler} from 'react-native-gesture-handler';
 import AppleSVG from '../../../assets/svgs/Apple.svg';
 import PlaystoreSVG from '../../../assets/svgs/Playstore.svg';
-import Toast from 'react-native-toast-message';
-const Bmoney = ({ closeModal }) => {
+const Bmoney = ({closeModal}) => {
   const [isInstalled, setIsInstalled] = useState(false);
 
-
-
-
-
-  const handleSwipeDown = ({ nativeEvent }) => {
+  const handleSwipeDown = ({nativeEvent}) => {
     if (nativeEvent.translationY > 50) {
       closeModal();
     }
@@ -30,10 +24,9 @@ const Bmoney = ({ closeModal }) => {
 
   const [show, setShowMessage] = useState(false);
 
-
   const isAppInstalled = async () => {
     let url = '';
-    if (Platform.OS == 'ios') {
+    if (Platform.OS === 'ios') {
       url = 'blowmoney://bottom-tab'; // Custom deep link
     } else {
       url = 'blowmoney://blowmoney'; // Custom deep link
@@ -41,26 +34,25 @@ const Bmoney = ({ closeModal }) => {
     try {
       // Try opening the app directly
       const can = await Linking.canOpenURL(url);
-      console.log("CAN", can,url);
+      console.log('CAN', can, url);
 
       setIsInstalled(can);
     } catch (error) {
-      console.log("CAN", error);
+      console.log('CAN', error);
       return false;
     }
-  }
-
+  };
 
   const openApp = async () => {
     let url = '';
-    if (Platform.OS == 'ios') {
+    if (Platform.OS === 'ios') {
       url = 'blowmoney://bottom-tab'; // Custom deep link
     } else {
       url = 'blowmoney://blowmoney'; // Custom deep link
     }
     if (!isInstalled) {
-      setShowMessage(true)
-      return
+      setShowMessage(true);
+      return;
     }
 
     Linking.openURL(url);
@@ -70,17 +62,14 @@ const Bmoney = ({ closeModal }) => {
     if (Platform.OS === 'ios') {
       Linking.openURL('https://apps.apple.com/app/BillsByBlowmoney');
     } else {
-
       Linking.openURL(
         'https://play.google.com/store/apps/details?id=com.BillsByBlowmoney',
       ); // Replace with actual app URL on Playstore
     }
   };
 
-
   useEffect(() => {
     isAppInstalled();
-
   }, []);
 
   return (
@@ -131,14 +120,17 @@ const Bmoney = ({ closeModal }) => {
           </TouchableOpacity>
 
           <View style={tw` pb-4 px-2 rounded-[8px] gap-4`}>
-
-           {isInstalled && <TouchableOpacity
-              onPress={() => {
-                openApp()
-              }}
-              style={tw`bg-[#FF114A] rounded-[16px] px-3 py-3 flex w-full items-center flex-row justify-center `}>
-              <Text style={tw`text-white font-medium text-[14px]`}>Go to BlowMoney</Text>
-            </TouchableOpacity>}
+            {isInstalled && (
+              <TouchableOpacity
+                onPress={() => {
+                  openApp();
+                }}
+                style={tw`bg-[#FF114A] rounded-[16px] px-3 py-3 flex w-full items-center flex-row justify-center `}>
+                <Text style={tw`text-white font-medium text-[14px]`}>
+                  Go to BlowMoney
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {show && (
               <View style={tw`bg-yellow-100 p-3 rounded`}>
@@ -147,17 +139,19 @@ const Bmoney = ({ closeModal }) => {
                 </Text>
               </View>
             )}
-            {!isInstalled && <TouchableOpacity
-              style={[
-                tw`p-2 my-2 rounded items-center flex-row gap-2 justify-center rounded-[15px] bg-[#EDEDEF]`,
-              ]}
-              onPress={openPlaystore}>
-              <PlaystoreSVG />
-              <AppleSVG />
-              <Text style={tw`text-[#000000] text-[13px] font-medium`}>
-                Download App
-              </Text>
-            </TouchableOpacity>}
+            {!isInstalled && (
+              <TouchableOpacity
+                style={[
+                  tw`p-2 my-2 rounded items-center flex-row gap-2 justify-center rounded-[15px] bg-[#EDEDEF]`,
+                ]}
+                onPress={openPlaystore}>
+                <PlaystoreSVG />
+                <AppleSVG />
+                <Text style={tw`text-[#000000] text-[13px] font-medium`}>
+                  Download App
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>

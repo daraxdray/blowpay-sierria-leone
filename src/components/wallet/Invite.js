@@ -6,7 +6,7 @@ import {
   View,
   TouchableOpacity,
   Share,
-  Platform, // Import Share API
+  Platform,
 } from 'react-native';
 import tw from 'twrnc';
 import AppConstant from '../../constants/data/appConstant';
@@ -15,8 +15,15 @@ const Invite = () => {
   const shareMessage = async () => {
     try {
       const result = await Share.share({
-        message:
-          `Enjoy a stress-free way to manage your mobile bills with ${Platform.OS == 'ios' || AppConstant.isAmazonStore ?'Blowpay':'BillsByBlowmoney'}. Visit ${Platform.OS == 'ios'  || AppConstant.isAmazonStore ?  'www.blowpay.app':'www.BillsByBlowmoney.com'} to get started!`,
+        message: `Enjoy a stress-free way to manage your mobile bills with ${
+          Platform.OS === 'ios' || AppConstant.isAmazonStore
+            ? 'Blowpay'
+            : 'BillsByBlowmoney'
+        }. Visit ${
+          Platform.OS === 'ios' || AppConstant.isAmazonStore
+            ? 'www.blowpay.app'
+            : 'www.BillsByBlowmoney.com'
+        } to get started!`,
       });
 
       if (result.action === Share.sharedAction) {
@@ -38,11 +45,18 @@ const Invite = () => {
       style={tw`p-6 w-full bg-[#FFFFFF] mt-5 rounded-[20px] flex-row items-center justify-center`}>
       <View style={tw`flex-1 gap-1`}>
         <Text style={tw`text-[14px] mb-[5px] text-[#000000] font-semibold`}>
-          Invite friends and earn NGN
+          Invite friends and earn Money
         </Text>
         <Text style={tw`w-[85%] text-[#4B5563] text-[12px]`}>
-          "Enjoy a stress-free way to manage your mobile bills with {Platform.OS == 'ios' || AppConstant.isAmazonStore ?'Blowpay':'BillsByBlowmoney'}.
-          Visit {Platform.OS == 'ios'  || AppConstant.isAmazonStore ?  'Blowpay.app':'www.BillsByBlowmoney.com'} to get started!"
+          "Enjoy a stress-free way to manage your mobile bills with{' '}
+          {Platform.OS === 'ios' || AppConstant.isAmazonStore
+            ? 'Blowpay'
+            : 'BillsByBlowmoney'}
+          . Visit{' '}
+          {Platform.OS === 'ios' || AppConstant.isAmazonStore
+            ? 'Blowpay.app'
+            : 'www.BillsByBlowmoney.com'}{' '}
+          to get started!"
         </Text>
       </View>
       <View
@@ -50,7 +64,7 @@ const Invite = () => {
         <TouchableOpacity onPress={shareMessage}>
           <Image
             source={require('../../../assets/icons/share.png')}
-            style={{width: 20, height: 20}}
+            style={styles.Image}
             resizeMode={'contain'}
           />
         </TouchableOpacity>
@@ -61,4 +75,6 @@ const Invite = () => {
 
 export default Invite;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  Image: {width: 20, height: 20},
+});

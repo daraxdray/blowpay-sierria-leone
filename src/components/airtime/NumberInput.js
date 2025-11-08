@@ -1,189 +1,192 @@
-import React, {useState, useEffect} from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
-  Text,
-  Image,
-  TouchableOpacity,
   TextInput,
+  TouchableOpacity,
   FlatList,
   StyleSheet,
+  Image,
+  Text,
+  Modal,
+  Pressable,
+  Dimensions,
 } from 'react-native';
-import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {
+  telcos,
+  detectNetwork,
+  formatSierraLeoneNumber,
+} from '../../utils/format';
 
-const networkPrefixes = {
-  MTN: ['0703', '0706', '0803', '0806', '0903', '0906'],
-  Glo: ['0705', '0805', '0807', '0905'],
-  Airtel: ['0701', '0802', '0902', '0907'],
-  '9MOBILE': ['0809', '0909'],
+const defaultNetworks = {
+  Nigeria: 'MTN',
+  'Sierra Leone': 'Africell',
 };
 
-const options = [
-  {
-    name: 'Glo',
-    image: require('../../../assets/icons/glo.png'),
-    id: '49',
-    airtimeId: 'BIL102',
-    dataId: 'BIL109',
-  },
-  {
-    name: 'Airtel',
-    image: require('../../../assets/icons/airtel.png'),
-    id: '50',
-    airtimeId: 'BIL100',
-    dataId: 'BIL110',
-  },
-  {
-    name: '9MOBILE',
-    image: require('../../../assets/icons/9mobile.jpeg'),
-    id: '51',
-    airtimeId: 'BIL103',
-    dataId: 'BIL111',
-  },
-  {
-    name: 'MTN',
-    image: require('../../../assets/icons/mtn.png'),
-    id: '48',
-    airtimeId: 'BIL099',
-    dataId: 'BIL108',
-  },
-];
+const NumberInput = ({
+  country = 'Nigeria',
+  phoneNumber = '',
+  setPhoneNumber = () => {},
+}) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [manualSelection, setManualSelection] = useState(false);
+  const [anchor, setAnchor] = useState(null);
+  const inputRef = useRef(null);
 
+  const options = telcos[country] || [];
+  const WINDOW = Dimensions.get('window');
+  useEffect(() => {
+    const defaultNetwork = defaultNetworks[country];
+    if (defaultNetwork) {
+      const match = options.find(opt => opt.name === defaultNetwork);
+      if (match) {
+        setSelectedOption(match);
+      }
+    }
+  }, [country]);
+  useEffect(() => {
+    if (country === 'Sierra Leone' && !phoneNumber) {
+      setPhoneNumber('+232 ');
+    }
+  }, [country]);
 
-
-function detectNetwork(number) {
-  // Ensure the number is a string, starts with '0', and is at least 4 characters long
-  if (typeof number !== 'string' || !number.startsWith('0') || number.length < 4) {
-    return 'Invalid number';
-  }
-
-  // Define network prefixes
-  const networks = {
-    'MTN': new Set(['0803', '0806', '0703', '0903', '0906', '0706', '0813', '0810', '0814', '0816', '0913', '0916']),
-    'Glo': new Set(['0805', '0705', '0905', '0807', '0815', '0811', '0915']),
-    'Airtel': new Set(['0802', '0902', '0701', '0808', '0708', '0812', '0901', '0907']),
-    '9mobile (Etisalat)': new Set(['0809', '0909', '0817', '0818', '0908']),
-    'Visafone': new Set(['0704', '07025', '07026']),
-    'Multilinks': new Set(['0709', '07029']),
-    'Starcomms': new Set(['0819', '07028', '07029']),
-    'Nitel': new Set(['0804']),
-    'Zoom Mobile': new Set(['0707']),
+  const measureAnchor = () => {
+    try {
+      if (inputRef.current && inputRef.current.measureInWindow) {
+        inputRef.current.measureInWindow((x, y, width, height) => {
+          setAnchor({x, y, width, height});
+        });
+      } else if (inputRef.current && inputRef.current.measure) {
+        inputRef.current.measure((ix, iy, width, height, px, py) => {
+          setAnchor({x: px, y: py, width, height});
+        });
+      }
+    } catch (err) {
+      setAnchor(null);
+    }
+  };
+  const handleChangePhone = text => {
+    if (country === 'Sierra Leone') {
+      setPhoneNumber(formatSierraLeoneNumber(text));
+    } else {
+      setPhoneNumber(text);
+    }
+    setManualSelection(false);
   };
 
-  // Check 5-digit prefixes first, then 4-digit prefixes if necessary
-  const prefix5 = number.slice(0, 5);
-  const prefix4 = number.slice(0, 4);
+  const openDropdown = () => {
+    setModalVisible(true);
+    requestAnimationFrame(() => {
+      measureAnchor();
+    });
+  };
 
-  // Determine network
-  for (const [network, prefixes] of Object.entries(networks)) {
-    if (prefixes.has(prefix5) || prefixes.has(prefix4)) {
-      return network;
-    }
-  }
-
-  return 'Unknown network';
-}
-
-
-
-
-const NumberInput = ({
-  onOptionSelect,
-  phoneNumber,
-  setPhoneNumber,
-  dataOptionSelect,
-}) => {
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(options[3].name);
-
-  const toggleDropdown = () => {
-    setDropdownVisible(prev => !prev);
+  const closeDropdown = () => {
+    setModalVisible(false);
   };
 
   const handleOptionSelect = item => {
-    setSelectedOption(item.name);
-    setDropdownVisible(false);
-    onOptionSelect(item.airtimeId);
-    dataOptionSelect(item.dataId);
+    setSelectedOption(item);
+    setManualSelection(true);
+    closeDropdown();
   };
-  // const detectNetwork = number => {
-  //   const prefix = number.substring(0, 4);
-  //   let detectedNetwork = null;
-
-  //   Object.keys(networkPrefixes).forEach(network => {
-  //     if (networkPrefixes[network].includes(prefix)) {
-  //       detectedNetwork = network;
-  //     }
-  //   });
-
-  //   return detectedNetwork;
-  // };
-   
 
   useEffect(() => {
-    if (phoneNumber.length >= 4) {
-      const detectedNetwork = detectNetwork(phoneNumber);
-      
-      if (detectedNetwork) {
-        const matchedOption = options.find(
-          option => option.name === detectedNetwork,
-        );
-        if (matchedOption) {
-          setSelectedOption(matchedOption.name);
-          onOptionSelect(matchedOption.airtimeId);
-          dataOptionSelect(matchedOption.dataId);
-        }else{
-          setSelectedOption(null);
-          onOptionSelect(null);
-          dataOptionSelect(null);
+    if (manualSelection) {
+      return;
+    }
+    const cleaned = (phoneNumber || '').replace(/\D/g, '');
+    if (cleaned.length >= 2) {
+      const detected = detectNetwork(cleaned, country);
+      if (detected) {
+        const match = options.find(opt => opt.name === detected);
+        if (match && match.name !== selectedOption?.name) {
+          setSelectedOption(match);
         }
       }
     }
   }, [phoneNumber]);
 
+  const dropdownStyleFromAnchor = () => {
+    if (!anchor) {
+      return {
+        position: 'absolute',
+        top: WINDOW.height * 0.2,
+        left: 20,
+        right: 20,
+        maxHeight: WINDOW.height * 0.5,
+      };
+    }
+    const left = Math.max(8, anchor.x - 8);
+    const width = Math.min(
+      WINDOW.width - left - 8,
+      anchor.width || WINDOW.width * 0.6,
+    );
+    const top = Math.min(
+      WINDOW.height - 48,
+      anchor.y + (anchor.height || 40) + 6,
+    );
+    const maxHeight = WINDOW.height - top - 20;
+    return {
+      position: 'absolute',
+      top,
+      left,
+      width,
+      maxHeight,
+    };
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.inputContainer}>
-        <TouchableOpacity
-          style={styles.dropdownButton}
-          onPress={toggleDropdown}>
-          {<Image
-            source={
-              options.find(option => option.name === selectedOption)?.image ?? require('../../../assets/images/monthly.png')
-            }
-            style={styles.icon}
-          />}
+      <View style={styles.inputContainer} ref={inputRef}>
+        <TouchableOpacity style={styles.dropdownButton} onPress={openDropdown}>
+          {selectedOption ? (
+            <Image source={selectedOption.image} style={styles.icon} />
+          ) : (
+            <Ionicons name="cellular" size={24} color="#9C9C9C" />
+          )}
           <Ionicons name="chevron-down" size={20} color="#9C9C9C" />
         </TouchableOpacity>
+
         <TextInput
-          placeholder="Enter Phone number"
+          placeholder="Enter phone number"
           style={styles.input}
-          keyboardType="number-pad"
-          placeholderTextColor="gray"
+          keyboardType="phone-pad"
           value={phoneNumber}
-          maxLength={11}
-          onChangeText={setPhoneNumber}
+          onChangeText={handleChangePhone}
         />
       </View>
 
-      {dropdownVisible && (
-        <View style={styles.overlay}>
-          <View style={styles.dropdown}>
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeDropdown}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={closeDropdown}
+          android_ripple={{color: 'rgba(0,0,0,0.1)'}}>
+          <Pressable
+            style={[styles.dropdown, dropdownStyleFromAnchor()]}
+            onPress={() => {}}>
             <FlatList
               data={options}
               keyExtractor={item => item.name}
+              keyboardShouldPersistTaps="handled"
               renderItem={({item}) => (
                 <TouchableOpacity
                   style={styles.option}
                   onPress={() => handleOptionSelect(item)}>
                   <Image source={item.image} style={styles.icon} />
-                  <Text style={tw`text-black`}>{item.name}</Text>
+                  <Text style={styles.optionText}>{item?.name}</Text>
                 </TouchableOpacity>
               )}
             />
-          </View>
-        </View>
-      )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
@@ -191,62 +194,61 @@ const NumberInput = ({
 export default NumberInput;
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'relative',
-    zIndex: 1,
-  },
+  container: {position: 'relative', zIndex: 1},
   inputContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 5,
-    paddingVertical: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderWidth: 1,
     borderColor: '#D9D9D9',
-    borderRadius: 5,
+    borderRadius: 8,
     alignItems: 'center',
+    backgroundColor: '#fff',
   },
   dropdownButton: {
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 10,
+    paddingRight: 6,
   },
   icon: {
     width: 32,
     height: 32,
-    marginRight: 5,
+    resizeMode: 'contain',
+    marginRight: 8,
   },
   input: {
     flex: 1,
-    paddingHorizontal: 10,
-    borderRadius: 20,
+    paddingHorizontal: 8,
+    borderRadius: 5,
     color: 'black',
+    height: 40,
+    placeholderTextColor: '#9C9C9C',
   },
-  overlay: {
-    position: 'absolute',
-    top: 50, // Adjust if needed to position the dropdown correctly
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    zIndex: 999,
-    width: 150,
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   dropdown: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
     backgroundColor: 'white',
-    borderRadius: 5,
-    zIndex: 1000,
-    elevation: 5,
+    borderRadius: 10,
+    elevation: 10,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
-    padding: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    maxWidth: 200,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+  },
+  optionText: {
+    fontSize: 14,
+    color: '#111',
   },
 });

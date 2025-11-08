@@ -2,65 +2,50 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   TextInput,
   TouchableWithoutFeedback,
   FlatList,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { CustomButton } from '../../global/components';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import { useBillerByCategory, useBillerGetCable } from '../../hooks/billing.hook';
-import Loader from './Loader';
+import {CustomButton} from '../../global/components';
+import {PanGestureHandler, State} from 'react-native-gesture-handler';
 
-const CableModal = ({ closeModal, proceed, selectCompany }) => {
+const CableModal = ({closeModal, proceed, selectCompany, country}) => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [searchText, setSearchText] = useState('');
-  const billerId = 'CABLEBILLS';
-  const [formattedCompanies, setformattedCompanies] = useState([]);
-  const { data, isLoading, error } = useBillerGetCable();
+  const [formattedCompanies, setFormattedCompanies] = useState([]);
+
   useEffect(() => {
-
-    if (data?.data) {
-
-      const formatResponse = (response) => {
-        const companies = response?.TV_ID;
-        return Object.keys(companies).reduce((acc, key) => {
-
-          return acc.concat(companies[key]);
-        }, []);
-      };
-
-      setformattedCompanies(formatResponse(data?.data));
-      console.log("formattedCompanies",formattedCompanies);
+    if (country?.toLowerCase() === 'sierra leone') {
+      setFormattedCompanies([{ID: 'DSTV'}]);
+    } else {
+      setFormattedCompanies([{ID: 'DSTV'}, {ID: 'GOTV'}, {ID: 'STARTIMES'}]);
     }
-  }, [data?.data])
-  
-  const handleSwipeDown = ({ nativeEvent }) => {
+  }, [country]);
+
+  const handleSwipeDown = ({nativeEvent}) => {
     if (nativeEvent.translationY > 50) {
       closeModal();
     }
   };
 
-  const handleGestureStateChange = ({ nativeEvent }) => {
+  const handleGestureStateChange = ({nativeEvent}) => {
     if (nativeEvent.state === State.END) {
-      handleSwipeDown({ nativeEvent });
+      handleSwipeDown({nativeEvent});
     }
   };
 
-
   const filteredCompanies =
-  formattedCompanies?.length > 0
+    formattedCompanies?.length > 0
       ? formattedCompanies.filter(company =>
           company.ID.toLowerCase().includes(searchText.toLowerCase()),
         )
       : [];
 
-  const renderCompany = ({ item }) => {
+  const renderCompany = ({item}) => {
     const isSelected = selectedCompany === item?.ID;
-    console.log(item)
     return (
       <TouchableOpacity
         style={tw`flex-row items-center p-3 mb-1 bg-white shadow-sm rounded-lg`}
@@ -68,15 +53,6 @@ const CableModal = ({ closeModal, proceed, selectCompany }) => {
           setSelectedCompany(item?.ID);
           selectCompany(item);
         }}>
-        {/* Uncomment this block if using SVG logos */}
-        {/* {item.logo_url.endsWith('.svg') ? (
-          <SvgUri width="40" height="40" uri={item.logo_url} />
-        ) : (
-          <Image
-            source={{uri: item.logo_url}}
-            style={tw`w-[40px] h-[40px] mr-3`}
-          />
-        )} */}
         <View style={tw`flex-1`}>
           <Text style={tw`text-[#292929] font-medium text-[14px]`}>
             {item?.ID}
@@ -93,19 +69,6 @@ const CableModal = ({ closeModal, proceed, selectCompany }) => {
     );
   };
 
-  if (isLoading) {
-    return <Loader />;
-  }
-
-  if (error) {
-    return (
-      <View
-        style={tw`h-[55%] bg-white p-5 rounded-t-[20px] w-19/20 self-center rounded-b-10 mb-5 items-center justify-center`}>
-        <Text style={tw`text-red-500`}>Failed to load data</Text>
-      </View>
-    );
-  }
-
   return (
     <TouchableWithoutFeedback onPress={closeModal}>
       <View style={tw`flex-1 justify-end`}>
@@ -120,11 +83,11 @@ const CableModal = ({ closeModal, proceed, selectCompany }) => {
 
             <View style={tw`flex-1 mt-4`}>
               <Text style={tw`text-[#292929] font-medium text-[18px]`}>
-                Select Tv
+                Select TV
               </Text>
 
               <TextInput
-                placeholder="Search tv"
+                placeholder="Search TV"
                 placeholderTextColor="gray"
                 value={searchText}
                 onChangeText={setSearchText}
