@@ -108,9 +108,10 @@ const CablePaymentPin = props => {
       const userInfo = {
         smartCard: smartCardNo,
         provider: cableTv,
-        package: packageId,
+        tariffClass: packageId,
         amount: selectedAmount,
       };
+
       cableBill(userInfo, {
         onSuccess: DataResponse => {
           if (DataResponse) {

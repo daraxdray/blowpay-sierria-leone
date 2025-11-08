@@ -10,7 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState} from 'react';
 import tw from 'twrnc';
 import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -20,16 +20,12 @@ import {PanGestureHandler} from 'react-native-gesture-handler';
 import {useGetTransaction, useGetTxToken} from '../../hooks/transactions.hook';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Loader from './Loader';
-import {navigate} from '../../routes/root/RootNavigation';
 import RNFS from 'react-native-fs';
-// Add the following imports for PDF generation
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
-import FileViewer from 'react-native-file-viewer';
 import AppConstant from '../../constants/data/appConstant';
 import Appicon from '../../../assets/svgs/logo_ios.svg';
 import Appicon2 from '../../../assets/svgs/logo.svg';
 import {generateReceiptHTML} from '../wallet/generateRecept';
-// import ReactNativeBlobUtil from 'react-native-blob-util';
 
 const TransactionDetails = ({closeModal, transactionId}) => {
   const {data, status} = useGetTransaction(transactionId);
@@ -39,16 +35,21 @@ const TransactionDetails = ({closeModal, transactionId}) => {
   const [token, setToken] = useState('');
   const [isSharing, setIsSharing] = useState(false);
   const [shareFormat, setShareFormat] = useState('pdf'); // 'pdf' or 'text'
-  const receiptRef = useRef(null);
-  // State for token fetch time
   const [tokenFetchTime, setTokenFetchTime] = useState(null);
+  const [savedFilePath, setSavedFilePath] = useState(null); // Track saved file
+  const [showDownloadSuccess, setShowDownloadSuccess] = useState(false); // Show download feedback
 
-  // Update token fetch time when token changes or is fetched
+  // Update token fetch time when token changes
   useEffect(() => {
     if (token && !tokenFetchTime) {
       setTokenFetchTime(new Date().toLocaleString());
     }
   }, [token]);
+
+  useEffect(() => {
+    console.log(data?.data);
+  }, [data?.data]);
+
   const copyToClipboard = text => {
     Clipboard.setString(text);
     Toast.show({
@@ -56,10 +57,6 @@ const TransactionDetails = ({closeModal, transactionId}) => {
       text2: text + ' has been copied to clipboard',
     });
   };
-
-  useEffect(() => {
-    console.log(data?.data);
-  }, [data?.data]);
 
   const done = () => {
     closeModal();
@@ -72,11 +69,8 @@ const TransactionDetails = ({closeModal, transactionId}) => {
   };
 
   const requestNewToken = () => {
-    console.log(transactionId, 'transactionId');
-
     mutate(transactionId, {
       onSuccess: suc => {
-        console.log(suc, '==================================== help');
         if (suc?.data) {
           Toast.show({
             type: 'success',
@@ -84,62 +78,44 @@ const TransactionDetails = ({closeModal, transactionId}) => {
             text2: 'Token fetched.',
           });
           setToken(suc?.data?.token);
-          return;
         } else {
           setToken(null);
           Toast.show({
             type: 'error',
-            text1: 'error',
+            text1: 'Error',
             text2: 'No token available for this transaction.',
           });
         }
       },
       onError: err => {
-        console.log(err);
-
-        console.log(err);
+        console.error('Token fetch error:', err);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to fetch token.',
+        });
       },
     });
   };
 
-  const gotoService = data => {
-    switch (data?.description) {
-      case 'Transfer':
-        navigate('SendBills', data);
-        return;
-      case 'Electricity':
-        navigate('');
-        return;
-      default:
-        navigate('');
-    }
-  };
-
-  // Function to request storage permissions (for Android)
+  // Request storage permissions (only for very old Android versions)
   const requestStoragePermission = async () => {
     if (Platform.OS !== 'android') return true;
 
     try {
       const apiLevel = Platform.Version;
 
-      // Android 13+ (API 33+) uses different permissions
-      if (apiLevel >= 33) {
-        // No permission needed for Downloads folder on Android 13+
-        return true;
-      }
-
-      // Android 10-12 (API 29-32)
+      // Android 10+ doesn't need permission for Downloads folder
       if (apiLevel >= 29) {
-        // Scoped storage - no permission needed for app-specific directories
         return true;
       }
 
-      // Android 9 and below (API 28-)
+      // Android 9 and below
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
         {
           title: 'Storage Permission',
-          message: 'BlowMoney needs access to your storage to save receipts',
+          message: 'App needs access to save receipts',
           buttonNeutral: 'Ask Me Later',
           buttonNegative: 'Cancel',
           buttonPositive: 'OK',
@@ -148,137 +124,102 @@ const TransactionDetails = ({closeModal, transactionId}) => {
 
       return granted === PermissionsAndroid.RESULTS.GRANTED;
     } catch (err) {
-      console.warn('Permission error:', err);
-      Toast.show({
-        type: 'error',
-        text1: 'Permission Error',
-        text2: err.message || 'Unable to request storage permission',
-      });
+      console.error('Permission error:', err);
       return false;
     }
   };
 
-  // Create HTML for PDF Receipt
-
-  // Function to create and share receipt as PDF
+  // Create and save PDF receipt - Banking app style
   const createAndSharePDF = async () => {
     try {
-      // Generate HTML content
       const htmlContent = generateReceiptHTML(userData, formatTime, token);
-
-      // Generate a unique filename
       const timestamp = new Date().getTime();
       const id = userData?.id || userData?.transaction?.id || 'unknown';
       const prefix =
         Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BP' : 'BM';
       const fileName = `${prefix}_Receipt_${id.slice(-4)}_${timestamp}`;
 
-      // Create PDF with updated options
-      const options = {
+      console.log('Generating PDF:', fileName);
+
+      // Generate PDF directly in Downloads
+      const pdfOptions = {
         html: htmlContent,
         fileName: fileName,
-        directory: Platform.OS === 'android' ? 'Downloads' : 'Documents',
+        directory: 'Downloads',
         base64: false,
       };
 
-      console.log('Creating PDF with options:', options);
-      const file = await RNHTMLtoPDF.convert(options);
-      console.log('PDF created at:', file.filePath);
+      const file = await RNHTMLtoPDF.convert(pdfOptions);
 
-      let shareFilePath = file.filePath;
+      if (!file.filePath) {
+        throw new Error('PDF generation failed');
+      }
 
-      // On Android, ensure file is in Downloads folder
+      // Verify file exists and has content
+      const fileExists = await RNFS.exists(file.filePath);
+      if (!fileExists) {
+        throw new Error('PDF file was not created');
+      }
+
+      const fileStats = await RNFS.stat(file.filePath);
+      console.log('PDF size:', fileStats.size, 'bytes');
+
+      if (fileStats.size === 0) {
+        throw new Error('PDF file is empty');
+      }
+
+      // Ensure file is in public Downloads folder
+      let finalPath = file.filePath;
+
       if (Platform.OS === 'android') {
-        try {
-          const downloadPath = `${RNFS.DownloadDirectoryPath}/${fileName}.pdf`;
-          console.log('Attempting to copy to:', downloadPath);
+        const downloadPath = `${RNFS.DownloadDirectoryPath}/${fileName}.pdf`;
 
-          // Check if source file exists
-          const fileExists = await RNFS.exists(file.filePath);
-          console.log('Source file exists:', fileExists);
+        // Copy to Downloads if not already there
+        if (!file.filePath.includes(RNFS.DownloadDirectoryPath)) {
+          console.log('Copying to Downloads...');
+          await RNFS.copyFile(file.filePath, downloadPath);
 
-          if (fileExists) {
-            // Copy to downloads folder
-            await RNFS.copyFile(file.filePath, downloadPath);
-            console.log('File copied successfully to Downloads');
-
-            // Verify the copy was successful
-            const downloadExists = await RNFS.exists(downloadPath);
-            if (downloadExists) {
-              shareFilePath = downloadPath;
-
-              Toast.show({
-                type: 'success',
-                text1: 'Receipt Saved',
-                text2: `PDF saved to Downloads/${fileName}.pdf`,
-                visibilityTime: 4000,
-              });
-            } else {
-              console.warn('Downloaded file not found after copy');
-            }
-          } else {
-            console.warn('Source PDF file not found');
-            Toast.show({
-              type: 'error',
-              text1: 'Error',
-              text2: 'PDF file was not created properly',
-            });
+          const copyExists = await RNFS.exists(downloadPath);
+          if (!copyExists) {
+            throw new Error('Failed to copy to Downloads');
           }
-        } catch (copyError) {
-          console.error('Error copying file to Downloads:', copyError);
-          // Continue with original path if copy fails
-          Toast.show({
-            type: 'warning',
-            text1: 'Partial Success',
-            text2: 'PDF created but may not be in Downloads folder',
-          });
+
+          // Clean up temp file
+          try {
+            await RNFS.unlink(file.filePath);
+          } catch (e) {
+            console.log('Could not delete temp file:', e.message);
+          }
+
+          finalPath = downloadPath;
         }
+
+        console.log('File saved at:', finalPath);
       }
 
-      // Prepare share URL with correct format
-      let shareUrl = shareFilePath;
+      // Show success message with action buttons
+      Toast.show({
+        type: 'success',
+        text1: '✓ Receipt Saved Successfully',
+        text2: `Saved to Downloads/${fileName}.pdf`,
+        visibilityTime: 5000,
+      });
 
-      // On Android, remove file:// prefix if present and add it back
-      if (Platform.OS === 'android') {
-        shareUrl = shareFilePath.replace('file://', '');
-        shareUrl = `file://${shareUrl}`;
-      } else {
-        // iOS
-        shareUrl = `file://${shareFilePath}`;
-      }
+      // Store the path for later sharing
+      setSavedFilePath(finalPath);
+      setShowDownloadSuccess(true);
 
-      console.log('Sharing file from:', shareUrl);
+      // Hide success indicator after 3 seconds
+      setTimeout(() => setShowDownloadSuccess(false), 3000);
 
-      // Share the PDF
-      const shareResult = await Share.share(
-        {
-          title: 'Transaction Receipt',
-          message: `${
-            Platform.OS === 'ios' || AppConstant.isAmazonStore
-              ? 'BlowPay'
-              : 'BillsByBlowmoney'
-          } Transaction Receipt`,
-          url: shareUrl,
-        },
-        {
-          // Android specific options
-          dialogTitle: 'Share Transaction Receipt',
-          subject: 'Transaction Receipt',
-        },
-      );
-
-      console.log('Share result:', shareResult);
-
-      return shareFilePath;
+      return finalPath;
     } catch (error) {
-      console.error('PDF creation failed:', error);
-      console.error('Error stack:', error.stack);
+      console.error('PDF creation error:', error);
 
-      // Show detailed error to user
       Toast.show({
         type: 'error',
-        text1: 'PDF Creation Failed',
-        text2: error.message || 'Unable to create PDF receipt',
+        text1: 'Failed to Create PDF',
+        text2: error.message || 'Could not generate receipt',
         visibilityTime: 5000,
       });
 
@@ -286,10 +227,9 @@ const TransactionDetails = ({closeModal, transactionId}) => {
     }
   };
 
-  // Function to create and share receipt as text file
+  // Create and share text receipt
   const createAndShareTextFile = async () => {
     try {
-      // Format transaction details for receipt
       const transactionDate = userData?.updatedAt
         ? formatTime(userData?.updatedAt)
         : formatTime(userData?.flutterwaveResponse?.transaction_date);
@@ -306,92 +246,86 @@ const TransactionDetails = ({closeModal, transactionId}) => {
         userData?.description ||
         userData?.flutterwaveResponse?.product ||
         'Transaction';
+
       const status =
         userData?.status || userData?.transaction?.status || 'Unknown';
       const id = userData?.id || userData?.transaction?.id || 'Unknown';
 
-      // Create a plain text receipt
       const appName =
         Platform.OS === 'ios' || AppConstant.isAmazonStore
           ? 'BlowPay'
           : 'BillsByBlowMoney';
+
       const textReceipt = `
-${appName} Transaction Receipt
----------------------------
-Amount: ${amount}
-Description: ${description}
-Status: ${status}
-Transaction ID: ${id}
-Date: ${transactionDate}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${appName.toUpperCase()}
+TRANSACTION RECEIPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AMOUNT: ${amount}
+STATUS: ${status}
+DESCRIPTION: ${description}
+
+TRANSACTION ID: ${id}
+DATE & TIME: ${transactionDate}
 ${
   userData?.metadata?.meterno
-    ? `Meter Number: ${userData?.metadata?.meterno}`
+    ? `\nMETER NUMBER: ${userData?.metadata?.meterno}`
     : ''
 }
 ${
-  userData?.metadata?.token
-    ? `Token: ${userData?.metadata?.token || token?.replace('/PIN', '')}`
+  userData?.metadata?.token || token
+    ? `\nTOKEN: ${userData?.metadata?.token || token?.replace('/PIN', '')}`
     : ''
 }
 ${
   userData?.flutterwaveResponse?.extra
-    ? `Recharge Token: ${userData?.flutterwaveResponse?.extra}`
+    ? `\nRECHARGE TOKEN: ${userData?.flutterwaveResponse?.extra}`
     : ''
 }
----------------------------
-Receipt generated from ${appName} App
-    `;
 
-      // Generate a unique filename
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated from ${appName}
+Keep this receipt for your records
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      `.trim();
+
       const timestamp = new Date().getTime();
       const prefix =
         Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'BP' : 'BM';
       const fileName = `${prefix}_Receipt_${id.slice(-4)}_${timestamp}.txt`;
 
-      // Save path - in Downloads folder
-      const path = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+      // Save to Downloads
+      const filePath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+      await RNFS.writeFile(filePath, textReceipt, 'utf8');
 
-      console.log('Writing text file to:', path);
-
-      // Write the text file
-      await RNFS.writeFile(path, textReceipt, 'utf8');
-
-      // Verify file was written
-      const fileExists = await RNFS.exists(path);
-      console.log('Text file created:', fileExists);
-
-      if (fileExists) {
-        Toast.show({
-          type: 'success',
-          text1: 'Receipt Saved',
-          text2: `Receipt saved to Downloads/${fileName}`,
-          visibilityTime: 4000,
-        });
+      const fileExists = await RNFS.exists(filePath);
+      if (!fileExists) {
+        throw new Error('Text file was not created');
       }
 
-      // Share the receipt text (message only for Android, url for iOS)
-      if (Platform.OS === 'android') {
-        await Share.share({
-          title: 'Transaction Receipt',
-          message: textReceipt,
-        });
-      } else {
-        await Share.share({
-          title: 'Transaction Receipt',
-          message: textReceipt,
-          url: `file://${path}`,
-        });
-      }
+      Toast.show({
+        type: 'success',
+        text1: '✓ Receipt Saved',
+        text2: `Downloads/${fileName}`,
+        visibilityTime: 5000,
+      });
 
-      return path;
+      // Store the path for later sharing
+      setSavedFilePath(filePath);
+      setShowDownloadSuccess(true);
+
+      // Hide success indicator after 3 seconds
+      setTimeout(() => setShowDownloadSuccess(false), 3000);
+
+      return filePath;
     } catch (error) {
-      console.error('Text file creation failed:', error);
-      console.error('Error stack:', error.stack);
+      console.error('Text file error:', error);
 
       Toast.show({
         type: 'error',
-        text1: 'File Creation Failed',
-        text2: error.message || 'Unable to create text receipt',
+        text1: 'Failed to Create Receipt',
+        text2: error.message || 'Could not generate text receipt',
         visibilityTime: 5000,
       });
 
@@ -399,65 +333,79 @@ Receipt generated from ${appName} App
     }
   };
 
-  // Main function to handle sharing receipt
+  // Main share function
   const shareTransaction = async () => {
     if (isSharing) return;
 
     setIsSharing(true);
 
     try {
-      // Request permission first
-      if (Platform.OS === 'android') {
+      // Check permissions for old Android versions
+      if (Platform.OS === 'android' && Platform.Version < 29) {
         const hasPermission = await requestStoragePermission();
         if (!hasPermission) {
           Toast.show({
             type: 'error',
             text1: 'Permission Denied',
-            text2: 'Storage permission is required to save receipts',
+            text2: 'Storage permission required',
           });
           setIsSharing(false);
           return;
         }
       }
 
-      let filePath;
-
-      // Create and share receipt based on selected format
+      // Create and save based on format
       if (shareFormat === 'pdf') {
-        filePath = await createAndSharePDF();
+        await createAndSharePDF();
       } else {
-        filePath = await createAndShareTextFile();
+        await createAndShareTextFile();
       }
-
-      // Option to view the file (particularly useful for PDF)
-      if (shareFormat === 'pdf' && Platform.OS === 'android') {
-        try {
-          // Wait a moment for the file to be fully written
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          await FileViewer.open(filePath, {
-            showOpenWithDialog: true,
-            showAppsSuggestions: true,
-          });
-        } catch (viewerError) {
-          console.log('Error opening file viewer:', viewerError);
-          // Don't show error - file was still created successfully
-        }
-      }
-
-      Toast.show({
-        type: 'success',
-        text1: 'Success',
-        text2: `Receipt ${
-          shareFormat === 'pdf' ? 'PDF' : 'file'
-        } created successfully`,
-        visibilityTime: 3000,
-      });
     } catch (error) {
-      console.error('Error in shareTransaction:', error);
-      // Error toast already shown in individual functions
+      console.error('Share error:', error);
     } finally {
       setIsSharing(false);
+    }
+  };
+
+  // Manual share function - user clicks to share after file is saved
+  const manualShareFile = async () => {
+    if (!savedFilePath) {
+      Toast.show({
+        type: 'error',
+        text1: 'No File to Share',
+        text2: 'Please download the receipt first',
+      });
+      return;
+    }
+
+    try {
+      // Verify file still exists
+      const fileExists = await RNFS.exists(savedFilePath);
+      if (!fileExists) {
+        Toast.show({
+          type: 'error',
+          text1: 'File Not Found',
+          text2: 'Please download the receipt again',
+        });
+        setSavedFilePath(null);
+        return;
+      }
+
+      // Open share sheet
+      await Share.share({
+        title: 'Transaction Receipt',
+        message: 'Transaction Receipt',
+        url: `file://${savedFilePath}`,
+      });
+    } catch (error) {
+      if (error.message !== 'User did not share') {
+        console.error('Share error:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Share Failed',
+          text2: 'Could not open share menu',
+        });
+      }
     }
   };
 
@@ -467,13 +415,13 @@ Receipt generated from ${appName} App
     Toast.show({
       type: 'info',
       text1: `Format: ${shareFormat === 'pdf' ? 'Text' : 'PDF'}`,
-      text2: `Receipt will be shared as ${
+      text2: `Receipt will be saved as ${
         shareFormat === 'pdf' ? 'text' : 'PDF'
       }`,
     });
   };
 
-  // Helper functions
+  // Helper: Get status color
   const getStatusColor = status => {
     if (!status) return 'bg-gray-400';
 
@@ -492,6 +440,7 @@ Receipt generated from ${appName} App
     return 'bg-gray-400';
   };
 
+  // Helper: Format timestamp
   const formatTime = timestamp => {
     if (!timestamp) return 'N/A';
 
@@ -514,14 +463,16 @@ Receipt generated from ${appName} App
   return (
     <PanGestureHandler onGestureEvent={handleSwipeDown}>
       <View
-        style={tw` bg-white p-5 rounded-t-[20px] w-19/20 self-center rounded-b-10  gap-3 justify-between h-[85%]`}>
-        <View style={tw` flex flex-row items-center justify-between`}>
+        style={tw`bg-white p-5 rounded-t-[20px] w-19/20 self-center rounded-b-10 gap-3 justify-between h-[85%]`}>
+        {/* Header with buttons */}
+        <View style={tw`flex flex-row items-center justify-between`}>
           <TouchableOpacity
             style={tw`p-1 bg-black items-center justify-center rounded-full w-[30px] h-[30px]`}
             activeOpacity={0.65}
             onPress={closeModal}>
             <Ionicons name="chevron-back" size={13} color={WHITE} />
           </TouchableOpacity>
+
           <TouchableOpacity
             style={tw`p-1 bg-gray-200 items-center justify-center rounded-full px-3 h-[30px] flex-row`}
             activeOpacity={0.65}
@@ -531,19 +482,29 @@ Receipt generated from ${appName} App
             </Text>
             <Ionicons name="swap-horizontal" size={13} color={BLACK} />
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={tw`p-1 bg-black items-center justify-center rounded-full w-[30px] h-[30px]`}
+            style={tw`p-1 ${
+              showDownloadSuccess ? 'bg-green-500' : 'bg-black'
+            } items-center justify-center rounded-full w-[30px] h-[30px]`}
             activeOpacity={0.65}
             disabled={isSharing}
             onPress={shareTransaction}>
             <Ionicons
-              name={isSharing ? 'cloud-download-outline' : 'download-outline'}
+              name={
+                showDownloadSuccess
+                  ? 'checkmark'
+                  : isSharing
+                  ? 'cloud-download-outline'
+                  : 'download-outline'
+              }
               size={13}
               color={WHITE}
             />
           </TouchableOpacity>
         </View>
 
+        {/* Title */}
         <View style={tw`mt-4 gap-3`}>
           <View style={tw`flex items-center flex-row justify-center`}>
             <View style={tw`mr-2`}>
@@ -559,9 +520,9 @@ Receipt generated from ${appName} App
           </View>
         </View>
 
+        {/* Scrollable content */}
         <View style={tw`mt-2 gap-2 h-[90%]`}>
           <ScrollView
-            ref={receiptRef}
             style={tw`border-[0.5px] border-[#D0D5DD] p-2 rounded-[8px] gap-3 mb-30 bg-white`}>
             {message === 'FAILED' ? (
               <View
@@ -574,7 +535,7 @@ Receipt generated from ${appName} App
             ) : (
               <View
                 style={tw`border-[0.5px] bg-[#F8F8FA] border-[#D0D5DD] p-3 py-6 rounded-[8px] gap-6`}>
-                {/* Amount Section */}
+                {/* Amount */}
                 <View style={tw`flex flex-row items-center justify-between`}>
                   <View>
                     <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
@@ -610,7 +571,7 @@ Receipt generated from ${appName} App
                   </TouchableOpacity>
                 </View>
 
-                {/* Description Section */}
+                {/* Description */}
                 <View style={tw`flex flex-row items-center justify-between`}>
                   <View>
                     <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
@@ -624,7 +585,7 @@ Receipt generated from ${appName} App
                   </View>
                 </View>
 
-                {/* Status Section */}
+                {/* Status */}
                 <View style={tw`flex flex-row items-center justify-between`}>
                   <View>
                     <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
@@ -645,7 +606,7 @@ Receipt generated from ${appName} App
                   </View>
                 </View>
 
-                {/* Transaction ID Section */}
+                {/* Transaction ID */}
                 <View style={tw`flex flex-row items-center justify-between`}>
                   <View>
                     <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
@@ -666,7 +627,7 @@ Receipt generated from ${appName} App
                   </TouchableOpacity>
                 </View>
 
-                {/* Time Section */}
+                {/* Time */}
                 <View style={tw`flex flex-row items-center justify-between`}>
                   <View>
                     <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
@@ -681,7 +642,7 @@ Receipt generated from ${appName} App
                   </View>
                 </View>
 
-                {/* Extra Recharge Token if available */}
+                {/* Recharge Token (if available) */}
                 {userData?.flutterwaveResponse?.extra && (
                   <View style={tw`flex flex-row items-center justify-between`}>
                     <View>
@@ -704,93 +665,8 @@ Receipt generated from ${appName} App
                   </View>
                 )}
 
-                {/* Improved Token Section */}
-                {/* {userData?.metadata?.meterno && (
-                    <View style={tw`mt-2 border-t border-[#E5E7EB] pt-4`}>
-                      <View style={tw`flex flex-row items-center justify-between mb-2`}>
-                        <Text style={tw`text-[#4B5563] font-semibold text-[14px]`}>
-                          Token Information
-                        </Text>
-                      </View>
-
-                      <View style={tw`flex flex-row items-center justify-between mb-2`}>
-                        <View>
-                          <Text style={tw`text-[#A5A5A5] font-normal text-[12px]`}>
-                            Meter Number
-                          </Text>
-                          <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                            {userData?.metadata?.meterno}
-                          </Text>
-                        </View>
-                        <TouchableOpacity onPress={() => copyToClipboard(userData?.metadata?.meterno)}>
-                          <Image
-                            source={require('../../../assets/icons/copy.png')}
-                            style={{ width: 20, height: 20 }}
-                          />
-                        </TouchableOpacity>
-                      </View>
-
-                      {userData?.metadata?.token || token ? (
-                        <View style={tw`bg-[#FEF3C7] border-l-4 border-[#F59E0B] p-4 rounded-[8px] mb-2`}>
-                          <View style={tw`flex flex-row items-center justify-between`}>
-                            <View style={tw`flex-1`}>
-                              <Text style={tw`text-[#78350F] font-normal text-[12px] mb-1`}>
-                                Generated Token
-                              </Text>
-                              <Text style={tw`text-[#000000] font-bold text-[13px]`}>
-                                {userData?.metadata?.token || token?.replace("/PIN", '')}
-                              </Text>
-                              {tokenFetchTime && (
-                                <Text style={tw`text-[#78350F] font-normal text-[10px] mt-1`}>
-                                  Generated at: {tokenFetchTime}
-                                </Text>
-                              )}
-                            </View>
-                            <TouchableOpacity
-                              style={tw`ml-2`}
-                              onPress={() => copyToClipboard(userData?.metadata?.token || token?.replace("/PIN", ''))}>
-                              <Image
-                                source={require('../../../assets/icons/copy.png')}
-                                style={{ width: 24, height: 24 }}
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        </View>
-                      ) : (
-                        <View style={tw`border border-[#D1D5DB] rounded-[8px] p-4 mb-2`}>
-                          <View style={tw`flex flex-row items-center justify-between`}>
-                            <View style={tw`flex-1`}>
-                              <Text style={tw`text-[#4B5563] font-medium text-[14px]`}>
-                                No token available
-                              </Text>
-                              <Text style={tw`text-[#6B7280] text-[12px] mt-1`}>
-                                Click the button to fetch your token
-                              </Text>
-                            </View>
-                            <TouchableOpacity
-                              style={tw`ml-2 bg-[#10B981] px-3 py-2 rounded-[6px] ${gettingToken === 'pending' ? 'opacity-70' : ''}`}
-                              disabled={gettingToken === 'pending'}
-                              onPress={() => requestNewToken()}>
-                              {gettingToken === 'pending' ? (
-                                <View style={tw`flex flex-row items-center`}>
-                                  <ActivityIndicator size="small" color="#ffffff" style={tw`mr-1`} />
-                                  <Text style={tw`text-white font-medium text-[12px]`}>Fetching...</Text>
-                                </View>
-                              ) : (
-                                <Text style={tw`text-white font-medium text-[12px]`}>Fetch Token</Text>
-                              )}
-                            </TouchableOpacity>
-                          </View>
-                          {gettingToken === 'failed' && (
-                            <Text style={tw`text-[#EF4444] text-[12px] mt-2`}>
-                              Failed to fetch token. Please try again.
-                            </Text>
-                          )}
-                        </View>
-                      )}
-                    </View>
-                  )} */}
-                {userData?.description == 'Electricity' && (
+                {/* Electricity Token Section */}
+                {userData?.description === 'Electricity' && (
                   <View style={tw`mt-2 border-t border-[#E5E7EB] pt-4`}>
                     <View
                       style={tw`flex flex-row items-center justify-between mb-2`}>
@@ -800,6 +676,7 @@ Receipt generated from ${appName} App
                       </Text>
                     </View>
 
+                    {/* Meter Number */}
                     <View
                       style={tw`flex flex-row items-center justify-between mb-2`}>
                       <View>
@@ -809,7 +686,7 @@ Receipt generated from ${appName} App
                         </Text>
                         <Text
                           style={tw`text-[#000000] font-medium text-[15px]`}>
-                          {userData?.metadata?.meterno}
+                          {userData?.metadata?.meterno || 'N/A'}
                         </Text>
                       </View>
                       <TouchableOpacity
@@ -823,6 +700,7 @@ Receipt generated from ${appName} App
                       </TouchableOpacity>
                     </View>
 
+                    {/* Token Display or Fetch */}
                     {userData?.metadata?.token || token ? (
                       <View
                         style={tw`bg-[#FEF3C7] border-l-4 border-[#F59E0B] p-4 rounded-[8px] mb-2`}>
@@ -881,7 +759,7 @@ Receipt generated from ${appName} App
                                 gettingToken === 'pending' ? 'opacity-70' : ''
                               }`}
                               disabled={gettingToken === 'pending'}
-                              onPress={() => requestNewToken()}>
+                              onPress={requestNewToken}>
                               {gettingToken === 'pending' ? (
                                 <View style={tw`flex flex-row items-center`}>
                                   <ActivityIndicator
@@ -903,7 +781,7 @@ Receipt generated from ${appName} App
                             </TouchableOpacity>
                           </View>
 
-                          {gettingToken === 'failed' && (
+                          {gettingToken === 'error' && (
                             <Text style={tw`text-[#EF4444] text-[12px] mt-2`}>
                               Failed to fetch token. Please try again.
                             </Text>
@@ -914,7 +792,7 @@ Receipt generated from ${appName} App
                   </View>
                 )}
 
-                {/* Dynamic Metadata Section */}
+                {/* Additional Metadata */}
                 {userData?.metadata &&
                   Object.keys(userData.metadata).length > 0 && (
                     <View style={tw`mt-2 border-t border-[#E5E7EB] pt-4`}>
@@ -924,7 +802,7 @@ Receipt generated from ${appName} App
                       </Text>
 
                       {Object.entries(userData.metadata).map(([key, value]) => {
-                        // Skip wallet balance or empty values or already displayed meterno
+                        // Skip already displayed fields
                         if (
                           key === 'walletbalance' ||
                           !value ||
@@ -934,17 +812,15 @@ Receipt generated from ${appName} App
                           return null;
                         }
 
-                        // Format the key for display
+                        // Format key
                         const formattedKey = key
-                          .replace(/([A-Z])/g, ' $1') // Add space before capital letters
-                          .replace(/^./, str => str.toUpperCase()) // Capitalize first letter
-                          .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space between camelCase
-                          .replace(/[-_]/g, ' '); // Replace dashes and underscores with spaces
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, str => str.toUpperCase())
+                          .replace(/([a-z])([A-Z])/g, '$1 $2')
+                          .replace(/[-_]/g, ' ');
 
-                        // Format value based on type
+                        // Format value
                         let displayValue = value;
-                        let canCopy = true;
-
                         if (typeof value === 'object' && value !== null) {
                           displayValue = JSON.stringify(value);
                         } else if (typeof value === 'boolean') {
@@ -965,17 +841,15 @@ Receipt generated from ${appName} App
                                 {displayValue.toString()}
                               </Text>
                             </View>
-                            {canCopy && (
-                              <TouchableOpacity
-                                onPress={() =>
-                                  copyToClipboard(displayValue.toString())
-                                }>
-                                <Image
-                                  source={require('../../../assets/icons/copy.png')}
-                                  style={{width: 20, height: 20}}
-                                />
-                              </TouchableOpacity>
-                            )}
+                            <TouchableOpacity
+                              onPress={() =>
+                                copyToClipboard(displayValue.toString())
+                              }>
+                              <Image
+                                source={require('../../../assets/icons/copy.png')}
+                                style={{width: 20, height: 20}}
+                              />
+                            </TouchableOpacity>
                           </View>
                         );
                       })}
@@ -986,16 +860,49 @@ Receipt generated from ${appName} App
           </ScrollView>
         </View>
 
+        {/* Footer */}
         <View style={tw`pb-5`}>
+          {savedFilePath && (
+            <View style={tw`mb-3 flex-row gap-2`}>
+              <TouchableOpacity
+                style={tw`flex-1 bg-blue-500 py-3 rounded-lg flex-row items-center justify-center`}
+                activeOpacity={0.7}
+                onPress={manualShareFile}>
+                <Ionicons name="share-social" size={16} color={WHITE} />
+                <Text style={tw`text-white font-medium text-[13px] ml-2`}>
+                  Share
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={tw`flex-1 bg-green-500 py-3 rounded-lg flex-row items-center justify-center`}
+                activeOpacity={0.7}
+                onPress={() => {
+                  Toast.show({
+                    type: 'success',
+                    text1: 'Receipt Saved',
+                    text2: 'Check your Downloads folder',
+                    visibilityTime: 3000,
+                  });
+                }}>
+                <Ionicons name="folder-open" size={16} color={WHITE} />
+                <Text style={tw`text-white font-medium text-[13px] ml-2`}>
+                  View in Files
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           <CustomButton onPress={done} text={'Done'} style={tw`bg-[#FF114A]`} />
           {isSharing && (
             <Text style={tw`text-center text-xs text-gray-500 mt-2`}>
               {shareFormat === 'pdf'
-                ? 'Creating PDF receipt...'
-                : 'Preparing text receipt...'}
+                ? 'Saving PDF to Downloads...'
+                : 'Saving text file to Downloads...'}
             </Text>
           )}
         </View>
+
         {status === 'pending' && <Loader />}
       </View>
     </PanGestureHandler>
