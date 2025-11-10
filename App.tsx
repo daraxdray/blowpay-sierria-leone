@@ -1,57 +1,35 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-// import React, {useEffect} from 'react';
-import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
-// import type {PropsWithChildren} from 'react';
+/* eslint-disable react-native/no-inline-styles */
+import React, {useEffect} from 'react';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-
-// import {
-//   Linking,
-//   SafeAreaView,
-//   ScrollView,
-//   StatusBar,
-//   StyleSheet,
-//   Text,
-//   useColorScheme,
-//   View,
-// } from 'react-native';
-
-// import {
-//   Colors,
-//   DebugInstructions,
-//   Header,
-//   LearnMoreLinks,
-//   ReloadInstructions,
-// } from 'react-native/Libraries/NewAppScreen';
-import Main from './main';
-import {ThemeProvider} from './src/global/styles/theme';
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {Provider} from 'react-redux';
 import configureStore from './src/contexts/stores/index';
-function App(): React.JSX.Element {
-  // const isDarkMode = useColorScheme() === 'dark';
+import Main from './main';
+import {ThemeProvider} from './src/global/styles/theme';
+import {
+  requestUserPermission,
+  setupNotificationListeners,
+} from './src/services/push.notification.service';
+
+export default function App() {
   const client = new QueryClient();
 
-  // const backgroundStyle = {
-  //   backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  // };
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      try {
+        await requestUserPermission();
+        const unsubscribe = setupNotificationListeners();
+        return unsubscribe;
+      } catch (error) {
+        console.error('Failed to initialize notifications:', error);
+      }
+    };
 
-  // useEffect(() => {
-  //   const handleDeepLink = (event) => {
-  //     console.log('Deep Link:', event.url);
-  //   };
+    initializeNotifications();
+  }, []);
 
-  //   Linking.addEventListener('url', handleDeepLink);
-  //   return () => {
-  //     Linking.removeAllListeners('url');
-  //   };
-  // }, []);
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={{flex: 1}}>
       <QueryClientProvider client={client}>
         <ThemeProvider>
           <Provider store={configureStore()}>
@@ -62,5 +40,3 @@ function App(): React.JSX.Element {
     </GestureHandlerRootView>
   );
 }
-
-export default App;

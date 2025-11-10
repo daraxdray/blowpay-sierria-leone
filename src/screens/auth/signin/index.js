@@ -16,6 +16,9 @@ import {loginSuccess} from '../../../contexts/actions/user/index.js';
 import {useDispatch} from 'react-redux';
 import {AuthContext} from '../../../global/wrappers/AuthProvider';
 import {getUserPincode} from '../../../utils/storage.js';
+import {usePushNotify} from '../../../hooks/user.hook.js';
+import messaging from '@react-native-firebase/messaging';
+import {Platform} from 'react-native';
 
 const Signin = props => {
   const navigation = props.navigation;
@@ -25,6 +28,8 @@ const Signin = props => {
   const [validPass, setValidPass] = useState(false);
   const {reloadAuth} = useContext(AuthContext);
   const {mutate: loginUser, status} = useLogin();
+  const {mutate: pushNotify} = usePushNotify();
+
   const {isBiometricExist, keyFound, handleBiometricAuth, deleteKey} =
     useBiometricAuth();
   const dispatch = useDispatch();
@@ -49,7 +54,6 @@ const Signin = props => {
       onSuccess: async data => {
         if (data.data != null) {
           console.log(data, '🌍 login data received:');
-
           try {
             if (data?.data?.country) {
               await AsyncStorage.setItem('userCountry', data.data.country);
@@ -59,6 +63,14 @@ const Signin = props => {
             await AsyncStorage.setItem('authEmail', userData.emailAddress);
             console.log('🌍 data saved:', data);
             await reloadAuth();
+            const fcmToken = await messaging().getToken();
+            if (fcmToken) {
+              console.log(fcmToken, 'fcmToken in login');
+              pushNotify({
+                token: fcmToken,
+                platform: Platform.OS,
+              });
+            }
 
             const det = await getUserPincode();
             if (data?.data?.status === 'inactive') {
@@ -84,7 +96,6 @@ const Signin = props => {
                 }),
               );
             }
-            //check if biometric exist and create key and store if it does not else moves to home page
           } catch (error) {
             console.error('Failed to save user data', error);
             Toast.show({

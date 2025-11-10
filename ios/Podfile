@@ -5,25 +5,25 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-ENV['RCT_NEW_ARCH_ENABLED'] = '1'  # enable new arch early
-project 'blowpay_mobile.xcodeproj'       # tell CocoaPods which project to link
+# ✅ Keep New Architecture enabled for Reanimated
+ENV['RCT_NEW_ARCH_ENABLED'] = '1'
+
+project 'blowpay_mobile.xcodeproj'
 
 platform :ios, '16.0'
 
 prepare_react_native_project!
 
-linkage = ENV['USE_FRAMEWORKS']
-if linkage != nil
-  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
-end
+use_modular_headers!
+
+# ✅ Keep static linkage (fixes modular import issues with Firebase)
+use_frameworks! :linkage => :static
 
 target 'blowpay_mobile' do
   config = use_native_modules!
 
   use_react_native!(
     :path => config[:reactNativePath],
-    # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
@@ -31,14 +31,14 @@ target 'blowpay_mobile' do
     react_native_post_install(
       installer,
       config[:reactNativePath],
-      :mac_catalyst_enabled => false,
-      # :ccache_enabled => true
+      :mac_catalyst_enabled => false
     )
-    
-    # Fix for C++ char_traits error with iOS 18.4 SDK
+
+    # 🩹 Patch: make all pods modular if possible (helps Firebase + Swift pods)
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
+        config.build_settings['DEFINES_MODULE'] = 'YES'
       end
     end
   end
