@@ -1,14 +1,11 @@
 // receiptGenerator.js
-// Utility file for generating receipt HTML
+// Fixed version for Android PDF generation
 
 import {Platform} from 'react-native';
 
 /**
  * Generates a formatted HTML receipt for transactions
- * @param {Object} userData - Transaction data object
- * @param {Function} formatTime - Function to format timestamps
- * @param {string} token - Optional token string
- * @returns {string} HTML string for the receipt
+ * Optimized for PDF generation on Android devices
  */
 export const generateReceiptHTML = (userData, formatTime, token = '') => {
   // Validate formatTime function
@@ -36,10 +33,10 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
     : formatTime(userData?.flutterwaveResponse?.transaction_date);
 
   const amount = userData?.amount
-    ? `₦${parseFloat(userData?.amount / 100)
+    ? `NGN ${parseFloat(userData?.amount / 100)
         .toFixed(2)
         .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`
-    : `₦${parseFloat(userData?.flutterwaveResponse?.amount)
+    : `NGN ${parseFloat(userData?.flutterwaveResponse?.amount)
         .toFixed(2)
         .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
 
@@ -49,14 +46,10 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
     'Transaction';
 
   const status = userData?.status || userData?.transaction?.status || 'Unknown';
-
   const id = userData?.id || userData?.transaction?.id || 'Unknown';
-
   const meterToken =
     userData?.metadata?.token || token?.replace('/PIN', '') || '';
-
   const meterNumber = userData?.metadata?.id || '';
-
   const rechargeToken = userData?.flutterwaveResponse?.extra || '';
 
   // Additional metadata fields
@@ -71,8 +64,7 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
   const charges = userData?.metadata?.charges || '0';
   const responseMessage = userData?.metadata?.responseMessage || '';
 
-  const appName = Platform.OS === 'ios' ? 'BlowPay' : 'BillsByBlowMoney';
-  const appInitials = Platform.OS === 'ios' ? 'BP' : 'BM';
+  const appName = Platform.OS === 'ios' ? 'BlowPay' : 'Blowpay';
 
   return `
     <!DOCTYPE html>
@@ -80,7 +72,7 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>BlowMoney Receipt</title>
+        <title>Transaction Receipt</title>
         <style>
           * {
             margin: 0;
@@ -89,144 +81,78 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
           }
           
           body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, Helvetica, sans-serif;
+            background: #ffffff;
             padding: 20px;
             color: #333;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 14px;
+            line-height: 1.6;
           }
           
           .receipt-container {
             max-width: 600px;
             width: 100%;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            animation: slideUp 0.5s ease-out;
-          }
-          
-          @keyframes slideUp {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
+            border: 2px solid #e0e0e0;
+            margin: 0 auto;
           }
           
           .header {
-            background: linear-gradient(135deg, #FF114A 0%, #FF5C7C 100%);
+            background: #FF114A;
             color: white;
             padding: 30px 20px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-          }
-          
-          .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: pulse 3s ease-in-out infinite;
-          }
-          
-          @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-          }
-          
-          .logo-container {
-            position: relative;
-            z-index: 1;
-            margin-bottom: 15px;
-          }
-          
-          .logo {
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-          }
-          
-          .logo-text {
-            color: #FF114A;
-            font-weight: 900;
-            font-size: 32px;
-            letter-spacing: -1px;
+            border-bottom: 4px solid #d00d3c;
           }
           
           .header h1 {
             font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 5px;
-            position: relative;
-            z-index: 1;
+            font-weight: bold;
+            margin-bottom: 8px;
           }
           
           .header p {
             font-size: 14px;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
+            margin-bottom: 15px;
           }
           
           .status-badge {
             display: inline-block;
-            margin-top: 15px;
             padding: 8px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+            border-radius: 5px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            backdrop-filter: blur(10px);
-          }
-          
-          .status-success {
-            background: rgba(16, 185, 129, 0.9);
           }
           
           .content {
-            padding: 30px 20px;
+            padding: 25px 20px;
           }
           
           .amount-section {
             text-align: center;
             padding: 25px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 15px;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
             margin-bottom: 25px;
           }
           
           .amount-label {
-            font-size: 14px;
+            font-size: 12px;
             color: #666;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             text-transform: uppercase;
+            font-weight: bold;
             letter-spacing: 1px;
           }
           
           .amount-value {
-            font-size: 42px;
-            font-weight: 800;
+            font-size: 36px;
+            font-weight: bold;
             color: #FF114A;
-            letter-spacing: -1px;
           }
           
           .info-section {
@@ -234,22 +160,19 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
           }
           
           .section-title {
-            font-size: 12px;
-            font-weight: 700;
+            font-size: 11px;
+            font-weight: bold;
             color: #999;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             margin-bottom: 15px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 2px solid #e0e0e0;
           }
           
           .info-item {
-            display: flex;
-            justify-content: space-between;
             padding: 12px 0;
-            border-bottom: 1px solid #f5f5f5;
-            align-items: flex-start;
+            border-bottom: 1px solid #f0f0f0;
           }
           
           .info-item:last-child {
@@ -258,83 +181,83 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
           
           .info-label {
             color: #666;
-            font-size: 14px;
-            font-weight: 500;
-            flex-shrink: 0;
-            margin-right: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
           }
           
           .info-value {
-            font-weight: 600;
+            font-weight: normal;
             font-size: 14px;
             color: #333;
-            text-align: right;
-            word-break: break-word;
+            word-wrap: break-word;
           }
           
           .token-box {
-            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            background: #FEF3C7;
             border-left: 5px solid #F59E0B;
             padding: 20px;
             margin: 20px 0;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+            border: 1px solid #F59E0B;
           }
           
           .token-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #92400E;
-            font-weight: 700;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            display: block;
           }
           
           .token-value {
-            font-size: 24px;
-            font-weight: 800;
+            font-size: 18px;
+            font-weight: bold;
             color: #92400E;
             letter-spacing: 2px;
-            word-break: break-all;
-            font-family: 'Courier New', monospace;
+            word-wrap: break-word;
+            font-family: monospace;
           }
           
           .units-box {
-            background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+            background: #DBEAFE;
             border-left: 5px solid #3B82F6;
             padding: 15px 20px;
             margin: 15px 0;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border: 1px solid #3B82F6;
           }
           
           .units-label {
-            font-size: 14px;
+            font-size: 12px;
             color: #1E40AF;
-            font-weight: 600;
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 15px;
           }
           
           .units-value {
-            font-size: 20px;
-            font-weight: 800;
+            font-size: 18px;
+            font-weight: bold;
             color: #1E40AF;
+            display: inline-block;
           }
           
           .address-box {
             background: #F9FAFB;
             padding: 15px;
-            border-radius: 10px;
             margin: 15px 0;
             border: 1px solid #E5E7EB;
           }
           
           .address-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #6B7280;
-            font-weight: 600;
-            margin-bottom: 5px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
           }
           
           .address-value {
@@ -345,7 +268,7 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
           
           .divider {
             height: 1px;
-            background: linear-gradient(to right, transparent, #ddd, transparent);
+            background: #ddd;
             margin: 25px 0;
           }
           
@@ -353,29 +276,23 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
             text-align: center;
             padding: 20px;
             background: #F9FAFB;
-            border-top: 1px solid #E5E7EB;
+            border-top: 2px solid #e0e0e0;
           }
           
           .footer p {
-            font-size: 12px;
-            color: #9CA3AF;
+            font-size: 11px;
+            color: #666;
             margin: 5px 0;
           }
           
           .footer-logo {
-            font-weight: 700;
+            font-weight: bold;
             color: #FF114A;
           }
           
-          @media print {
-            body {
-              background: white;
-              padding: 0;
-            }
-            .receipt-container {
-              box-shadow: none;
-              max-width: 100%;
-            }
+          table {
+            width: 100%;
+            border-collapse: collapse;
           }
         </style>
       </head>
@@ -384,11 +301,7 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
           <div class="header">
             <h1>${appName}</h1>
             <p>Transaction Receipt</p>
-            <div class="status-badge ${
-              status === 'completed' ? 'status-success' : ''
-            }">
-              ${status}
-            </div>
+            <div class="status-badge">${status}</div>
           </div>
           
           <div class="content">
@@ -446,7 +359,7 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
               meterToken
                 ? `
             <div class="token-box">
-              <div class="token-label">⚡ Meter Token</div>
+              <div class="token-label">METER TOKEN</div>
               <div class="token-value">${meterToken}</div>
             </div>
             `
@@ -457,7 +370,7 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
               units
                 ? `
             <div class="units-box">
-              <span class="units-label">Energy Units</span>
+              <span class="units-label">Energy Units:</span>
               <span class="units-value">${units} kWh</span>
             </div>
             `
@@ -508,7 +421,7 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
                   : ''
               }
               <div class="info-item">
-                <span class="info-label">Date & Time</span>
+                <span class="info-label">Date &amp; Time</span>
                 <span class="info-value">${transactionDate}</span>
               </div>
               ${
@@ -536,7 +449,7 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
                   ? `
               <div class="info-item">
                 <span class="info-label">Service Charges</span>
-                <span class="info-value">₦${parseFloat(charges).toFixed(
+                <span class="info-value">NGN ${parseFloat(charges).toFixed(
                   2,
                 )}</span>
               </div>
@@ -557,9 +470,10 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
           </div>
           
           <div class="footer">
-            <p><span class="footer-logo">BlowMoney</span> • Digital Payment Solutions</p>
+            <p><span class="footer-logo">BlowMoney</span> - Digital Payment Solutions</p>
             <p>Thank you for using our service!</p>
-            <p style="margin-top: 10px; font-size: 11px;">Keep this receipt for your records</p>
+            <p style="margin-top: 10px;">Keep this receipt for your records</p>
+            <p style="margin-top: 15px; font-size: 10px;">Generated on ${new Date().toLocaleString()}</p>
           </div>
         </div>
       </body>
@@ -569,10 +483,9 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
 
 // Helper function to format currency
 export const formatCurrency = amount => {
-  return `₦${parseFloat(amount)
+  return `NGN ${parseFloat(amount)
     .toFixed(2)
     .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
 };
 
-// Export default
 export default generateReceiptHTML;

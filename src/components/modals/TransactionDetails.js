@@ -367,7 +367,6 @@ Keep this receipt for your records
     }
   };
 
-  // Manual share function - user clicks to share after file is saved
   const manualShareFile = async () => {
     if (!savedFilePath) {
       Toast.show({

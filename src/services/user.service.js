@@ -28,6 +28,19 @@ class UserServices {
       undefined,
     );
   }
+  pushNotify(Payload) {
+    return request(
+      '/user/me/notify',
+      'PUT',
+      Payload,
+      undefined,
+      undefined,
+      undefined,
+    );
+  }
+  pingUser() {
+    return request('/user/me/ping', 'PUT');
+  }
 
   /**
    *

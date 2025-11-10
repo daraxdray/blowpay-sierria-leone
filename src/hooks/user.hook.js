@@ -26,6 +26,34 @@ export const useGetUser = () => {
     },
   });
 };
+export const usePingUser = () => {
+  return useMutation({
+    mutationFn: payload => userService.pingUser(payload),
+    onSuccess: data => {
+      console.log('✅ User ping successful:', data);
+      return data;
+    },
+    onError: error => {
+      console.error('❌ User ping failed:', error);
+      _errorPrompt(error.message);
+    },
+  });
+};
+
+export const usePushNotify = () => {
+  return useMutation({
+    mutationFn: payload => userService.pushNotify(payload),
+    onSuccess: data => {
+      console.log('✅ Push notification token sent:', data);
+      return data;
+    },
+    onError: error => {
+      console.error('❌ Push notify error:', error);
+      _errorPrompt(error.message);
+    },
+  });
+};
+
 export const useGetUserAcc = () => {
   return useQuery({
     queryKey: ['userVirtualAccount'],
