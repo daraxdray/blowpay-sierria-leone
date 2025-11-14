@@ -28,6 +28,10 @@ class UserServices {
       undefined,
     );
   }
+  ChooseCountry(Payload) {
+    console.log(Payload, '/auth/delete/cyril@gmail.com');
+    return request('/kyc/country', 'POST', Payload);
+  }
   pushNotify(Payload) {
     return request(
       '/user/me/notify',

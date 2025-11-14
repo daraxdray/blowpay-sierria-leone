@@ -20,7 +20,6 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {styles} from './style';
-import Toast from 'react-native-toast-message';
 import {ScreenView} from '../../../global/wrappers';
 import {Image} from 'react-native-animatable';
 import WalletCard from '../../../components/wallet/WalletCard';
@@ -39,7 +38,7 @@ import {
   useGetVitualAcc,
   useGetVitualBalance,
 } from '../../../hooks/virtual.hook';
-import {useGetUserAcc, useCreateUserAcc} from '../../../hooks/user.hook';
+import {useGetUserAcc} from '../../../hooks/user.hook';
 import {useGetTransactions} from '../../../hooks/transactions.hook';
 import Bmoney from '../../../components/modals/BMoneyModal';
 import {CommonActions} from '@react-navigation/native';
@@ -58,8 +57,7 @@ const HomeTab = props => {
   const {data, refetch: refetchAccount} = useGetVitualAcc();
   const {data: vtAcc, refetch: refetchBalance} = useGetVitualBalance();
   const {refetch: refetchTransactions} = useGetTransactions();
-  const {data: userAcc, refetch: refetchUserAcc, status} = useGetUserAcc();
-  const {mutate: createUserAcc, status: createStatus} = useCreateUserAcc();
+  const {data: userAcc, status} = useGetUserAcc();
   const [advertModalVisible, setAdvertModalVisible] = useState(true);
 
   const loadUserData = async () => {
@@ -72,70 +70,6 @@ const HomeTab = props => {
       console.error('Failed to load user data:', error);
     }
   };
-  useEffect(() => {
-    const checkAndCreateAccount = async () => {
-      if (country?.toLowerCase() === 'sierra leone') {
-        console.log(
-          '⏭️ Skipping account creation - country is not Sierra Leone',
-        );
-        return;
-      }
-
-      if (status !== 'success' || !userAcc) {
-        console.log('⏳ Waiting for userAcc to finish loading...');
-        return;
-      }
-
-      try {
-        const accList = userAcc || [];
-        const sources = accList.map(acc => acc?.source?.toLowerCase());
-        console.log('🔍 Existing account sources:', sources);
-
-        const hasCashOnRails = sources.includes('cashonrails');
-        if (!hasCashOnRails) {
-          const storedUser = await AsyncStorage.getItem('Login');
-          const parsedUser = JSON.parse(storedUser);
-          const userId = parsedUser?.id;
-
-          if (!userId) {
-            console.warn('⚠️ No user ID found — cannot create account');
-            return;
-          }
-
-          console.log(
-            '💳 Creating CashOnRails account for Sierra Leone user...',
-          );
-          createUserAcc(
-            {userIds: [userId]},
-            {
-              onSuccess: () => {
-                Toast.show({
-                  type: 'success',
-                  text1: 'Virtual Account Created 🎉',
-                  text2: 'Your CashOnRails account is ready!',
-                });
-                setTimeout(() => refetchUserAcc(), 2000);
-              },
-              onError: err => {
-                console.error('❌ Error creating account:', err.message);
-                Toast.show({
-                  type: 'error',
-                  text1: 'Account Creation Failed',
-                  text2: err.message || 'Please try again later.',
-                });
-              },
-            },
-          );
-        } else {
-          console.log('✅ CashOnRails account already exists');
-        }
-      } catch (error) {
-        console.error('💥 Error checking or creating account:', error);
-      }
-    };
-
-    checkAndCreateAccount();
-  }, [status, country]);
 
   const saveUserData = async () => {
     try {
@@ -151,7 +85,6 @@ const HomeTab = props => {
 
   useEffect(() => {
     if (data?.data) {
-      console.log(data?.data);
       setUserData(data?.data);
       saveUserData(data?.data);
     }
@@ -205,7 +138,7 @@ const HomeTab = props => {
   }, [handleAppStateChange]);
 
   const vi = ['actions', 'invite', 'recent'];
-  if (status === 'loading' || createStatus === 'pending') {
+  if (status === 'pending') {
     return <Loader />;
   }
 
@@ -297,7 +230,7 @@ const HomeTab = props => {
         return null;
     }
   };
-  if (status === 'pending' || createStatus === 'pending') {
+  if (status === 'pending') {
     <Loader />;
   }
   return (

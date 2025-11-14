@@ -19,13 +19,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const Biometric = props => {
   const navigation = props.navigation;
   const {navigateHome, createKey} = useBiometricAuth();
-
   const activate = async () => {
     await createKey();
     try {
       const storedKyc = await AsyncStorage.getItem('userKyc');
       const kyc = storedKyc ? JSON.parse(storedKyc) : null;
-
+      const storedLogin = await AsyncStorage.getItem('Login');
+      const userDataFromStorage = storedLogin ? JSON.parse(storedLogin) : null;
+      if (userDataFromStorage?.country === 'Nigeria' || 'Sierra Leone') {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{name: 'bottom-tab'}],
+          }),
+        );
+        return;
+      }
       if (kyc) {
         navigation.dispatch(
           CommonActions.reset({
@@ -34,7 +43,7 @@ const Biometric = props => {
           }),
         );
       } else {
-        navigateHome('residence-screen');
+        navigateHome('selectCountry-screen');
       }
     } catch (error) {
       console.error('Error reading KYC data:', error);

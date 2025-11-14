@@ -1,19 +1,11 @@
+/* eslint-disable no-shadow */
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useRef, useState} from 'react';
-import {View, Text, ScrollView, StatusBar} from 'react-native';
+import {View, ScrollView, StatusBar, Platform} from 'react-native';
 import {styles} from './style';
 import {ScreenView} from '../../../global/wrappers';
 import LinearGradient from 'react-native-linear-gradient';
-import {
-  GREY,
-  GREY2,
-  HEIGHT,
-  MILK,
-  PRIMARY_COLOR,
-  SECONDARY_COLOR,
-  SEMI_PRIMARY_COLOR,
-  WHITE,
-  WIDTH,
-} from '../../../global/theme';
+import {HEIGHT, WHITE, WIDTH} from '../../../global/theme';
 import Carousel from 'react-native-reanimated-carousel';
 import {Carouseltem} from '../../../components/onboard';
 import {CarouselData} from '../../../constants/onboard';
@@ -27,9 +19,7 @@ const Walkthrough = props => {
   const navigation = props.navigation;
   const {isAuthenticated} = useSelector(state => state.user);
   const carouselRef = useRef(null);
-  const {data: user, status: fetchingUser} = useGetUser();
-
-  // States
+  const {data: user} = useGetUser();
   const [index, setIndex] = useState(0);
 
   const _constructor = () => {
@@ -40,7 +30,7 @@ const Walkthrough = props => {
   };
 
   const gotoDashboard = () => {
-    if (user?.message == 'Unauthorized' || user?.data == undefined) {
+    if (user?.message === 'Unauthorized' || user?.data === undefined) {
       navigation.navigate('TransactionPinScreen', {
         params: {currentRoute: 'walkthrough-screen'},
       });

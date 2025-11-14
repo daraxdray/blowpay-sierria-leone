@@ -45,6 +45,7 @@ import Language from '../../screens/main/profile-tab/language';
 import NotificationSetting from '../../screens/main/profile-tab/notification';
 import Faqs from '../../screens/main/profile-tab/faqs';
 import Refer from '../../screens/main/profile-tab/refer-earn';
+import SelectCounntry from '../../screens/auth/select-country/index';
 import Contact from '../../screens/main/profile-tab/contact-us';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ConfirmPin from '../../screens/auth/confirm-pin';
@@ -136,19 +137,14 @@ const RootNav = props => {
           initialRouteName={
             isAuthenticated ? 'bottom-tab' : 'walkthrough-screen'
           }>
-          {isAuthenticated ? (
-            <Screen
-              name={'TransactionPinScreen'}
-              component={TransactionPinScreen}
-              options={screenOptions}
-            />
-          ) : (
-            console.log('jeeeje')
-          )}
-
           <Screen
             name={'walkthrough-screen'}
             component={Walkthrough}
+            options={screenOptions}
+          />
+          <Screen
+            name={'selectCountry-screen'}
+            component={SelectCounntry}
             options={screenOptions}
           />
           <Screen

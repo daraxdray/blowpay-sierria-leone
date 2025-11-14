@@ -18,6 +18,7 @@ import {CustomButton} from '../../../global/components';
 import useBiometricAuth from '../../../hooks/biometric.hook';
 
 const ConfirmPin = props => {
+  const {from} = props.route.params || {};
   const navigation = props.navigation;
   const {mutate: confirmPasscode, status} = useConfirmPasscode();
   const {data: user, status: fetchingUser} = useGetUser();
@@ -33,15 +34,22 @@ const ConfirmPin = props => {
   };
 
   const handleVerify = value => {
-    const userData = {
-      passcode: value,
-    };
+    const userData = {passcode: value};
 
     confirmPasscode(userData, {
       onSuccess: async data => {
         if (data) {
           try {
             dispatch(loginSuccess());
+            if (from === 'CreatePin') {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{name: 'selectCountry-screen'}],
+                }),
+              );
+              return;
+            }
             const kyc = JSON.parse(await AsyncStorage.getItem('userKyc'));
             const storedLogin = await AsyncStorage.getItem('Login');
             const userDataFromStorage = storedLogin
@@ -53,10 +61,20 @@ const ConfirmPin = props => {
                 userData.passcode,
               );
             }
-
             if (!keyFound && isBiometricExist) {
               navigation.navigate('biometric-screen');
-            } else if (kyc) {
+              return;
+            }
+            if (userDataFromStorage?.country === 'Nigeria' || 'Sierra Leone') {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{name: 'bottom-tab'}],
+                }),
+              );
+              return;
+            }
+            if (kyc) {
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
@@ -67,7 +85,7 @@ const ConfirmPin = props => {
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
-                  routes: [{name: 'residence-screen'}],
+                  routes: [{name: 'selectCountry-screen'}],
                 }),
               );
             }
@@ -77,22 +95,23 @@ const ConfirmPin = props => {
         } else {
           Toast.show({
             type: 'error',
-            text1: 'Passcode confirm  failed',
+            text1: 'Passcode confirm failed',
           });
         }
       },
       onError: error => {
         Toast.show({
           type: 'error',
-          text1: 'Passcode confirm ',
+          text1: 'Passcode confirm',
           text2:
-            error?.response.data.error ||
+            error?.response?.data?.error ||
             error?.message ||
             'An error occurred. Please try again.',
         });
       },
     });
   };
+
   return (
     <ScreenView style={styles.container} light color={WHITE}>
       <ScrollView style={styles.viewContainer}>
