@@ -1,4 +1,4 @@
-package com.rdx.blowpay
+package blowcloud.blowpay.org
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

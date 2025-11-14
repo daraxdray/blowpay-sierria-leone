@@ -1,4 +1,4 @@
-package com.rdx.blowpay
+package blowcloud.blowpay.org
 
 import android.app.Application
 import com.facebook.react.PackageList

@@ -14,7 +14,7 @@ module.exports = {
   },
   project: {
     ios: {},
-    android: {packageName: 'com.rdx.blowpay'},
+    android: {packageName: 'blowcloud.blowpay.org'},
   },
   assets: ['./node_modules/react-native-vector-icons/Fonts'],
 };
