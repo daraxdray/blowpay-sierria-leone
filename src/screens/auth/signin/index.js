@@ -81,7 +81,7 @@ const Signin = props => {
               return;
             }
             if (!det) {
-              navigation.navigate('ConfirmPin');
+              navigation.navigate('ConfirmPin', {from: 'Signin'});
               return;
             }
 

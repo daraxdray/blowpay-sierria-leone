@@ -47,7 +47,7 @@ const CreatePin = props => {
     setPasscode(userData, {
       onSuccess: data => {
         if (data) {
-          navigation.navigate('ConfirmPin');
+          navigation.navigate('ConfirmPin', {from: 'CreatePin'});
 
           Toast.show({
             type: 'success',
