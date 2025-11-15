@@ -65,6 +65,7 @@ export const useSendOtp = () => {
     },
   });
 };
+
 // Hook for checking website statsu
 export const useCheckServerStatus = () => {
   return useQuery({

@@ -26,6 +26,32 @@ export const useGetUser = () => {
     },
   });
 };
+export const usePingUser = () => {
+  return useMutation({
+    mutationFn: payload => userService.pingUser(payload),
+    onSuccess: data => {
+      return data;
+    },
+    onError: error => {
+      console.error('❌ User ping failed:', error);
+      _errorPrompt(error.message);
+    },
+  });
+};
+
+export const usePushNotify = () => {
+  return useMutation({
+    mutationFn: payload => userService.pushNotify(payload),
+    onSuccess: data => {
+      return data;
+    },
+    onError: error => {
+      console.error('❌ Push notify error:', error);
+      _errorPrompt(error.message);
+    },
+  });
+};
+
 export const useGetUserAcc = () => {
   return useQuery({
     queryKey: ['userVirtualAccount'],
@@ -33,8 +59,8 @@ export const useGetUserAcc = () => {
       const response = await userService.getUserAcc();
       return response?.data || {};
     },
-    staleTime: 1000 * 60 * 5, // 5 mins
-    cacheTime: 1000 * 60 * 10, // 10 mins
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     retry: 1,
     onError: error => {
@@ -56,6 +82,25 @@ export const useCreateUserAcc = () => {
       console.log('✅ Created Virtual Account:', data);
     },
     onError: error => {
+      _errorPrompt(error.message || 'Failed to create virtual account');
+    },
+  });
+};
+export const useChooseCountry = () => {
+  return useMutation({
+    mutationFn: async payload => {
+      const response = await userService.ChooseCountry(payload);
+      return response?.data;
+    },
+    staleTime: 1000 * 60 * 5,
+    cacheTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
+    onSuccess: data => {
+      _successPrompt('country chosen successfully!');
+      console.log('country chosen successfully!:', data);
+    },
+    onError: error => {
+      console.log(error, 'hhdhd');
       _errorPrompt(error.message || 'Failed to create virtual account');
     },
   });

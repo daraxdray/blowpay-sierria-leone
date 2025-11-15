@@ -18,6 +18,8 @@ import AppConstant from '../../constants/data/appConstant';
 import SierraLeoneTopup from '../SierraLeone/SierraLeoneTopup';
 
 const TopupModal = ({closeModal, accountData, country}) => {
+  console.log(accountData, 'accountData');
+
   const [setStep] = useState('input');
 
   const sortedAccounts = useMemo(() => {

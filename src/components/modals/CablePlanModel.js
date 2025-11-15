@@ -31,7 +31,6 @@ const CablePlanModal = ({
     error: cableError,
     status: Bpstatus,
   } = useBillerGetCable(products?.ID);
-  console.log(cableData, 'cableData');
 
   const plans = useMemo(() => {
     if (isSierraLeone) {

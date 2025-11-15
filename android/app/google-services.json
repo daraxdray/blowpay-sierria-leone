@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "385372762056",
+    "project_id": "blowpay-274a8",
+    "storage_bucket": "blowpay-274a8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:385372762056:android:cc1c46f1e3701bb25c5afd",
+        "android_client_info": {
+          "package_name": "com.rdx.blowpay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEoSBfL93bFcGOuCTDiwJxWYHyPfNeX3s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
