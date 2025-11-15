@@ -169,6 +169,11 @@ const RootNav = props => {
             options={screenOptions}
           />
           <Screen
+            name={'TransactionPinScreen'}
+            component={TransactionPinScreen}
+            options={screenOptions}
+          />
+          <Screen
             name={'signup-screen'}
             component={Signup}
             options={screenOptions}
