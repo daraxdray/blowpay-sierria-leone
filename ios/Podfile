@@ -1,0 +1,45 @@
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+# ✅ Keep New Architecture enabled for Reanimated
+ENV['RCT_NEW_ARCH_ENABLED'] = '1'
+
+project 'blowpay_mobile.xcodeproj'
+
+platform :ios, '16.0'
+
+prepare_react_native_project!
+
+use_modular_headers!
+
+# ✅ Keep static linkage (fixes modular import issues with Firebase)
+use_frameworks! :linkage => :static
+
+target 'blowpay_mobile' do
+  config = use_native_modules!
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false
+    )
+
+    # 🩹 Patch: make all pods modular if possible (helps Firebase + Swift pods)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
+        config.build_settings['DEFINES_MODULE'] = 'YES'
+      end
+    end
+  end
+end
