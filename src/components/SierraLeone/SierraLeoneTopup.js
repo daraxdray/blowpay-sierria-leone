@@ -1,12 +1,5 @@
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  ScrollView,
-  Platform,
-} from 'react-native';
+import {View, Text, TouchableOpacity} from 'react-native';
 import tw from 'twrnc';
 import * as Clipboard from '@react-native-clipboard/clipboard';
 import {CustomButton} from '../../global/components';
@@ -91,67 +84,54 @@ const SierraLeoneTopup = ({onSuccess}) => {
 
   if (responseData) {
     return (
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={tw`pb-4`}>
-        <View style={tw`mt-6`}>
-          <Text style={tw`text-[#101828] font-semibold text-[20px] text-center`}>
-            Complete Your Transfer
-          </Text>
-          <Text style={tw`text-[#667085] text-center mt-2 text-[14px]`}>
-            Send exactly {responseData?.amount} {responseData?.currency} using the
-            USSD code below to fund your wallet.
-          </Text>
+      <View style={tw`mt-6`}>
+        <Text style={tw`text-[#101828] font-semibold text-[20px] text-center`}>
+          Complete Your Transfer
+        </Text>
+        <Text style={tw`text-[#667085] text-center mt-2 text-[14px]`}>
+          Send exactly {responseData?.amount} {responseData?.currency} using the
+          USSD code below to fund your wallet.
+        </Text>
 
-          <View style={tw`mt-6 border border-[#D0D5DD] rounded-lg p-4`}>
-            <DetailRow
-              label="Amount"
-              value={`${responseData?.amount} ${responseData?.currency}`}
-            />
-            <DetailRow
-              label="Merchant Code"
-              value={responseData?.merchant_code}
-            />
-            <DetailRow
-              label="Service"
-              value={responseData?.service_slug?.replace(/_/g, ' ')}
-            />
-            <DetailRow label="Status" value={responseData?.status} />
-            <DetailRow
-              label="USSD Code"
-              value={responseData?.ussd_code}
-              onCopy={() => copyToClipboard(responseData?.ussd_code)}
-            />
-            <DetailRow
-              label="Expires At"
-              value={
-                responseData?.expires_at
-                  ? new Date(responseData.expires_at).toLocaleString('en-GB', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                  : '--'
-              }
-            />
-          </View>
+        <View style={tw`mt-6 border border-[#D0D5DD] rounded-lg p-4`}>
+          <DetailRow
+            label="Amount"
+            value={`${responseData?.amount} ${responseData?.currency}`}
+          />
+          <DetailRow
+            label="Merchant Code"
+            value={responseData?.merchant_code}
+          />
+          <DetailRow
+            label="Service"
+            value={responseData?.service_slug?.replace(/_/g, ' ')}
+          />
+          <DetailRow label="Status" value={responseData?.status} />
+          <DetailRow
+            label="USSD Code"
+            value={responseData?.ussd_code}
+            onCopy={() => copyToClipboard(responseData?.ussd_code)}
+          />
+          <DetailRow
+            label="Expires At"
+            value={
+              responseData?.expires_at
+                ? new Date(responseData.expires_at).toLocaleString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : '--'
+            }
+          />
         </View>
-      </ScrollView>
+      </View>
     );
   }
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={tw`pb-4`}
-        nestedScrollEnabled={true}>
-        <View style={tw`mt-4 mb-25`}>
+    <View style={tw`mt-4`}>
       <Text style={tw`text-xl font-bold text-center`}>Top-up Wallet</Text>
       <Text style={tw`text-gray-500 text-center mt-1`}>
         Choose how you’d like to fund
@@ -193,7 +173,7 @@ const SierraLeoneTopup = ({onSuccess}) => {
           ))}
         </View>
       ) : (
-        <View style={tw`mt-4 `}>
+        <View style={tw`mt-4`}>
           <TouchableOpacity onPress={resetForm} style={tw`self-end mb-2`}>
             <Text style={tw`text-red-500 text-sm`}>Change option</Text>
           </TouchableOpacity>
@@ -221,14 +201,12 @@ const SierraLeoneTopup = ({onSuccess}) => {
           <CustomButton
             onPress={handleSubmit}
             text={isPending ? 'Processing...' : 'Confirm Top-up'}
-            style={tw`bg-black mt-10`}
+            style={tw`bg-black mt-5`}
             disabled={isPending}
           />
         </View>
       )}
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 

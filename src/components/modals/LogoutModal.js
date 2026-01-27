@@ -28,10 +28,13 @@ const LogoutModal = ({closeModal}) => {
 
   const handleLogout = async () => {
     try {
+      // Clear all AsyncStorage data first
       await AsyncStorage.clear();
       
+      // Clear all Keychain credentials
       await Keychain.resetGenericPassword();
-      che
+      
+      // Comprehensively clear React Query cache
       queryClient.getQueryCache().clear();
       queryClient.getMutationCache().clear();
       

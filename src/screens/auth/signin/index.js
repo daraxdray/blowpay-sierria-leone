@@ -61,6 +61,7 @@ const Signin = props => {
             await AsyncStorage.setItem('userKyc', String(data.data.isKycSet));
             await AsyncStorage.setItem('Login', JSON.stringify(data.data));
             await AsyncStorage.setItem('authEmail', userData.emailAddress);
+            console.log('🌍 data saved:', data);
             await reloadAuth();
             const fcmToken = await messaging().getToken();
             if (fcmToken) {
@@ -84,7 +85,7 @@ const Signin = props => {
               return;
             }
 
-            dispatch(loginSuccess());
+            dispatch(loginSuccess()); ///stores login status
             if (!keyFound && isBiometricExist) {
               navigation.navigate('biometric-screen');
             } else {
