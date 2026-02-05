@@ -1,5 +1,4 @@
 import {request} from './api';
-
 class TransactionServices {
   /**
    *
@@ -25,7 +24,6 @@ class TransactionServices {
       false,
     );
   }
-
   /**
    * @param {string} id
    * @return {Promise<*>}

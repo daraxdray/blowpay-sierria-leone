@@ -58,6 +58,8 @@ const HomeTab = props => {
   const {data: vtAcc, refetch: refetchBalance} = useGetVitualBalance();
   const {refetch: refetchTransactions} = useGetTransactions();
   const {data: userAcc, status} = useGetUserAcc();
+  console.log(userAcc, 'user acc in home tab');
+  
   const [advertModalVisible, setAdvertModalVisible] = useState(true);
 
   const loadUserData = async () => {

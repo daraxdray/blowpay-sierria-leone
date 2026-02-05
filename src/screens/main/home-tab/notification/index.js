@@ -9,6 +9,7 @@ import AddfundSVG from '../../../../../assets/svgs/Addfund.svg';
 import Loader from '../../../../components/modals/Loader';
 import { useGetTransactions } from '../../../../hooks/transactions.hook';
 import { useGetNotifications } from '../../../../hooks/notification.hook';
+import { getUserFriendlyErrorMessage } from '../../../../utils';
 
 const Notification = props => {
   const navigation = props.navigation;
@@ -20,7 +21,7 @@ const Notification = props => {
   }
 
   if (error) {
-    return <Text>Error: {error.message}</Text>;
+    return <Text>Error: {getUserFriendlyErrorMessage(error)}</Text>;
   }
 
   const groupedNotifications = notifications.reduce((acc, curr) => {

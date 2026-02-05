@@ -12,34 +12,50 @@ import {
   useNavigationContainerRef,
 } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useGetUser} from '../../hooks/user.hook';
+import {useGetUser, useGetUserAcc} from '../../hooks/user.hook';
 
 export const AuthContext = createContext();
+
+/**
+ * Derive country from user accounts: if any account has SafulPay or currency SLE => Sierra Leone, else Nigeria.
+ * @param {Array} accounts - User accounts from getUserAcc endpoint
+ * @returns {'Sierra Leone'|'Nigeria'}
+ */
+const getCountryFromUserAccounts = accounts => {
+  if (!Array.isArray(accounts) || accounts.length === 0) {
+    return 'Nigeria';
+  }
+  const hasSafulPay = accounts.some(
+    acc =>
+      (acc?.bankName && String(acc.bankName).toLowerCase().includes('saful')) ||
+      acc?.currency?.code === 'SLE',
+  );
+  return hasSafulPay ? 'Sierra Leone' : 'Nigeria';
+};
 
 export const AuthProvider = ({children}) => {
   const navigationRef = useNavigationContainerRef();
   const INACTIVITY_TIMEOUT = (1 * 60 * 1000) / 2;
   const lastActiveRef = useRef(Date.now());
   const {data: user, refetch: refetchUser} = useGetUser();
+  const {data: userAccData, refetch: refetchUserAcc} = useGetUserAcc();
   const [country, setCountry] = useState('Nigeria');
 
-  // 🧠 Refetch user or AsyncStorage after Signin
+  // Derive country from user accounts (SafulPay/SLE => Sierra Leone, else Nigeria)
+  useEffect(() => {
+    const accounts = Array.isArray(userAccData) ? userAccData : [];
+    const derivedCountry = getCountryFromUserAccounts(accounts);
+    setCountry(derivedCountry);
+  }, [userAccData]);
+
   const reloadAuth = useCallback(async () => {
     try {
       await refetchUser();
-
-      const storedCountry = await AsyncStorage.getItem('userCountry');
-      if (storedCountry) setCountry(storedCountry);
+      await refetchUserAcc();
     } catch (err) {
       console.error('⚠️ Error reloading auth data:', err);
     }
-  }, [refetchUser]);
-
-  useEffect(() => {
-    if (user?.data?.country) {
-      setCountry(user.data.country);
-    }
-  }, [user]);
+  }, [refetchUser, refetchUserAcc]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener(

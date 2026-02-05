@@ -32,7 +32,8 @@ const TopupModal = ({closeModal, accountData, country}) => {
   }, [accountData]);
 
   const copyToClipboard = text => {
-    Clipboard.setString(text);
+    if (text == null || text === '') return;
+    Clipboard.setString(String(text));
     Toast.show({
       text1: 'Copied',
       text2: 'Account number copied to clipboard',

@@ -106,6 +106,7 @@ const Data = props => {
           <PlansList
             plans={categorizedProducts(days => days > 0 && days <= 5)}
             onPlanSelect={handlePlanSelect}
+            country={country}
           />
         );
       case 'Weekly':
@@ -113,6 +114,7 @@ const Data = props => {
           <PlansList
             plans={categorizedProducts(days => days >= 7 && days < 14)}
             onPlanSelect={handlePlanSelect}
+            country={country}
           />
         );
       case 'Monthly':
@@ -120,6 +122,7 @@ const Data = props => {
           <PlansList
             plans={categorizedProducts(days => days >= 25 && days <= 31)}
             onPlanSelect={handlePlanSelect}
+            country={country}
           />
         );
       case '2-Months':
@@ -127,6 +130,7 @@ const Data = props => {
           <PlansList
             plans={categorizedProducts(days => days > 31 && days <= 60)}
             onPlanSelect={handlePlanSelect}
+            country={country}
           />
         );
       case '3-Months':
@@ -134,6 +138,7 @@ const Data = props => {
           <PlansList
             plans={categorizedProducts(days => days > 60 && days <= 90)}
             onPlanSelect={handlePlanSelect}
+            country={country}
           />
         );
       case 'Yearly':
@@ -141,11 +146,16 @@ const Data = props => {
           <PlansList
             plans={categorizedProducts(days => days >= 360)}
             onPlanSelect={handlePlanSelect}
+            country={country}
           />
         );
       default:
         return (
-          <PlansList plans={airtimeProducts} onPlanSelect={handlePlanSelect} />
+          <PlansList
+            plans={airtimeProducts}
+            onPlanSelect={handlePlanSelect}
+            country={country}
+          />
         );
     }
   };

@@ -7,6 +7,7 @@ import {CustomButton} from '../../global/components';
 import {PanGestureHandler} from 'react-native-gesture-handler';
 import {useGetSLCablePlans, useBillerGetCable} from '../../hooks/billing.hook';
 import Loader from './Loader';
+import {getCurrencySymbol} from '../../utils/format';
 
 const CablePlanModal = ({
   closeModal,
@@ -72,7 +73,7 @@ const CablePlanModal = ({
             {item?.PACKAGE_NAME}
           </Text>
           <Text style={tw`text-gray-500 text-[13px]`}>
-            ₦{item?.PACKAGE_AMOUNT?.toLocaleString()}
+          {getCurrencySymbol(country)}{item?.PACKAGE_AMOUNT?.toLocaleString()}
           </Text>
         </View>
         <View

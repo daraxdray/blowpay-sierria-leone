@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react';
-import {View, Text, Image, TouchableOpacity, Clipboard} from 'react-native';
+import {View, Text, Image, TouchableOpacity} from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import {styles} from './style';
 import {ScreenView} from '../../../../../global/wrappers';
 import {WHITE} from '../../../../../global/theme';
@@ -7,9 +8,15 @@ import tw from 'twrnc';
 import {CustomButton} from '../../../../../global/components';
 import {CommonActions} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+const getToken = params => {
+  const d = params?.data;
+  return d?.token ?? d?.metadata?.token ?? d?.data?.metadata?.token ?? null;
+};
+
 const PaymentSucess = props => {
   const navigation = props.navigation;
   const params = props.route?.params;
+  const token = getToken(params);
 
   const handleNext = () => {
     navigation.dispatch(
@@ -50,21 +57,23 @@ const PaymentSucess = props => {
           </Text>
 
           {/* ✅ Token Section */}
-          {params?.data?.token && (
+          {token && (
             <View
               style={tw`flex-row items-center justify-between bg-[#F8F8F8] rounded-xl px-4 py-3 w-[85%] shadow-sm border border-[#E5E5E5]`}>
               <Text style={tw`text-[#333] text-[15px] font-medium flex-1`}>
-                Token: {params?.data?.token}
+                Token: {token}
               </Text>
 
               <TouchableOpacity
                 onPress={() => {
-                  Clipboard.setString(params?.data?.token);
-                  Toast.show({
-                    type: 'success',
-                    text1: 'Token copied!',
-                    visibilityTime: 1000,
-                  });
+                  if (token) {
+                    Clipboard.setString(String(token));
+                    Toast.show({
+                      type: 'success',
+                      text1: 'Token copied!',
+                      visibilityTime: 1000,
+                    });
+                  }
                 }}
                 style={tw`bg-[#01A33D] px-4 py-2 rounded-lg`}>
                 <Text style={tw`text-white text-[14px] font-semibold`}>

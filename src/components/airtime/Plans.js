@@ -2,8 +2,10 @@ import React from 'react';
 import {View, Text} from 'react-native';
 import tw from 'twrnc';
 import Plan from './Plan';
+import {getCurrencySymbol} from '../../utils/format';
 
-const PlansList = ({plans, onPlanSelect}) => {
+const PlansList = ({plans, onPlanSelect, country}) => {
+  const currencySymbol = getCurrencySymbol(country);
   return (
     <View style={tw`flex flex-wrap flex-row items-center justify-center`}>
       {plans.length > 0 ? (
@@ -17,7 +19,7 @@ const PlansList = ({plans, onPlanSelect}) => {
               <Plan
                 amount={plan?.validity}
                 dataSize={dataSize}
-                duration={`₦${plan?.price
+                duration={`${currencySymbol}${plan?.price
                   ?.toFixed(2)
                   .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`}
                 onPress={() => onPlanSelect(plan)}

@@ -21,6 +21,8 @@ import {CustomButton} from '../../../global/components';
 import Toast from 'react-native-toast-message';
 import {useDispatch, useSelector} from 'react-redux';
 import {updateKyc} from '../../../contexts/actions/user';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const ResidenceScreen = ({navigation, route}) => {
   const {idNumber, expiryDate, documentImage, documentType, selfieImage} =
@@ -112,9 +114,18 @@ const ResidenceScreen = ({navigation, route}) => {
     });
 
     submitKYC(formData, {
-      onSuccess: () => {
-        navigation.navigate('bottom-tab');
-        Toast.show({type: 'success', text1: 'KYC submitted successfully'});
+      onSuccess: async () => {
+        await AsyncStorage.setItem('userCountry', 'Sierra Leone');
+      
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'bottom-tab' }],
+        });
+      
+        Toast.show({
+          type: 'success',
+          text1: 'KYC submitted successfully',
+        });
       },
       onError: () => {
         Toast.show({type: 'error', text1: 'Failed to submit KYC. Try again.'});

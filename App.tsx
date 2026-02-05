@@ -7,25 +7,25 @@ import configureStore from './src/contexts/stores/index';
 import Main from './main';
 import {ThemeProvider} from './src/global/styles/theme';
 import {
-  requestUserPermission,
   setupNotificationListeners,
+  promptForNotificationPermissionIfNeeded,
 } from './src/services/push.notification.service';
 
 export default function App() {
   const client = new QueryClient();
 
   useEffect(() => {
-    const initializeNotifications = async () => {
-      try {
-        await requestUserPermission();
-        const unsubscribe = setupNotificationListeners();
-        return unsubscribe;
-      } catch (error) {
-        console.error('Failed to initialize notifications:', error);
-      }
-    };
+    const unsubscribe = setupNotificationListeners();
 
-    initializeNotifications();
+    // Show in-app alert to allow notifications (Android/iOS) after app is visible
+    const timer = setTimeout(() => {
+      promptForNotificationPermissionIfNeeded();
+    }, 1500);
+
+    return () => {
+      clearTimeout(timer);
+      typeof unsubscribe === 'function' && unsubscribe();
+    };
   }, []);
 
   return (

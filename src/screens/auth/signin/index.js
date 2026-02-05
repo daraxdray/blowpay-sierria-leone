@@ -17,7 +17,7 @@ import {useDispatch} from 'react-redux';
 import {AuthContext} from '../../../global/wrappers/AuthProvider';
 import {getUserPincode} from '../../../utils/storage.js';
 import {usePushNotify} from '../../../hooks/user.hook.js';
-import messaging from '@react-native-firebase/messaging';
+import {getFCMToken} from '../../../services/push.notification.service.js';
 import {Platform} from 'react-native';
 
 const Signin = props => {
@@ -61,9 +61,8 @@ const Signin = props => {
             await AsyncStorage.setItem('userKyc', String(data.data.isKycSet));
             await AsyncStorage.setItem('Login', JSON.stringify(data.data));
             await AsyncStorage.setItem('authEmail', userData.emailAddress);
-            console.log('🌍 data saved:', data);
             await reloadAuth();
-            const fcmToken = await messaging().getToken();
+            const fcmToken = await getFCMToken();
             if (fcmToken) {
               console.log(fcmToken, 'fcmToken in login');
               pushNotify({
@@ -85,7 +84,7 @@ const Signin = props => {
               return;
             }
 
-            dispatch(loginSuccess()); ///stores login status
+            dispatch(loginSuccess());
             if (!keyFound && isBiometricExist) {
               navigation.navigate('biometric-screen');
             } else {

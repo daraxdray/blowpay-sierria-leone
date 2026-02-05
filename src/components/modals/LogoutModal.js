@@ -28,13 +28,9 @@ const LogoutModal = ({closeModal}) => {
 
   const handleLogout = async () => {
     try {
-      // Clear all AsyncStorage data first
       await AsyncStorage.clear();
       
-      // Clear all Keychain credentials
-      await Keychain.resetGenericPassword();
-      
-      // Comprehensively clear React Query cache
+      await Keychain.resetGenericPassword(); 
       queryClient.getQueryCache().clear();
       queryClient.getMutationCache().clear();
       
@@ -47,12 +43,8 @@ const LogoutModal = ({closeModal}) => {
           routes: [{name: 'walkthrough-screen'}],
         }),
       );
-      
-      // Show success message
       Toast.show({text1: 'You have logged out successfully'});
-      
-      // Call logout mutation
-      mutate({});
+  
     } catch (error) {
       console.error('An unexpected error occurred:', error);
       Toast.show({

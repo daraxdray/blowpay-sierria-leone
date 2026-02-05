@@ -82,23 +82,65 @@ export const FilterDate = (val) => {
 }
 
 
+/** Lowercase string for matching; handles non-strings. */
+const toMatchStr = (val) => (val && typeof val === 'string' ? val : String(val || '')).toLowerCase();
+
+/** True if the message looks like a generic/unhelpful backend error (e.g. "failed with error 500"). */
+export const isGenericServerErrorMessage = (message) => {
+  const s = toMatchStr(message);
+  if (!s) return true;
+  const generic = [
+    '500', '502', '503', '504',
+    'internal server error',
+    'bad gateway',
+    'service unavailable',
+    'gateway timeout',
+    'failed with error',
+    'request failed with status code',
+    'error 500', 'error 502', 'error 503',
+  ];
+  return generic.some((term) => s.includes(term));
+};
+
 export const errorSeeker = (error) => {
-  let msg = "";
+  const raw = error && typeof error === 'string' ? error : String(error ?? '');
+  const s = raw.toLowerCase();
 
-  console.log({error})
-  msg = error.includes("Network request failed")
-    ? "Check Network or Connect to the Internet"
-    : error.includes("Invalid credentials")
-    ? "Email or Password is incorrect"
-    : error.includes("JSON Parse error: Unrecognized token '<'")
-    ? "Sorry We Are Currently Under Maintenance!"
-    : error.includes("user not found")
-    ? "User has been logged out!... Please Logout"
-    : error.includes("Invalid or Expired Token")
-    ? "User has been logged out!... Please Logout"
-    : error;
+  if (s.includes('network request failed')) return 'Check your connection and try again.';
+  if (s.includes('invalid credentials')) return 'Email or password is incorrect.';
+  if (s.includes("json parse error") || s.includes("unrecognized token '<'")) return 'Sorry, we\'re under maintenance. Please try again later.';
+  if (s.includes('user not found') || s.includes('invalid or expired token')) return 'Session expired. Please log in again.';
+  if (isGenericServerErrorMessage(raw)) return 'Something went wrong. Please try again.';
+  return raw || 'Something went wrong. Please try again.';
+};
 
-  return msg;
+/**
+ * Returns a user-friendly error message from any error (Axios error, Error, or string).
+ * Use this so users never see raw messages like "failed with error 500".
+ */
+export const getUserFriendlyErrorMessage = (error) => {
+  if (error == null) return 'Something went wrong. Please try again.';
+
+  const status = error.response?.status;
+  const data = error.response?.data;
+  const extracted =
+    typeof data === 'string'
+      ? data
+      : (data && (data.message ?? data.error ?? data.msg ?? data.detail));
+  const backendMsg = extracted != null ? String(extracted) : '';
+  const fallback = error.message ? String(error.message) : String(error);
+
+  const messageToCheck = backendMsg || fallback;
+
+  if (status >= 500 || isGenericServerErrorMessage(messageToCheck)) {
+    return 'Something went wrong. Please try again.';
+  }
+  if (status === 429) return 'Too many requests. Please wait a moment and try again.';
+  if (status === 404) return 'The requested item was not found.';
+  if (status === 403) return 'You don\'t have permission to do this.';
+  if (status === 401) return 'Please log in again.';
+
+  return errorSeeker(messageToCheck || fallback);
 };
 
 export const makeid = () =>{
@@ -143,21 +185,15 @@ export const colors = [
 
 
 export const _errorPrompt = (error, errorText) => {
-  console.log("error: ", error, errorText);
-
-  let errorMsg = '';
-  if(error.toString().includes("JSON parse")){
-    errorMsg = "Service unavailable at the moment, Something went wrong.";
-  } else {
-    errorMsg = error;
+  if (__DEV__) {
+    console.log('error: ', error, errorText);
   }
-
+  const errorMsg = getUserFriendlyErrorMessage(error ?? errorText);
   Toast.show({
     type: 'error',
-    text1:`${errorMsg ?? ""}`,
-    text2: `${errorText ?? ""}`
+    text1: 'Error',
+    text2: errorMsg || errorText || 'Something went wrong. Please try again.',
   });
-
 };
 
 

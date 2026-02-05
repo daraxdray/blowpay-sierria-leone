@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -23,9 +23,12 @@ import useBiometricAuth from '../../../../../hooks/biometric.hook';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
 import { useConfirmPasscode } from '../../../../../hooks/auth.hook';
 import { CommonActions } from '@react-navigation/native';
+import { getCurrencySymbol } from '../../../../../utils/format';
+import { AuthContext } from '../../../../../global/wrappers/AuthProvider';
 
 const BettingPaymentPin = (props) => {
   const navigation = props.navigation;
+  const { country } = useContext(AuthContext);
   const { customerId = '', bettingCompany = '', amount = 0 } = props.route.params || {};
   const [pin, setPin] = useState('');
   const { mutate: fundBetting, status: fundingStatus } = useBettingFund();
@@ -176,9 +179,8 @@ const BettingPaymentPin = (props) => {
             </View>
 
             <Text style={tw`text-base text-[${PRIMARY_COLOR}] text-center mb-4`}>
-              You're about to fund {bettingCompany} account with ₦{amount}
+              You're about to fund {bettingCompany} account with {getCurrencySymbol(country)}{amount}
             </Text>
-
             {isBiometricExist && (
               <View
                 style={tw`mt-8  flex flex-row items-center justify-center p-4  rounded-lg mt-[300]`}

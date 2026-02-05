@@ -35,10 +35,14 @@ target 'blowpay_mobile' do
     )
 
     # 🩹 Patch: make all pods modular if possible (helps Firebase + Swift pods)
+    # 🩹 Enforce minimum iOS 12 (Xcode 26 requires 12.0–26.2; some pods default to 9.0)
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
         config.build_settings['DEFINES_MODULE'] = 'YES'
+        if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 12.0
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+        end
       end
     end
   end

@@ -1,7 +1,8 @@
-// import {API_URL, BASE_URL} from '@env';
+import { BASE_URL } from '../config/env';
 // import CookieManager from '@react-native-cookies/cookies';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
+import { getUserFriendlyErrorMessage } from '../utils';
 
 /**
  * Object Request Header
@@ -93,8 +94,8 @@ export const requestHeader = {
 //   }
 // }
 
-export const baseUrl = 'https://api.blowcloud.org/v1';
-// const baseUrl = 'https://648b-196-1-187-34.ngrok-free.app/v1';
+/** API base URL (from src/config/env.js). */
+export const baseUrl = BASE_URL;
 
 export async function request(url, method, payload = {}, form = false) {
   const fullUrl = `${baseUrl}${url}`;
@@ -146,20 +147,19 @@ export async function request(url, method, payload = {}, form = false) {
     return response.data;
   } catch (err) {
     const status = err.response?.status;
-    const message = err.response?.data || 'Something went wrong';
+    const friendlyMessage = getUserFriendlyErrorMessage(err);
 
-    if (status === 429 && typeof message === 'string') {
+    if (status === 429) {
       Toast.show({
         type: 'error',
-        text1: 'Too Many Requests wait a moment',
-        text2: message,
+        text1: 'Too many requests',
+        text2: friendlyMessage,
       });
-    } else if (status === 401) {
-    } else {
+    } else if (status !== 401) {
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: typeof message === 'string' ? message : 'Something went wrong.',
+        text2: friendlyMessage,
       });
     }
 

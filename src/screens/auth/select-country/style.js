@@ -132,5 +132,6 @@ export const styles = StyleSheet.create({
   },
   continueBtn: {
     width: '100%',
+    marginBottom: 20,
   },
 });

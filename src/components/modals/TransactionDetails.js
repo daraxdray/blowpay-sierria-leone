@@ -10,7 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import tw from 'twrnc';
 import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -23,14 +23,19 @@ import Loader from './Loader';
 import RNFS from 'react-native-fs';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import AppConstant from '../../constants/data/appConstant';
+import {getCurrencySymbol} from '../../utils/format';
+import {AuthContext} from '../../global/wrappers/AuthProvider';
 import Appicon from '../../../assets/svgs/logo_ios.svg';
 import Appicon2 from '../../../assets/svgs/logo.svg';
 import {generateReceiptHTML} from '../wallet/generateRecept';
 
 const TransactionDetails = ({closeModal, transactionId}) => {
+  const {country} = useContext(AuthContext);
+  const currencySymbol = getCurrencySymbol(country);
   const {data, status} = useGetTransaction(transactionId);
   const {mutate, status: gettingToken} = useGetTxToken();
   const userData = data?.data || {};
+  console.log(userData, 'user data in transaction details');
   const message = data?.message;
   const [token, setToken] = useState('');
   const [isSharing, setIsSharing] = useState(false);
@@ -51,10 +56,12 @@ const TransactionDetails = ({closeModal, transactionId}) => {
   }, [data?.data]);
 
   const copyToClipboard = text => {
-    Clipboard.setString(text);
+    if (text == null || text === '') return;
+    const str = String(text);
+    Clipboard.setString(str);
     Toast.show({
       text1: 'Copied',
-      text2: text + ' has been copied to clipboard',
+      text2: str + ' has been copied to clipboard',
     });
   };
 
@@ -235,10 +242,10 @@ const TransactionDetails = ({closeModal, transactionId}) => {
         : formatTime(userData?.flutterwaveResponse?.transaction_date);
 
       const amount = userData?.amount
-        ? `₦${parseFloat(userData?.amount / 100)
+        ? `${currencySymbol}${parseFloat(userData?.amount / 100)
             .toFixed(2)
             .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`
-        : `₦${parseFloat(userData?.flutterwaveResponse?.amount)
+        : `${currencySymbol}${parseFloat(userData?.flutterwaveResponse?.amount)
             .toFixed(2)
             .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
 
@@ -541,7 +548,7 @@ Keep this receipt for your records
                       Amount
                     </Text>
                     <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                      ₦
+                      {currencySymbol}
                       {parseFloat(
                         userData?.amount
                           ? userData?.amount / 100
@@ -801,12 +808,10 @@ Keep this receipt for your records
                       </Text>
 
                       {Object.entries(userData.metadata).map(([key, value]) => {
-                        // Skip already displayed fields
                         if (
                           key === 'walletbalance' ||
                           !value ||
-                          key === 'meterno' ||
-                          key === 'token'
+                          key === 'meterno' 
                         ) {
                           return null;
                         }

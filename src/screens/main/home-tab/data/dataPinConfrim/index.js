@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useContext} from 'react';
 import {View, Text, ScrollView} from 'react-native';
 import {styles} from './style';
 import {ScreenView} from '../../../../../global/wrappers';
@@ -15,10 +15,14 @@ import Toast from 'react-native-toast-message';
 import {useGetVitualBalance} from '../../../../../hooks/virtual.hook';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
+import {getCurrencySymbol} from '../../../../../utils/format';
+import {AuthContext} from '../../../../../global/wrappers/AuthProvider';
 
 const DataPaymentPin = props => {
   const navigation = props.navigation;
   const route = props.route;
+  const {country} = useContext(AuthContext);
+  const currencySymbol = getCurrencySymbol(country);
   const {data: selectedPlan, phoneNumber, providerStatus} = route.params;
   const {isBiometricExist} = useBiometricAuth();
   const {mutate: confirmPasscode, status} = useConfirmPasscode();
@@ -174,7 +178,7 @@ const DataPaymentPin = props => {
             <CustomButton
               onPress={handleVerify}
               style={styles.btn1}
-              text={`Pay ₦${selectedPlan?.price
+              text={`Pay ${currencySymbol}${selectedPlan?.price
                 ?.toFixed(2)
                 ?.replace(/\d(?=(\d{3})+\.)/g, '$&,')}`}
             />

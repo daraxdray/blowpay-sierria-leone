@@ -23,17 +23,13 @@ import {unformatAmount, getCurrencySymbol} from '../../../../../utils/format';
 const ElectricPaymentPin = ({navigation, route}) => {
   const {selectedProvider, selectedMeter, selectedAmount, country} =
     route.params;
-
   const rawValue = unformatAmount(selectedAmount);
-
   const {data: balanceData} = useGetVitualBalance();
   const userBalance = balanceData?.data?.balance / 100;
-
   const {mutate: confirmPasscode, status: passcodeStatus} =
     useConfirmPasscode();
   const {mutate: electricBill, status: billStatus} = useByPBillPay();
   const {mutate: buyAirtime, status: spBillStatus} = useSpBillPayment();
-
   const [otp, setOtp] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -177,6 +173,8 @@ const ElectricPaymentPin = ({navigation, route}) => {
 
     buyAirtime(payload, {
       onSuccess: res => {
+        console.log(res, 'res in electricity payment pin');
+        
         if (res) {
           navigation.dispatch(
             CommonActions.reset({
@@ -186,7 +184,7 @@ const ElectricPaymentPin = ({navigation, route}) => {
                   name: 'PaymentSucess',
                   params: {
                     message: 'Your electricity payment was successful.',
-                    data: res?.data,
+                    data: res,
                   },
                 },
               ],

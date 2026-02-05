@@ -21,6 +21,7 @@ import Loader from '../../../../components/modals/Loader';
 import {AuthContext} from '../../../../global/wrappers/AuthProvider';
 import {styles} from './style';
 import ServiceUnavailable from '../../../../components/SierraLeone/ServiceUnavailable';
+import {getCurrencySymbol} from '../../../../utils/format';
 
 const FundBetting = props => {
   const navigation = props.navigation;
@@ -149,7 +150,7 @@ const FundBetting = props => {
       Toast.show({
         type: 'error',
         text1: 'Invalid Amount',
-        text2: `Minimum amount is ₦${selectedProvider.MINAMOUNT}`,
+        text2: `Minimum amount is ${getCurrencySymbol(country)}${selectedProvider.MINAMOUNT}`,
       });
       return false;
     }
@@ -158,7 +159,7 @@ const FundBetting = props => {
       Toast.show({
         type: 'error',
         text1: 'Invalid Amount',
-        text2: `Maximum amount is ₦${selectedProvider.MAXAMOUNT}`,
+        text2: `Maximum amount is ${getCurrencySymbol(country)}${selectedProvider.MAXAMOUNT}`,
       });
       return false;
     }
@@ -256,8 +257,8 @@ const FundBetting = props => {
             />
             {selectedProvider && (
               <Text style={tw`text-gray-600 text-[12px] text-center`}>
-                Min: ₦{selectedProvider.MINAMOUNT} | Max: ₦
-                {selectedProvider.MAXAMOUNT}
+                Min: {getCurrencySymbol(country)}{selectedProvider.MINAMOUNT} | Max:{' '}
+                {getCurrencySymbol(country)}{selectedProvider.MAXAMOUNT}
               </Text>
             )}
           </View>

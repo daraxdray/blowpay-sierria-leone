@@ -7,6 +7,9 @@ import tw from 'twrnc';
 import {CustomButton} from '../../../../../global/components';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+const USER_FRIENDLY_MESSAGE =
+  'Something went wrong. Please try again.';
+
 const PaymentError = props => {
   const {navigation, route} = props;
   const {screenError} = route?.params || {};
@@ -15,25 +18,10 @@ const PaymentError = props => {
     navigation.goBack();
   };
 
-  // 🔥 normalize error message
-  const normalizeError = error => {
-    if (!error) return 'An unexpected error occurred.';
-    if (typeof error === 'string') return error;
-
-    // handle Axios/Express style errors
-    if (error?.message) return error.message;
-    if (error?.msg) return error.msg;
-    if (error?.error) return error.error;
-
-    // last resort
-    try {
-      return JSON.stringify(error, null, 2);
-    } catch {
-      return 'An unexpected error occurred.';
-    }
-  };
-
-  const errorMessage = normalizeError(screenError);
+  // Log raw error for debugging; never expose to user
+  if (screenError && __DEV__) {
+    console.warn('[PaymentError]', screenError);
+  }
 
   return (
     <ScreenView style={styles.container} light color={WHITE}>
@@ -46,7 +34,7 @@ const PaymentError = props => {
           <View style={tw`flex items-center w-[60%]`}>
             <Text
               style={tw`text-[#7F7F7F] font-normal text-[14px] text-center`}>
-              {errorMessage}
+              {USER_FRIENDLY_MESSAGE}
             </Text>
           </View>
         </View>
