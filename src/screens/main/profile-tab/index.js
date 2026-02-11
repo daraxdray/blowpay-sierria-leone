@@ -9,6 +9,7 @@ import {
   ImageBackground,
   Linking,
   Platform,
+  Alert,
 } from 'react-native';
 import {styles} from './style';
 import {ScreenView} from '../../../global/wrappers';
@@ -25,13 +26,22 @@ import {useGetVitualAcc} from '../../../hooks/virtual.hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import VerifyPhoneComponent from './verifyPhone';
 import AppConstant from '../../../constants/data/appConstant';
+import {CommonActions} from '@react-navigation/native';
+import {useDispatch} from 'react-redux';
+import {logout} from '../../../contexts/actions/user';
+import {useQueryClient} from '@tanstack/react-query';
+import * as Keychain from 'react-native-keychain';
+import Toast from 'react-native-toast-message';
 
 const ProfileTab = props => {
   const navigation = props.navigation;
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
   const [phoneModalVisible, setPhoneModalVisible] = useState(false);
   const [helpModalVisible, setHelpModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const {data} = useGetVitualAcc();
   const [user, setUser] = useState({});
   const socialImage =
@@ -44,12 +54,45 @@ const ProfileTab = props => {
   const closeModal = () => {
     setModalVisible(false);
   };
-  const gotoDelete = () => {
-    const url =
-      Platform.OS === 'ios' || AppConstant.isAmazonStore
-        ? 'https://BlowPay.app/request-account-deletion'
-        : 'http://billsbyblowmoney.com/request-account-deletion';
-    Linking.openURL(url);
+  const closeDeleteModal = () => setDeleteModalVisible(false);
+
+  const performLogout = async () => {
+    try {
+      await AsyncStorage.clear();
+      await Keychain.resetGenericPassword();
+      queryClient.getQueryCache().clear();
+      queryClient.getMutationCache().clear();
+      queryClient.clear();
+      dispatch(logout());
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{name: 'walkthrough-screen'}],
+        }),
+      );
+      Toast.show({text1: 'You have been logged out.'});
+    } catch (error) {
+      console.error('Logout error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'An error occurred. Please try again.',
+      });
+    }
+  };
+
+  const confirmDeleteAccount = () => {
+    // const url =
+    //   Platform.OS === 'ios' || AppConstant.isAmazonStore
+    //     ? 'https://BlowPay.app/request-account-deletion'
+    //     : 'http://billsbyblowmoney.com/request-account-deletion';
+    // Linking.openURL(url);
+    closeDeleteModal();
+    Alert.alert(
+      'Account deletion requested',
+      'We have requested to delete your account. It will take effect after 30 days.',
+      [{text: 'OK', onPress: performLogout}],
+    );
   };
   const openHelpModal = () => {
     setHelpModalVisible(true);
@@ -131,13 +174,7 @@ const ProfileTab = props => {
             {/* <ProfilleSVG /> */}
             <Image
               source={socialImage}
-              style={{
-                width: 50,
-                height: 50,
-                borderRadius: 25,
-                backgroundColor: 'black',
-                borderRadius: 30,
-              }}
+              style={tw`w-[50px] h-[50px] rounded-full bg-black`}
             />
           </TouchableOpacity>
           <View style={tw`items-center pl-4`}>
@@ -247,7 +284,9 @@ const ProfileTab = props => {
             <Options
               icon={<OptionsSVG />}
               title="Delete Account"
-              onPress={gotoDelete}
+              onPress={() => {
+                setDeleteModalVisible(true);
+              }}
               showIonicon={true}
             />
             {/* <Options
@@ -301,6 +340,35 @@ const ProfileTab = props => {
                 phone={user.phone}
                 closeModal={closePhoneModal}
               />
+            </View>
+          </Modal>
+
+          <Modal
+            animationType="fade"
+            transparent={true}
+            visible={deleteModalVisible}
+            onRequestClose={closeDeleteModal}>
+            <View style={tw`flex-1 justify-center items-center bg-black bg-opacity-50 px-4`}>
+              <View style={tw`bg-white rounded-2xl p-5 w-full max-w-sm gap-4`}>
+                <Text style={tw`text-[#080B30] font-bold text-[18px] text-center`}>
+                  Delete account?
+                </Text>
+                <Text style={tw`text-[#606060] font-normal text-[14px] text-center`}>
+                  Are you sure you want to delete your account?
+                </Text>
+                <View style={tw`flex-row gap-3 mt-2`}>
+                  <TouchableOpacity
+                    onPress={closeDeleteModal}
+                    style={tw`flex-1 bg-[#EDEDEF] rounded-xl py-3 items-center`}>
+                    <Text style={tw`text-black font-medium text-[14px]`}>No</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={confirmDeleteAccount}
+                    style={tw`flex-1 bg-[#FF114A] rounded-xl py-3 items-center`}>
+                    <Text style={tw`text-white font-medium text-[14px]`}>Yes</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           </Modal>
         </View>

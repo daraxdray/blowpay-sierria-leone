@@ -30,27 +30,27 @@ const Legal = props => {
         <View style={styles.view1}>
           <LegalSection
             title="1. Information We Collect"
-            content="We collect personal information to provide and improve our services. The types of information we may collect include: Account Details, Payment Information, Identity Verification, Transaction Information, Device Information, Cookies & Tracking Technologies, Location Information."
+            content="Personal information is collected and stored through licensed third-party service providers to provide and improve our services. The types of information that may be collected include: Account Details, Payment Information, Identity Verification, Transaction Information, Device Information, Cookies & Tracking Technologies, Location Information."
           />
           <LegalSection
             title="2. How We Use Your Information"
-            content="We use the information we collect to: Provide and maintain our services, Process transactions and handle payments, Improve the functionality and user experience of our platform, Personalize services based on your preferences and behavior, Send service-related notifications, Prevent fraudulent activities and secure your data, Comply with legal obligations and regulatory requirements."
+            content="Information is used by us and our licensed third-party providers to: Provide and maintain our services, Process transactions and handle payments, Improve the functionality and user experience of our platform, Personalize services based on your preferences and behavior, Send service-related notifications, Prevent fraudulent activities and secure your data, Comply with legal obligations and regulatory requirements."
           />
           <LegalSection
             title="3. Information Sharing and Disclosure"
-            content="We do not sell or rent your personal information to third parties. However, we may share your information in the following cases: Service Providers, Legal Compliance, Business Transfers, With Your Consent."
+            content="We do not sell or rent your personal information. Your data may be stored and processed by licensed third-party service providers. We may share your information in the following cases: Licensed Service Providers, Legal Compliance, Business Transfers, With Your Consent."
           />
           <LegalSection
             title="4. Data Security"
-            content="We implement a range of security measures to protect your personal information from unauthorized access, misuse, or disclosure. These measures include: Encryption, Secure Payment Processing, Access Controls, Regular Security Audits."
+            content="Your personal information is protected through security measures implemented by our licensed third-party service providers and by us, including: Encryption, Secure Payment Processing, Access Controls, Regular Security Audits. We are not the primary custodians of your data; storage and processing are carried out through licensed third parties."
           />
           <LegalSection
             title="5. Data Retention"
-            content="We retain your personal information for as long as necessary to provide our services, comply with legal obligations, resolve disputes, and enforce our agreements. Once no longer needed, your data will be securely deleted or anonymized."
+            content="Your personal information is retained by our licensed third-party providers and by us for as long as necessary to provide our services, comply with legal obligations, resolve disputes, and enforce our agreements. Once no longer needed, your data will be securely deleted or anonymized by the relevant provider."
           />
           <LegalSection
             title="6. Your Data Rights"
-            content={`Depending on your location, you may have certain rights regarding your personal data, including: Access, Correction, Deletion, Restriction, Portability. To exercise these rights, please contact us at [support@${Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'blowpay.app' : 'BillsByBlowmoney.com'}].`}
+            content={`Depending on your location, you may have certain rights regarding your personal data (which may be held by us or by our licensed third-party providers), including: Access, Correction, Deletion, Restriction, Portability. To exercise these rights, please contact us at [support@${Platform.OS === 'ios' || AppConstant.isAmazonStore ? 'blowpay.app' : 'BillsByBlowmoney.com'}].`}
           />
           <LegalSection
             title="7. Third-Party Links"
@@ -58,15 +58,15 @@ const Legal = props => {
           />
           <LegalSection
             title="8. Cookies and Tracking Technologies"
-            content="We use cookies and other tracking technologies to enhance your user experience and collect information about your usage of our services. You can control cookie settings through your browser, but disabling cookies may affect the functionality of the platform."
+            content="Our platform and our licensed third-party providers use cookies and other tracking technologies to enhance your user experience and collect information about your usage of our services. You can control cookie settings through your browser, but disabling cookies may affect the functionality of the platform."
           />
           <LegalSection
             title="9. Children’s Privacy"
-            content="Our services are not intended for children under the age of 18. We do not knowingly collect personal information from minors. If we become aware that a child has provided us with personal data, we will take steps to delete that information immediately."
+            content="Our services are not intended for children under the age of 18. We do not knowingly collect personal information from minors; any such data would be processed through our licensed third-party providers. If we become aware that a child has provided personal data, we will take steps to have that information deleted by the relevant provider."
           />
           <LegalSection
             title="10. Changes to This Privacy Policy"
-            content="We may update this Privacy Policy from time to time to reflect changes in our practices or legal requirements. We will notify you of any significant updates by email or through a notice on our platform. Your continued use of our services after any changes signifies your acceptance of the updated policy."
+            content="We may update this Privacy Policy from time to time to reflect changes in our practices, those of our licensed third-party providers, or legal requirements. We will notify you of any significant updates by email or through a notice on our platform. Your continued use of our services after any changes signifies your acceptance of the updated policy."
           />
         </View>
       </ScrollView>
