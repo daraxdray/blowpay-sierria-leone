@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useEffect} from 'react';
 import {View, Text, Image, TouchableOpacity} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';

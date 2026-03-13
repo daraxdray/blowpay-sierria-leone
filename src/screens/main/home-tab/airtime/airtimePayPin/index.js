@@ -22,6 +22,7 @@ const AirtimePaymentPin = props => {
   const navigation = props.navigation;
   const route = props.route;
   const {providerName, phoneNumber, selectedAmount, country} = route.params;
+  console.log(providerName, phoneNumber, selectedAmount, country, 'providerName, phoneNumber, selectedAmount, country');
   const {mutate: confirmPasscode, status} = useConfirmPasscode();
   const {mutate: Bpairtime, status: bill} = useBpAirtime();
   const [otp, setOtp] = useState();

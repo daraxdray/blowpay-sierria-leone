@@ -139,7 +139,7 @@ const TransactionDetails = ({closeModal, transactionId}) => {
   // Create and save PDF receipt - Banking app style
   const createAndSharePDF = async () => {
     try {
-      const htmlContent = generateReceiptHTML(userData, formatTime, token);
+      const htmlContent = generateReceiptHTML(userData, formatTime, token, currencySymbol);
       const timestamp = new Date().getTime();
       const id = userData?.id || userData?.transaction?.id || 'unknown';
       const prefix =

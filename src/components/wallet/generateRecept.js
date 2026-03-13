@@ -6,8 +6,12 @@ import {Platform} from 'react-native';
 /**
  * Generates a formatted HTML receipt for transactions
  * Optimized for PDF generation on Android devices
+ * @param {object} userData - Transaction data
+ * @param {function} formatTime - Time formatter
+ * @param {string} token - Optional token
+ * @param {string} currencySymbol - Currency symbol (e.g. 'NGN ' or 'SLE ')
  */
-export const generateReceiptHTML = (userData, formatTime, token = '') => {
+export const generateReceiptHTML = (userData, formatTime, token = '', currencySymbol = 'NGN ') => {
   // Validate formatTime function
   if (typeof formatTime !== 'function') {
     formatTime = timestamp => {
@@ -33,10 +37,10 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
     : formatTime(userData?.flutterwaveResponse?.transaction_date);
 
   const amount = userData?.amount
-    ? `NGN ${parseFloat(userData?.amount / 100)
+    ? `${currencySymbol}${parseFloat(userData?.amount / 100)
         .toFixed(2)
         .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`
-    : `NGN ${parseFloat(userData?.flutterwaveResponse?.amount)
+    : `${currencySymbol}${parseFloat(userData?.flutterwaveResponse?.amount)
         .toFixed(2)
         .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
 
@@ -449,7 +453,7 @@ export const generateReceiptHTML = (userData, formatTime, token = '') => {
                   ? `
               <div class="info-item">
                 <span class="info-label">Service Charges</span>
-                <span class="info-value">NGN ${parseFloat(charges).toFixed(
+                <span class="info-value">${currencySymbol}${parseFloat(charges).toFixed(
                   2,
                 )}</span>
               </div>
