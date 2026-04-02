@@ -11,7 +11,7 @@ import {CommonActions} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 const getToken = params => {
   const d = params?.data;
-  return d?.token ?? d?.metadata?.token ?? d?.data?.metadata?.token ?? null;
+  return d?.token ?? d?.data?.token?? d?.metadata?.token ?? d?.data?.metadata?.token ?? null;
 };
 
 const PaymentSucess = props => {

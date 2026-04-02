@@ -261,7 +261,7 @@ const TransactionDetails = ({closeModal, transactionId}) => {
       const appName =
         Platform.OS === 'ios' || AppConstant.isAmazonStore
           ? 'BlowPay'
-          : 'BillsByBlowMoney';
+          : 'BlowPay';
 
       const textReceipt = `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━

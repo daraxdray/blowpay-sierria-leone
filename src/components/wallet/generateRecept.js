@@ -474,7 +474,7 @@ export const generateReceiptHTML = (userData, formatTime, token = '', currencySy
           </div>
           
           <div class="footer">
-            <p><span class="footer-logo">BlowMoney</span> - Digital Payment Solutions</p>
+            <p><span class="footer-logo">BlowPay</span> - Digital Payment Solutions</p>
             <p>Thank you for using our service!</p>
             <p style="margin-top: 10px;">Keep this receipt for your records</p>
             <p style="margin-top: 15px; font-size: 10px;">Generated on ${new Date().toLocaleString()}</p>

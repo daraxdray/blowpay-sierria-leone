@@ -66,7 +66,7 @@ const SierraLeoneForm = ({
           country={'sierra leone'}
         />
         <Text style={tw`text-[#98A2B3] text-[12px] mt-2`}>
-          Minimum top-up is 10,000 SLL
+          Minimum top-up is 15 SLL
         </Text>
       </View>
     </View>
