@@ -106,6 +106,16 @@ export const AuthProvider = ({children}) => {
     const isLoggedIn = JSON.parse(await AsyncStorage.getItem('Login'));
     const currentRoute = navigation.getCurrentRoute();
 
+    const authScreens = [
+      'signin-screen',
+      'signup-screen',
+      'walkthrough-screen',
+      'otp-screen',
+      'forgot-password-screen',
+      'reset-password-screen',
+    ];
+    if (authScreens.includes(currentRoute?.name)) return;
+
     if (isLoggedIn) {
       if (isLoggedIn?.status === 'inactive') {
         navigation.navigate('otp-screen', {
@@ -118,18 +128,6 @@ export const AuthProvider = ({children}) => {
             routes: [
               {
                 name: 'TransactionPinScreen',
-                params: {currentRoute: currentRoute?.name},
-              },
-            ],
-          }),
-        );
-      } else {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'create-pin-screen',
                 params: {currentRoute: currentRoute?.name},
               },
             ],

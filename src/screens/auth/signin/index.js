@@ -61,6 +61,7 @@ const Signin = props => {
             await AsyncStorage.setItem('userKyc', String(data.data.isKycSet));
             await AsyncStorage.setItem('Login', JSON.stringify(data.data));
             await AsyncStorage.setItem('authEmail', userData.emailAddress);
+            await AsyncStorage.removeItem('backgroundTime');
             await reloadAuth();
             const fcmToken = await getFCMToken();
             if (fcmToken) {
@@ -79,13 +80,10 @@ const Signin = props => {
               });
               return;
             }
-            if (!det) {
-              navigation.navigate('ConfirmPin', {from: 'Signin'});
-              return;
-            }
-
             dispatch(loginSuccess());
-            if (!keyFound && isBiometricExist) {
+            if (!data.data.isPasscodeSet) {
+              navigation.navigate('create-pin-screen');
+            } else if (!keyFound && isBiometricExist) {
               navigation.navigate('biometric-screen');
             } else {
               navigation.dispatch(

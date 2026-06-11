@@ -5,7 +5,7 @@ import { ScreenView } from '../../../global/wrappers';
 import { BLACK, PRIMARY_COLOR, WHITE } from '../../../global/theme';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { CustomButton } from '../../../global/components';
-import { useVerifyOtp, useSendOtp } from '../../../hooks/auth.hook';
+import { useVerifyOtp, useVerifyForgotPasswordOtp, useSendOtp } from '../../../hooks/auth.hook';
 import OTPTextView from 'react-native-otp-textinput';
 import Toast from 'react-native-toast-message';
 import Loader from '../../../components/modals/Loader';
@@ -15,8 +15,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const OtpScreen = ({ navigation, route }) => {
   let otpRef = useRef(null);
   const { isVerified, resetPassword = false } = route.params || {};
-  const { mutate: verifyOtp, status } = useVerifyOtp();
+  const { mutate: verifyOtp, status: verifyStatus } = useVerifyOtp();
+  const { mutate: verifyForgotOtp, status: verifyForgotStatus } = useVerifyForgotPasswordOtp();
   const { mutate: sendOtp, status: resendStatus } = useSendOtp();
+  const status = resetPassword ? verifyForgotStatus : verifyStatus;
 
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,8 +62,8 @@ const OtpScreen = ({ navigation, route }) => {
       otp: otp,
     };
 
-
-    verifyOtp(userData, {
+    const mutate = resetPassword ? verifyForgotOtp : verifyOtp;
+    mutate(userData, {
       onSuccess: data => {
         if (data) {
 

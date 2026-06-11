@@ -43,6 +43,39 @@ target 'blowpay_mobile' do
         if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 12.0
           config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
         end
+        # Xcode 26+ Apple Clang mis-compiles fmt 11 consteval; -DFMT_USE_CONSTEVAL=0 only works if
+        # base.h does not redefine it (we patch that after the loop).
+        if target.name == 'fmt'
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+          defs = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS']
+          defs = [defs] unless defs.is_a?(Array)
+          defs << 'FMT_USE_CONSTEVAL=0' unless defs.any? { |d| d.to_s.include?('FMT_USE_CONSTEVAL') }
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
+        end
+      end
+    end
+
+    # fmt's base.h redefines FMT_USE_CONSTEVAL after -DFMT_USE_CONSTEVAL=0; wrap auto-detect so the flag sticks.
+    fmt_base_h = File.join(__dir__, 'Pods/fmt/include/fmt/base.h')
+    if File.exist?(fmt_base_h)
+      contents = File.read(fmt_base_h)
+      marker = 'FMT_BLOWPAY_WRAP_CONSTEVAL_DETECT'
+      unless contents.include?(marker)
+        needle = "// Detect consteval, C++20 constexpr extensions and std::is_constant_evaluated.\n#if !defined(__cpp_lib_is_constant_evaluated)"
+        replacement =
+          "// Detect consteval, C++20 constexpr extensions and std::is_constant_evaluated.\n" \
+          "#ifndef FMT_USE_CONSTEVAL /* #{marker} */\n" \
+          "#if !defined(__cpp_lib_is_constant_evaluated)"
+        unless contents.include?(needle)
+          raise 'fmt base.h changed; update Podfile wrap for consteval block'
+        end
+        contents = contents.sub(needle, replacement)
+        contents = contents.sub(
+          "#endif\n#if FMT_USE_CONSTEVAL\n#  define FMT_CONSTEVAL consteval",
+          "#endif\n#endif /* #{marker} */\n#if FMT_USE_CONSTEVAL\n#  define FMT_CONSTEVAL consteval"
+        )
+        File.chmod(0o644, fmt_base_h)
+        File.write(fmt_base_h, contents)
       end
     end
   end

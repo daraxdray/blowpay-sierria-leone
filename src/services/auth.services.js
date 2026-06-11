@@ -102,6 +102,22 @@ class AuthServices {
 
   /**
    *
+   * @param {{emailAddress: string, otp: string}} payload
+   * @return {Promise<*>}
+   */
+  verifyForgotPasswordOtp(payload) {
+    return request(
+      '/auth/forgot-password/verify-otp',
+      'POST',
+      payload,
+      false,
+      false,
+      false,
+    );
+  }
+
+  /**
+   *
    * @param {{emailAddress: string}} payload
    * @return {Promise<*>}
    */

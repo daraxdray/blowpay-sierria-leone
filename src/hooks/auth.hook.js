@@ -140,6 +140,18 @@ export const useLoginPasscode = () => {
  * @return {Promise<*>}
  * @private
  */
+export const useVerifyForgotPasswordOtp = () => {
+  return useMutation({
+    mutationFn: payload => authServices.verifyForgotPasswordOtp(payload),
+    onSuccess: data => {
+      return data;
+    },
+    onError: error => {
+      _errorPrompt(error.message);
+    },
+  });
+};
+
 export const useForgotPassword = () => {
   return useMutation({
     mutationFn: payload => authServices.forgotPassword(payload),
