@@ -34,6 +34,24 @@ target 'blowpay_mobile' do
       :mac_catalyst_enabled => false
     )
 
+    # Copy hermesvm dSYMs into the archive so App Store Connect can symbolicate crashes.
+    # The prebuilt Hermes xcframework ships dSYMs alongside each slice.
+    main_project = Xcodeproj::Project.open(File.join(__dir__, 'blowpay_mobile.xcodeproj'))
+    main_target  = main_project.targets.find { |t| t.name == 'blowpay_mobile' }
+    if main_target && main_target.shell_script_build_phases.none? { |p| p.name == '[RN] Copy Hermes dSYM' }
+      phase = main_target.new_shell_script_build_phase('[RN] Copy Hermes dSYM')
+      phase.shell_script = <<~SHELL
+        HERMES_XCFRAMEWORK="${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/universal/hermesvm.xcframework"
+        for SLICE in ios-arm64 ios-arm64_x86_64-simulator; do
+          DSYM="${HERMES_XCFRAMEWORK}/${SLICE}/hermesvm.framework.dSYM"
+          if [ -d "$DSYM" ]; then
+            cp -r "$DSYM" "${DWARF_DSYM_FOLDER_PATH}/"
+          fi
+        done
+      SHELL
+      main_project.save
+    end
+
     # 🩹 Patch: make all pods modular if possible (helps Firebase + Swift pods)
     # 🩹 Enforce minimum iOS 12 (Xcode 26 requires 12.0–26.2; some pods default to 9.0)
     installer.pods_project.targets.each do |target|

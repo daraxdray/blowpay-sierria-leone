@@ -183,6 +183,7 @@
 				616D1707704A2AAC1E24EBB0 /* [CP] Embed Pods Frameworks */,
 				7563C167A6347986A507FF1A /* [CP] Copy Pods Resources */,
 				3DDA36DF4B30CACE89AB6B51 /* [CP-User] [RNFB] Core Configuration */,
+				96D35102CE781CB0C1CE9A5E /* [RN] Copy Hermes dSYM */,
 			);
 			buildRules = (
 			);
@@ -321,6 +322,24 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-blowpay_mobile/Pods-blowpay_mobile-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		96D35102CE781CB0C1CE9A5E /* [RN] Copy Hermes dSYM */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[RN] Copy Hermes dSYM";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "HERMES_XCFRAMEWORK=\"${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/universal/hermesvm.xcframework\"\nfor SLICE in ios-arm64 ios-arm64_x86_64-simulator; do\n  DSYM=\"${HERMES_XCFRAMEWORK}/${SLICE}/hermesvm.framework.dSYM\"\n  if [ -d \"$DSYM\" ]; then\n    cp -r \"$DSYM\" \"${DWARF_DSYM_FOLDER_PATH}/\"\n  fi\ndone\n";
+		};
 		B00DAF4820D5C777B52451A3 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -375,7 +394,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.9.29;
+				MARKETING_VERSION = 3.9.30;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -407,7 +426,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.9.29;
+				MARKETING_VERSION = 3.9.30;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

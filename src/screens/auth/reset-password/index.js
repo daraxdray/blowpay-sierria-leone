@@ -52,11 +52,10 @@ const ResetPassword = ({ navigation, route }) => {
 
   const handleRegister = values => {
     const userData = {
-      emailAddress:emailAddress,
+      // emailAddress:emailAddress,
       password: values.password,
       confirmPassword: values.confirmPassword,
     };
-    console.log(userData);
 
     mutate(userData, {
       onSuccess: data => {

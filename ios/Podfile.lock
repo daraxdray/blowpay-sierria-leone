@@ -99,7 +99,7 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - PromisesObjC (2.4.0)
+  - PromisesObjC (2.4.1)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -3417,7 +3417,7 @@ SPEC CHECKSUMS:
   lottie-ios: a881093fab623c467d3bce374367755c272bdd59
   lottie-react-native: b01c4b468aed88931afefbde03d790fc4f8b010a
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: 22bf66112da540a7d40e536366ddd8557934fca1
   RCTRequired: a0ed4dc41b35f79fbb6d8ba320e06882a8c792cf
@@ -3486,7 +3486,7 @@ SPEC CHECKSUMS:
   React-utils: d8f6841c0ac1bf2bf65c2eb3b052fad439d0c6e2
   React-webperformancenativemodule: 001b3b079fee9074e4e3216f562c74716448fc33
   ReactAppDependencyProvider: c5c4f5280e4ae0f9f4a739c64c4260fe0b3edaf1
-  ReactCodegen: 3873d7ac09960375f7845384ff47d53e478462dc
+  ReactCodegen: b763ec68e6f3720ea7261245cd1ec0d519400650
   ReactCommon: f5527f5d97a9957ab46eb5db78875d3579e03b97
   RNCAsyncStorage: fd44f4b03e007e642e98df6726737bc66e9ba609
   RNCClipboard: e560338bf6cc4656a09ff90610b62ddc0dbdad65
@@ -3505,6 +3505,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: ce55ebb197c21e22b6700cd36e3f36b7ec26e6f8
 
-PODFILE CHECKSUM: 764a56eea42815a1ec453e334aaf05cebb438d88
+PODFILE CHECKSUM: 6ed83b807b9599a63ccee849a08b06003fb5c9d6
 
 COCOAPODS: 1.15.2
