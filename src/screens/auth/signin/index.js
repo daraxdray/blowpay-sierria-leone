@@ -83,7 +83,13 @@ const Signin = props => {
             dispatch(loginSuccess());
             if (!data.data.isPasscodeSet) {
               navigation.navigate('create-pin-screen');
-            } else if (!keyFound && isBiometricExist) {
+              return;
+            }
+            if (data?.data?.kyc?.isNinVerified === false) {
+              navigation.navigate('setup-id-screen');
+              return;
+            }
+            if (!keyFound && isBiometricExist) {
               navigation.navigate('biometric-screen');
             } else {
               navigation.dispatch(

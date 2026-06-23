@@ -308,14 +308,14 @@ const HomeTab = props => {
           </View>
         </Modal>
       </ImageBackground>
-      <AdvertModal
+      {/* <AdvertModal
         visible={advertModalVisible}
         onClose={() => setAdvertModalVisible(false)}
         imageSource={require('../../../../assets/images/ctc_advert.jpeg')}
         closePosition="topRight"
         borderRadius={25}
         backdropOpacity={0.8}
-      />
+      /> */}
     </ScreenView>
   );
 };

@@ -26,6 +26,44 @@
     },
     {
       "client_info": {
+        "mobilesdk_app_id": "1:385372762056:android:ae7c18109536bbe75c5afd",
+        "android_client_info": {
+          "package_name": "com.blowcloud.blowpay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEoSBfL93bFcGOuCTDiwJxWYHyPfNeX3s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:385372762056:android:687656cc8e4d26b15c5afd",
+        "android_client_info": {
+          "package_name": "com.blowmoney"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEoSBfL93bFcGOuCTDiwJxWYHyPfNeX3s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:385372762056:android:cc1c46f1e3701bb25c5afd",
         "android_client_info": {
           "package_name": "com.rdx.blowpay"

@@ -4,129 +4,63 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Image,
-  Alert,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {styles} from './style';
 import {ScreenView} from '../../../global/wrappers';
 import {BLACK, WHITE} from '../../../global/theme';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import CustomTextInput from '../../../global/components/CustomTextInput';
 import {CustomButton} from '../../../global/components';
-import {request, PERMISSIONS, RESULTS} from 'react-native-permissions';
-import tw from 'twrnc';
-import DateModal from '../../../components/bookFlight/DateModal';
+import Toast from 'react-native-toast-message';
+import {useVerifyNin} from '../../../hooks/kyc.hook';
+import Loader from '../../../components/modals/Loader';
+import {CommonActions} from '@react-navigation/native';
 
-const requestCameraPermission = async () => {
-  if (Platform.OS === 'android') {
-    const result = await request(PERMISSIONS.ANDROID.CAMERA);
-    return result === RESULTS.GRANTED;
-  } else {
-    const result = await request(PERMISSIONS.IOS.CAMERA);
-    return result === RESULTS.GRANTED;
-  }
-};
+const NIN_MIN_LENGTH = 11;
 
-const requestGalleryPermission = async () => {
-  if (Platform.OS === 'android') {
-    if (Platform.Version >= 33) {
-      const result = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES);
-      return result === RESULTS.GRANTED;
-    } else {
-      const result = await request(PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
-      return result === RESULTS.GRANTED;
-    }
-  } else {
-    return true;
-  }
-};
+const SetupID = props => {
+  const navigation = props.navigation;
+  const [nin, setNin] = useState('');
+  const {mutate, status} = useVerifyNin();
 
-const SetupID = ({navigation, route}) => {
-  const documentType = route?.params?.documentType || 'Default Method';
+  const isNinValid = nin.trim().length >= NIN_MIN_LENGTH;
 
-  const [idNumber, setidNumber] = useState('');
-  const [expiryDate, setExpiredDate] = useState('');
-  const [documentImage, setDocumentImage] = useState(null);
-  const [selfieImage, setSelfieImage] = useState(null);
-  const [departureModalOpen, setDepartureModalOpen] = useState(false);
-
-  const handleImagePicker = setImage => {
-    Alert.alert('Upload Image', 'Choose an option', [
-      {text: 'Camera', onPress: () => openCamera(setImage)},
-      {text: 'Gallery', onPress: () => openGallery(setImage)},
-      {text: 'Cancel', style: 'cancel'},
-    ]);
-  };
-
-  const openCamera = async setImage => {
-    const hasPermission = await requestCameraPermission();
-    if (!hasPermission) {
-      Alert.alert('Permission Denied', 'Camera access is required.');
-      return;
-    }
-    const options = {
-      mediaType: 'photo',
-      maxWidth: 800,
-      maxHeight: 400,
-      quality: 1,
-    };
-    launchCamera(options, response => {
-      if (response.assets && response.assets[0]?.uri) {
-        setImage(response.assets[0].uri);
-      }
-    });
-  };
-
-  const openGallery = async setImage => {
-    const hasPermission = await requestGalleryPermission();
-    if (!hasPermission) {
-      Alert.alert('Permission Denied', 'Gallery access is required.');
-      return;
-    }
-    const options = {
-      mediaType: 'photo',
-      maxWidth: 800,
-      maxHeight: 400,
-      quality: 1,
-    };
-    launchImageLibrary(options, response => {
-      if (response.assets && response.assets[0]?.uri) {
-        setImage(response.assets[0].uri);
-      }
-    });
-  };
-
-  const handleProceed = () => {
-    if (!idNumber || !expiryDate || !documentImage || !selfieImage) {
-      Alert.alert(
-        'Incomplete Data',
-        'Please fill all fields and upload both images.',
-      );
-      return;
-    }
-
-    navigation.navigate('residence-screen', {
-      idNumber,
-      expiryDate,
-      documentImage,
-      selfieImage,
-      documentType,
+  const handleConfirmId = () => {
+    mutate(nin.trim(), {
+      onSuccess: data => {
+        Toast.show({text1: data?.message ?? 'NIN verified successfully.'});
+        navigation.dispatch(
+          CommonActions.reset({index: 0, routes: [{name: 'bottom-tab'}]}),
+        );
+      },
+      onError: err => {
+        Toast.show({
+          type: 'error',
+          text1:
+            err?.response?.data?.message ??
+            err?.response?.data?.error ??
+            'Verification failed. Please try again.',
+        });
+      },
     });
   };
 
   return (
     <ScreenView style={styles.container} light color={WHITE}>
       <KeyboardAvoidingView
-        style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={80}>
+        style={{flex: 1, width: '100%'}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}>
         <ScrollView
-          style={styles.viewContainer}
-          contentContainerStyle={{paddingBottom: 120}}
-          keyboardShouldPersistTaps="handled">
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: 20,
+            paddingBottom: 30,
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.btn}
@@ -136,100 +70,58 @@ const SetupID = ({navigation, route}) => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.view1}>
-            {/* ID Number + Expiry */}
-            <View style={styles.v2}>
-              <Text style={styles.text}>I.D. Number</Text>
-              <TextInput
-                value={idNumber}
-                onChangeText={setidNumber}
-                placeholder="0000 0000 0000"
-                style={styles.inputCont1}
-                placeholderTextColor="#A9A9A9"
-                keyboardType="phone-pad"
-              />
+          <View style={styles.v1}>
+            <Text style={styles.text1}>
+              Confirm Your National Identity Number
+            </Text>
+            <Text style={styles.text11}>
+              Please provide your National Identity Number (NIN) for
+              verification
+            </Text>
+          </View>
 
-              <TouchableOpacity
-                style={tw`w-full`}
-                onPress={() => setDepartureModalOpen(true)}>
-                <Text style={styles.text}>Expiry Date</Text>
-                <Text style={styles.inputCont1}>
-                  {expiryDate ? expiryDate : 'select expiry date'}
-                </Text>
-              </TouchableOpacity>
+          <CustomTextInput
+            value={nin}
+            onChangeText={setNin}
+            keyboardType="numeric"
+            placeholder="Enter your National Identity Number"
+            title="National Identity Number (NIN)"
+            containerStyle={{marginTop: 20}}
+            noError
+            inputStyle={{borderRadius: 15}}
+          />
 
-              {/* Document Image Upload */}
-              <View style={styles.v3}>
-                <Text style={styles.text13}>Upload a valid ID Card</Text>
-                <TouchableOpacity
-                  style={styles.uploadCont}
-                  onPress={() => handleImagePicker(setDocumentImage)}>
-                  {documentImage ? (
-                    <Image
-                      source={{uri: documentImage}}
-                      style={styles.imagePreview}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <>
-                      <Image
-                        source={require('../../../../assets/icons/cloud-upload.png')}
-                        style={styles.icon}
-                        resizeMode="contain"
-                      />
-                      <Text style={styles.text12}>Click to upload</Text>
-                      <Text style={styles.text13}>
-                        PNG, JPG, GIF (max. 800x400px)
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
+          <View style={{flex: 1}} />
 
-              {/* Selfie Upload */}
-              <View style={styles.v3}>
-                <Text style={styles.text13}>
-                  Upload a Selfie (holding your ID)
-                </Text>
-                <TouchableOpacity
-                  style={styles.uploadCont}
-                  onPress={() => handleImagePicker(setSelfieImage)}>
-                  {selfieImage ? (
-                    <Image
-                      source={{uri: selfieImage}}
-                      style={styles.imagePreview}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <>
-                      <Image
-                        source={require('../../../../assets/icons/cloud-upload.png')}
-                        style={styles.icon}
-                        resizeMode="contain"
-                      />
-                      <Text style={styles.text12}>Click to upload</Text>
-                      <Text style={styles.text13}>
-                        PNG, JPG, GIF (max. 800x400px)
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
+          <View style={{marginTop: 30}}>
+            <CustomButton
+              text="Confirm ID"
+              onPress={handleConfirmId}
+              checker={isNinValid}
+              dark
+            />
+
+            <TouchableOpacity
+              activeOpacity={0.65}
+              onPress={() =>
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{name: 'bottom-tab'}],
+                  }),
+                )
+              }
+              style={{
+                marginTop: 16,
+                paddingVertical: 10,
+                alignSelf: 'center',
+              }}>
+              <Text style={styles.text11}>Skip verification</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
-
-        <View style={{padding: 16, backgroundColor: WHITE}}>
-          <CustomButton text="Proceed" onPress={handleProceed} dark />
-        </View>
-
-        <DateModal
-          visible={departureModalOpen}
-          onClose={() => setDepartureModalOpen(false)}
-          onDateChange={setExpiredDate}
-          selectedDate={expiryDate}
-        />
       </KeyboardAvoidingView>
+      {status === 'pending' && <Loader />}
     </ScreenView>
   );
 };

@@ -253,6 +253,12 @@ const ProfileTab = props => {
             />
             <Options
               icon={<OptionsSVG />}
+              title="Update NIN"
+              onPress={() => navigation.navigate('setup-id-screen')}
+              showIonicon={false}
+            />
+            <Options
+              icon={<OptionsSVG />}
               title="Security"
               onPress={openModal}
               showIonicon={true}

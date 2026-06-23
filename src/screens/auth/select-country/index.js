@@ -48,10 +48,7 @@ const CountrySelection = props => {
       {
         onSuccess: data => {
           if (selectedCountry.id === 'nigeria') {
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'bottom-tab'}],
-            });
+            navigation.navigate('setup-id-screen');
           } else if (selectedCountry.id === 'sierra-leone') {
             navigation.navigate('residence-screen');
           }
