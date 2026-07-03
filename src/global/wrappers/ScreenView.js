@@ -1,5 +1,6 @@
 import React from 'react';
-import {Platform, SafeAreaView, StatusBar, StyleSheet} from "react-native";
+import {StatusBar, StyleSheet} from "react-native";
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {MILK, WIDTH} from '../theme';
 
 const ScreenView = ({style, children, dark, light, color}) => {
@@ -18,7 +19,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: MILK,
         width: WIDTH,
-        // paddingTop: Platform.OS === "android" ? 20 : 0,
     },
 });
 

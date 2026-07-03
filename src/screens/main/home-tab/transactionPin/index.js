@@ -25,7 +25,7 @@ import useBiometricAuth from '../../../../hooks/biometric.hook';
 import { useDispatch } from 'react-redux';
 import { loginSuccess, logout } from '../../../../contexts/actions/user';
 import { useGetVitualAcc } from '../../../../hooks/virtual.hook';
-import { getUserPincode } from '../../../../utils/storage';
+import { getUserPincode, saveUserCredentials } from '../../../../utils/storage';
 import { useGetUser } from '../../../../hooks/user.hook';
 
 const TransactionPinScreen = props => {
@@ -76,9 +76,9 @@ const TransactionPinScreen = props => {
 
   const handleBiometric = async () => {
     const det = await getUserPincode();
-  
-    handleOtpChange(det.pincode)
-    
+    if (det?.pincode) {
+      handleOtpChange(det.pincode);
+    }
   }
   //approve login
   const authorizeLogin = (data) => {
@@ -125,11 +125,12 @@ const TransactionPinScreen = props => {
 
       if(Platform.OS == 'android'){
         await confirmPasscode(userData, {
-          onSuccess: data => {
-            authorizeLogin(data)
+          onSuccess: async data => {
+            await saveUserCredentials(email, otpValue);
+            authorizeLogin(data);
           },
           onError: error => {
-  
+
             Toast.show({
               type: 'error',
               text1: 'Error',
@@ -139,14 +140,14 @@ const TransactionPinScreen = props => {
           },
         });
       }else{
-      
+
          loginPasscode(userData, {
-          onSuccess: data => {
-            console.log("LOGGING IN")
-            authorizeLogin(data)
+          onSuccess: async data => {
+            await saveUserCredentials(email, otpValue);
+            authorizeLogin(data);
           },
           onError: error => {
-  
+
             Toast.show({
               type: 'error',
               text1: 'Error',

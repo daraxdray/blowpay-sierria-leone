@@ -148,6 +148,7 @@ export async function request(url, method, payload = {}, form = false) {
   } catch (err) {
     const status = err.response?.status;
     const friendlyMessage = getUserFriendlyErrorMessage(err);
+    console.warn(`[API ${status ?? 'ERR'}] ${method} ${url}`, err.response?.data ?? err.message);
 
     if (status === 429) {
       Toast.show({
@@ -155,7 +156,7 @@ export async function request(url, method, payload = {}, form = false) {
         text1: 'Too many requests',
         text2: friendlyMessage,
       });
-    } else if (status !== 401) {
+    } else if (status !== 401 && status !== 404) {
       Toast.show({
         type: 'error',
         text1: 'Error',

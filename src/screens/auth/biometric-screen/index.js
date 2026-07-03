@@ -14,39 +14,22 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {CustomButton} from '../../../global/components';
 import useBiometricAuth from '../../../hooks/biometric.hook';
 import {CommonActions} from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Biometric = props => {
   const navigation = props.navigation;
   const {navigateHome, createKey} = useBiometricAuth();
+
+  // Only navigate when the user actually confirmed the biometric prompt.
+  // createKey() returns false on cancel or failure, true on success.
   const activate = async () => {
-    await createKey();
-    try {
-      const storedKyc = await AsyncStorage.getItem('userKyc');
-      const kyc = storedKyc ? JSON.parse(storedKyc) : null;
-      const storedLogin = await AsyncStorage.getItem('Login');
-      const userDataFromStorage = storedLogin ? JSON.parse(storedLogin) : null;
-      if (userDataFromStorage?.country === 'Nigeria' || 'Sierra Leone') {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{name: 'bottom-tab'}],
-          }),
-        );
-        return;
-      }
-      if (kyc) {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{name: 'bottom-tab'}],
-          }),
-        );
-      } else {
-        navigateHome('selectCountry-screen');
-      }
-    } catch (error) {
-      console.error('Error reading KYC data:', error);
+    const enabled = await createKey();
+    if (enabled) {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{name: 'bottom-tab'}],
+        }),
+      );
     }
   };
 
@@ -92,7 +75,7 @@ const Biometric = props => {
             text={'Confirm Biometric'}
           />
           <CustomButton
-            onPress={navigateHome}
+            onPress={() => navigateHome("bottom-tab")}
             style={styles.btn3}
             // eslint-disable-next-line react-native/no-inline-styles
             textStyle={{color: 'black'}}

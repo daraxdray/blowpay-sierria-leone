@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View, ToastAndroid as Toast, Switch } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View, ToastAndroid as Toast, Switch } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import ReactNativeBiometrics from 'react-native-biometrics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -28,17 +28,22 @@ const BiometricComponent = ({ text = '', signin = false, onComplete = null, toke
     }
 
     useEffect(()=>{
-        //check if the biometric passes and execute on complete function or go home
         if(bmPass){
             if(onComplete != null){
                 onComplete();
             }else{
-                    navigateHome(fromRoute);
-                
+                navigateHome(fromRoute);
             }
             setBmPass(false)
         }
     },[bmPass])
+
+    // Auto-trigger biometric prompt on mount when used as sign-in gate
+    useEffect(()=>{
+        if(signin && keyFound){
+            promptSignIn();
+        }
+    },[keyFound])
 
     // useEffect(() => {
     //     // Check if biometric keys exist on component mount

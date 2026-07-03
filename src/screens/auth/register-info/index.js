@@ -31,7 +31,9 @@ const validationSchema = Yup.object().shape({
     .email('Invalid email')
     .required('Email is required'),
   // phoneNumber: Yup.string().required('Phone number is required'),
-  username: Yup.string().required('Username is required'),
+  username: Yup.string()
+    .matches(/^[a-zA-Z0-9]+$/, 'Username can only contain letters and numbers')
+    .required('Username is required'),
   dateOfBirth: Yup.string().required('Date of Birth is required'),
   terms: Yup.boolean().oneOf(
     [true],

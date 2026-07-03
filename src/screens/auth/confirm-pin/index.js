@@ -41,6 +41,17 @@ const ConfirmPin = props => {
         if (data) {
           try {
             dispatch(loginSuccess());
+            const storedLogin = await AsyncStorage.getItem('Login');
+            const userDataFromStorage = storedLogin
+              ? JSON.parse(storedLogin)
+              : null;
+            // Always save PIN so biometric unlock works on the lock screen
+            if (userDataFromStorage?.emailAddress && userData.passcode) {
+              saveUserCredentials(
+                userDataFromStorage.emailAddress,
+                userData.passcode,
+              );
+            }
             if (from === 'CreatePin') {
               navigation.dispatch(
                 CommonActions.reset({
@@ -50,22 +61,21 @@ const ConfirmPin = props => {
               );
               return;
             }
-            const kyc = JSON.parse(await AsyncStorage.getItem('userKyc'));
-            const storedLogin = await AsyncStorage.getItem('Login');
-            const userDataFromStorage = storedLogin
-              ? JSON.parse(storedLogin)
-              : null;
-            if (userDataFromStorage?.emailAddress && userData.passcode) {
-              saveUserCredentials(
-                userDataFromStorage.emailAddress,
-                userData.passcode,
-              );
+            let kyc = null;
+            try {
+              const storedKyc = await AsyncStorage.getItem('userKyc');
+              kyc = storedKyc ? JSON.parse(storedKyc) : null;
+            } catch {
+              kyc = null;
             }
             if (!keyFound && isBiometricExist) {
               navigation.navigate('biometric-screen');
               return;
             }
-            if (userDataFromStorage?.country === 'Nigeria' || 'Sierra Leone') {
+            if (
+              userDataFromStorage?.country === 'Nigeria' ||
+              userDataFromStorage?.country === 'Sierra Leone'
+            ) {
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
