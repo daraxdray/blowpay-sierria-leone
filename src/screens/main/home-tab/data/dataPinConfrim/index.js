@@ -14,6 +14,7 @@ import {CommonActions} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import {useGetVitualBalance} from '../../../../../hooks/virtual.hook';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
+import useTransactionGuard from '../../../../../hooks/useTransactionGuard';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
 import {getCurrencySymbol} from '../../../../../utils/format';
 import {AuthContext} from '../../../../../global/wrappers/AuthProvider';
@@ -24,7 +25,8 @@ const DataPaymentPin = props => {
   const {country} = useContext(AuthContext);
   const currencySymbol = getCurrencySymbol(country);
   const {data: selectedPlan, phoneNumber, providerStatus} = route.params;
-  const {isBiometricExist} = useBiometricAuth();
+  const {isBiometricReady} = useBiometricAuth();
+  const {canSubmit, begin, end} = useTransactionGuard();
   const {mutate: confirmPasscode, status} = useConfirmPasscode();
   const {mutate: dataBill, status: billStatus} = useBillPay();
   const [otp, setOtp] = useState();
@@ -47,53 +49,18 @@ const DataPaymentPin = props => {
     });
   };
 
-  const handleVerify = () => {
+  // Core purchase call - shared by the manual PIN path and the biometric
+  // path so both re-check the balance and land on the same success/error
+  // screens. Callers must have already run the submission guard.
+  const completeTransaction = () => {
     if (userBalance < selectedPlan?.price) {
+      end();
       const screenError = 'Insufficient funds. Please top up your account.';
       showToast(screenError);
       navigation.navigate('PaymentError', {screenError});
       return;
     }
 
-    if (otp?.length !== 6) {
-      const screenError = 'Please enter a valid 6-digit passcode.';
-      showToast(screenError);
-      navigation.navigate('PaymentError', {screenError});
-      return;
-    }
-
-    const userData = {passcode: otp};
-
-    confirmPasscode(userData, {
-      onSuccess: data => {
-        if (data) {
-          completeTransaction();
-        } else {
-          const screenError =
-            data?.error || 'Passcode confirmation failed. Please try again.';
-          showToast(screenError);
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{name: 'PaymentSucess'}],
-            }),
-          );
-        }
-      },
-      onError: error => {
-        const errorMessage =
-          error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          'An error occurred. Please try again.';
-        showToast(errorMessage, 'jjujjejdjdjj');
-        console.log(errorMessage, 'errormessage');
-
-        navigation.navigate('PaymentError', {screenError: errorMessage});
-      },
-    });
-  };
-
-  const completeTransaction = () => {
     dataBill(userInfo, {
       onSuccess: DataResponse => {
         if (DataResponse) {
@@ -104,6 +71,7 @@ const DataPaymentPin = props => {
             }),
           );
         } else {
+          end();
           const screenError =
             DataResponse?.error ||
             DataResponse?.response?.data?.error ||
@@ -113,6 +81,7 @@ const DataPaymentPin = props => {
         }
       },
       onError: dataError => {
+        end();
         const errorMessage =
           dataError?.response?.data?.message ||
           dataError?.response?.data?.error ||
@@ -123,14 +92,47 @@ const DataPaymentPin = props => {
     });
   };
 
-  const makeTransaction = () => {
-    if (userBalance < selectedPlan?.price) {
-      const screenError = 'Insufficient funds. Please top up your account.';
+  const handleBiometricComplete = () => {
+    if (!canSubmit()) return;
+    begin();
+    completeTransaction();
+  };
+
+  const handleVerify = () => {
+    if (!canSubmit()) return;
+
+    if (otp?.length !== 6) {
+      const screenError = 'Please enter a valid 6-digit passcode.';
       showToast(screenError);
       navigation.navigate('PaymentError', {screenError});
       return;
     }
-    completeTransaction();
+
+    begin();
+    const userData = {passcode: otp};
+
+    confirmPasscode(userData, {
+      onSuccess: data => {
+        if (data) {
+          completeTransaction();
+        } else {
+          end();
+          const screenError =
+            data?.error || 'Passcode confirmation failed. Please try again.';
+          showToast(screenError);
+          navigation.navigate('PaymentError', {screenError});
+        }
+      },
+      onError: error => {
+        end();
+        const errorMessage =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          'An error occurred. Please try again.';
+        showToast(errorMessage);
+        navigation.navigate('PaymentError', {screenError: errorMessage});
+      },
+    });
   };
 
   return (
@@ -167,10 +169,10 @@ const DataPaymentPin = props => {
             />
           </View>
 
-          {isBiometricExist && (
+          {isBiometricReady && (
             <View
               style={tw`mt-8 flex flex-row items-center justify-center p-4 rounded-lg mt-[300]`}>
-              <BiometricComponent signin={true} onComplete={makeTransaction} />
+              <BiometricComponent signin={true} onComplete={handleBiometricComplete} />
             </View>
           )}
 

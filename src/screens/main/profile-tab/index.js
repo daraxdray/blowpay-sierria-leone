@@ -30,7 +30,7 @@ import {CommonActions} from '@react-navigation/native';
 import {useDispatch} from 'react-redux';
 import {logout} from '../../../contexts/actions/user';
 import {useQueryClient} from '@tanstack/react-query';
-import * as Keychain from 'react-native-keychain';
+import {deleteUserCredentials} from '../../../utils/storage';
 import Toast from 'react-native-toast-message';
 
 const ProfileTab = props => {
@@ -58,8 +58,9 @@ const ProfileTab = props => {
 
   const performLogout = async () => {
     try {
+      const authEmail = await AsyncStorage.getItem('authEmail');
+      await deleteUserCredentials(authEmail);
       await AsyncStorage.clear();
-      await Keychain.resetGenericPassword();
       queryClient.getQueryCache().clear();
       queryClient.getMutationCache().clear();
       queryClient.clear();

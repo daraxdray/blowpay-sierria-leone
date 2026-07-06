@@ -24,19 +24,24 @@ export const saveUserCredentials = async (email, pincode) => {
   };
 
   try {
-    const r = await Keychain.setGenericPassword(email, pincode, options);
-    console.log('✅ Credentials saved securely (hardware):', r);
+    await Keychain.setGenericPassword(email, pincode, options);
+    console.log('✅ Credentials saved securely (hardware)');
     return true;
   } catch (error) {
-    if (String(error).includes('CryptoFailedException')) {
-      console.warn('⚠️ Secure hardware not available, falling back to ANY');
+    // Secure hardware can fail to persist for reasons other than
+    // CryptoFailedException (keystore corruption, disabled StrongBox, older
+    // devices, etc.) - fall back on any failure rather than a single
+    // substring match, so the PIN is never silently left unsaved.
+    console.warn('⚠️ Secure hardware unavailable, falling back to ANY:', error?.message || error);
+    try {
       options.securityLevel = Keychain.SECURITY_LEVEL.ANY;
-      const r = await Keychain.setGenericPassword(email, pincode, options);
-      console.log('✅ Credentials saved securely (software):', r);
+      await Keychain.setGenericPassword(email, pincode, options);
+      console.log('✅ Credentials saved securely (software fallback)');
       return true;
+    } catch (fallbackError) {
+      console.error('❌ Failed to save credentials:', fallbackError?.message || fallbackError);
+      return false;
     }
-    console.error('❌ Failed to save credentials:', error);
-    return false;
   }
 };
 
@@ -66,23 +71,22 @@ export const getUserPincode = async () => {
 };
 
 /**
- * Deletes the saved user's email and pincode.
+ * Deletes the saved user's pincode from Keychain.
+ * Must use the same `service` value saveUserCredentials stored it under
+ * (baseUrl + email) - resetGenericPassword() with no service only clears the
+ * default-service entry and leaves the real credential behind.
  * @returns {Promise<boolean>} - Returns true if deletion was successful, false otherwise.
  */
-export const deleteUserCredentials = async () => {
+export const deleteUserCredentials = async email => {
   try {
-    // Delete the saved credentials
-    const result = await Keychain.resetGenericPassword({
-      service: 'com.yourapp.usercredentials',
-    });
-
-    if (result) {
-      console.log('Credentials successfully deleted');
+    const targetEmail = email ?? (await AsyncStorage.getItem('authEmail'));
+    if (!targetEmail) {
       return true;
-    } else {
-      console.log('No credentials found to delete');
-      return false;
     }
+    const result = await Keychain.resetGenericPassword({
+      service: baseUrl + targetEmail,
+    });
+    return !!result;
   } catch (error) {
     console.error('Failed to delete credentials:', error);
     return false;

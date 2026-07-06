@@ -14,6 +14,7 @@ import {CommonActions} from '@react-navigation/native';
 import CustomToast from '../../../../../global/components/CustomToast';
 import {useGetVitualBalance} from '../../../../../hooks/virtual.hook';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
+import useTransactionGuard from '../../../../../hooks/useTransactionGuard';
 import {useSpBillPayment} from '../../../../../hooks/billing.hook';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
 import {unformatAmount, getCurrencySymbol} from '../../../../../utils/format';
@@ -32,7 +33,8 @@ const AirtimePaymentPin = props => {
   const [toastType, setToastType] = useState('error');
   const {data: balanceData} = useGetVitualBalance();
   const userBalance = balanceData?.data?.balance / 100;
-  const {isBiometricExist} = useBiometricAuth();
+  const {isBiometricReady} = useBiometricAuth();
+  const {canSubmit, begin, end} = useTransactionGuard();
   const rawValue = unformatAmount(selectedAmount);
   const showToast = (message, type = 'error') => {
     setToastMessage(message);
@@ -44,14 +46,23 @@ const AirtimePaymentPin = props => {
     }, 3000);
   };
 
+  // Balance check shared by manual PIN entry and biometric success, so
+  // biometric can never skip the funds check the manual path performs.
   const makeTransaction = () => {
     if (userBalance < rawValue) {
+      end();
       const screenError = 'Insufficient funds. Please top up your account.';
       showToast(screenError);
       navigation.navigate('PaymentError', {screenError});
       return;
     }
     completeTransaction();
+  };
+
+  const handleBiometricComplete = () => {
+    if (!canSubmit()) return;
+    begin();
+    makeTransaction();
   };
 
   const completeTransaction = () => {
@@ -73,6 +84,7 @@ const AirtimePaymentPin = props => {
             );
           },
           onError: err => {
+            end();
             const screenError =
               err?.response?.data?.message ||
               err?.response?.data?.error ||
@@ -99,6 +111,7 @@ const AirtimePaymentPin = props => {
             );
           },
           onError: err => {
+            end();
             const screenError =
               err?.response?.data?.message ||
               err?.response?.data?.error ||
@@ -112,12 +125,7 @@ const AirtimePaymentPin = props => {
   };
 
   const handleVerify = () => {
-    if (userBalance < rawValue) {
-      const screenError = 'Insufficient funds. Please top up your account.';
-      showToast(screenError);
-      navigation.navigate('PaymentError', {screenError});
-      return;
-    }
+    if (!canSubmit()) return;
 
     if (otp?.length !== 6) {
       const screenError = 'Please enter a valid 6-digit passcode.';
@@ -126,15 +134,23 @@ const AirtimePaymentPin = props => {
       return;
     }
 
+    begin();
     const userData = {passcode: otp};
 
     confirmPasscode(userData, {
       onSuccess: async data => {
         if (data.error == null && data.message != null) {
-          completeTransaction();
+          makeTransaction();
+        } else {
+          end();
+          const screenError =
+            data?.error || 'Passcode confirmation failed. Please try again.';
+          showToast(screenError);
+          navigation.navigate('PaymentError', {screenError});
         }
       },
       onError: error => {
+        end();
         const screenError =
           error?.response?.data?.message ||
           error?.response?.data?.error ||
@@ -180,10 +196,10 @@ const AirtimePaymentPin = props => {
             />
           </View>
 
-          {isBiometricExist && (
+          {isBiometricReady && (
             <View
               style={tw`mt-8  flex flex-row items-center justify-center p-4  rounded-lg mt-[300]`}>
-              <BiometricComponent signin={true} onComplete={makeTransaction} />
+              <BiometricComponent signin={true} onComplete={handleBiometricComplete} />
             </View>
           )}
 

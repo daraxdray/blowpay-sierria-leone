@@ -1,195 +1,104 @@
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, View, ToastAndroid as Toast, Switch } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View, Switch } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import ReactNativeBiometrics from 'react-native-biometrics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import tw from 'twrnc';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Loader from '../modals/Loader';
 import useBiometricAuth from '../../hooks/biometric.hook';
-import { useNavigation } from '@react-navigation/native';
-const rnBiometrics = new ReactNativeBiometrics();
 
+const BiometricComponent = ({ signin = false, onComplete = null, toggle = false, fromRoute = '' }) => {
+    const [toggling, setToggling] = useState(false);
 
-const BiometricComponent = ({ text = '', signin = false, onComplete = null, token = '', toggle = false, fromRoute = '' }) => {
-    const [bioLoading, setBioLoading] = useState(false);
-    const [activate, setActivate] = useState(false);
-    const navigate = useNavigation();
-    // const [keyFound, setKeyFound] = useState(false);
-    const payload = Math.round(new Date().getTime() / 1000).toString() + 'login with biometric';
+    const {
+        isBiometricExist,
+        isBiometricReady,
+        bmEnabled,
+        bmPass,
+        setBmPass,
+        createKey,
+        promptSignIn,
+        deleteKey,
+        navigateHome,
+    } = useBiometricAuth();
 
-    const {isBiometricExist,keyFound, bmPass,bmEnabled, setBmEnabled, setBmPass, createKey, promptSignIn, deleteKey, navigateHome} = useBiometricAuth();
-    const toggleSwitch = () => {
-        if (bmEnabled) {
-            deleteKey()
-        } else {
-            createKey();
+    // Only ever flips the switch from the *resolved* result of createKey/deleteKey -
+    // a cancelled or failed biometric prompt must leave it OFF, and disabling
+    // always leaves it OFF, so the UI can never show "enabled" when it isn't.
+    const toggleSwitch = async () => {
+        if (toggling) return;
+        setToggling(true);
+        try {
+            if (bmEnabled === 'true') {
+                await deleteKey();
+            } else {
+                await createKey();
+            }
+        } finally {
+            setToggling(false);
         }
-        setBmEnabled(previousState => !previousState);
-    }
+    };
 
-    useEffect(()=>{
-        if(bmPass){
-            if(onComplete != null){
+    useEffect(() => {
+        if (bmPass) {
+            if (onComplete != null) {
                 onComplete();
-            }else{
+            } else {
                 navigateHome(fromRoute);
             }
-            setBmPass(false)
+            setBmPass(false);
         }
-    },[bmPass])
+    }, [bmPass]);
 
-    // Auto-trigger biometric prompt on mount when used as sign-in gate
-    useEffect(()=>{
-        if(signin && keyFound){
+    // Auto-trigger the biometric prompt on mount, but only once every gate is
+    // satisfied: hardware+enrolled, user opted in, and a PIN actually exists
+    // to submit on success.
+    useEffect(() => {
+        if (signin && isBiometricReady) {
             promptSignIn();
         }
-    },[keyFound])
+    }, [signin, isBiometricReady]);
 
-    // useEffect(() => {
-    //     // Check if biometric keys exist on component mount
-    //     rnBiometrics.biometricKeysExist().then(async (e) => {
-    //         const storedPubKey = await AsyncStorage.getItem('bPK'); // get the bio pub key
-    //         const enabledBm = await AsyncStorage.getItem('bmEnabled'); //check if bio is enabled
-    //         setKeyFound(storedPubKey ? true : e.keysExist);
-    //         setIsEnabled(enabledBm);
-    //     });
-    // }, []);
+    if (!isBiometricExist) {
+        return null;
+    }
 
+    if (toggle) {
+        return (
+            <View
+                style={tw`bg-[#F8F8FA] rounded-[10px] px-3 py-4 flex w-full items-center flex-row justify-between border border-[#D0D5DD]`}>
+                <Text style={tw`text-[#000000] font-medium text-[15px]`}>
+                    Enable Face ID/Biometrics
+                </Text>
+                <Switch
+                    trackColor={{ false: '#767577', true: 'red' }}
+                    thumbColor={'white'}
+                    ios_backgroundColor="#3e3e3e"
+                    onValueChange={toggleSwitch}
+                    disabled={toggling}
+                    value={bmEnabled === 'true'}
+                />
+            </View>
+        );
+    }
 
-
-    // const isBioOn = async () => {
-    //     if (keyFound) {
-    //         setActivate(true);
-    //         promptSignIn();
-    //     } else {
-    //         createKey();
-    //     }
-    // };
-
-    // const deleteKey = async () => {
-    //     await rnBiometrics.deleteKeys();
-    //     await AsyncStorage.removeItem('bPK');
-    //     await AsyncStorage.removeItem('bmEnabled');
-
-    //     setKeyFound(false);
-    //     Toast.show('Biometric deactivated', Toast.SHORT);
-    // };
-
-    // const createKey = () => {
-    //     setBioLoading(true);
-    //     rnBiometrics.createKeys()
-    //         .then(async (resultObject) => {
-    //             const { publicKey } = resultObject;
-    //             setBioLoading(false);
-    //             await AsyncStorage.setItem('bPK', publicKey); // store the pubKey of bio
-    //             await AsyncStorage.setItem('bmEnabled', 'true');//store status of biometric enabled
-    //             setKeyFound(true);
-    //             Toast.show('Biometric Activated', Toast.SHORT);
-    //             if (onComplete) onComplete(); // execute callback on completion if provided
-    //         })
-    //         .catch((e) => {
-    //             Toast.show('Unable to generate sign key', Toast.SHORT);
-    //             setBioLoading(false);
-    //         });
-    // };
-
-    // const promptSignIn = async () => {
-    //     const storedPubKey = await AsyncStorage.getItem('bPK');
-    //     if (!storedPubKey) {
-    //         Toast.show('Please sign in first with your email', Toast.SHORT);
-    //     } else {
-    //         setBioLoading(true);
-    //         rnBiometrics.createSignature({
-    //             promptMessage: 'Sign in',
-    //             payload: payload
-    //         })
-    //             .then((resultObject) => {
-    //                 const { success, signature } = resultObject;
-    //                 setBioLoading(false);
-    //                 if (success) {
-    //                     Toast.show('Authorization successful', Toast.SHORT);
-    //                     if (onComplete) onComplete(signature); // execute callback on successful biometric
-    //                 }
-    //             })
-    //             .catch((e) => {
-    //                 Toast.show('No biometric data identified, please login using email', Toast.SHORT);
-    //                 setBioLoading(false);
-    //             });
-    //     }
-    // };
+    // Sign-in mode: don't show anything until biometrics can actually be used -
+    // no confusing "disabled" placeholder taking up space on every PIN screen.
+    if (!isBiometricReady) {
+        return null;
+    }
 
     return (
-         !isBiometricExist? 
-            <></> 
-            :
-        <View>
-            {toggle ? <>
-                <View
-                    style={tw`bg-[#F8F8FA] rounded-[10px] px-3 py-4 flex w-full items-center flex-row justify-between border border-[#D0D5DD]`}>
-                    <Text style={tw`text-[#000000] font-medium text-[15px]`}>
-                        Enable Face ID/Biometrics
-                    </Text>
-                    <Switch
-                        trackColor={{ false: '#767577', true: 'red' }}
-                        thumbColor={bmEnabled ? 'white' : 'white'}
-                        ios_backgroundColor="#3e3e3e"
-                        onValueChange={toggleSwitch}
-                        value={!!bmEnabled}
-                    />
-                </View>
-            </> :
-                <>
-                    {keyFound ? (
-                        <>
-                            { (
-                                <TouchableOpacity style={tw`flex flex-row items-center justify-center rounded-lg `} onPress={() => (signin ? promptSignIn() : createKey())}>
-                                    {/* <View style={tw`flex flex-row items-center justify-center rounded-lg`}>
-                                        
-                                    </View>     */}
-                                    <Ionicons
-                                        name={
-                                            Platform.OS === 'ios'
-                                                ? 'scan-circle-outline'
-                                                : 'finger-print-sharp'
-                                        }
-                                        size={25}
-                                        color="gray"
-                                    />
-                                    <Text
-                                        style={tw`ml-4 text-gray-500 text-center text-[14px]`}>
-                                        Use {Platform.OS === 'ios' ? 'Face ID' : 'Fingerprint'} to
-                                        unlock
-                                    </Text>
-                                </TouchableOpacity>
-                            )}
-                            {/* <Text style={styles.orLoginWith}>{text}</Text> */}
-                        </>
-                    ) : <Text
-                    style={tw`ml-4 text-gray-500 text-center text-[14px]`}>
-                    {Platform.OS === 'ios' ? 'Face ID' : 'Fingerprint'} Disabled 
-                </Text>}
-                    {signin ? null : (
-                        <View style={{ alignContent: 'center', justifyContent: 'center', flexDirection: 'row' }}>
-                            <Text style={{}}>
-                                Click on the thumb to {keyFound ? 'OFF' : 'ON'} fingerprint
-                            </Text>
-                        </View>
-                    )}
-                </>}
-        </View>
+        <TouchableOpacity
+            style={tw`flex flex-row items-center justify-center rounded-lg`}
+            onPress={() => promptSignIn()}>
+            <Ionicons
+                name={Platform.OS === 'ios' ? 'scan-circle-outline' : 'finger-print-sharp'}
+                size={25}
+                color="gray"
+            />
+            <Text style={tw`ml-4 text-gray-500 text-center text-[14px]`}>
+                Use {Platform.OS === 'ios' ? 'Face ID' : 'Fingerprint'} to unlock
+            </Text>
+        </TouchableOpacity>
     );
 };
 
 export default BiometricComponent;
-
-const styles = StyleSheet.create({
-    fingerprintView: {
-        // add your styling here
-    },
-    fingerprintBtn: {
-        // add your styling here
-    },
-    orLoginWith: {
-        // add your styling here
-    },
-});

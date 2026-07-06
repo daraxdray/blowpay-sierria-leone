@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { styles } from './style';
 import { ScreenView } from '../../../../../global/wrappers';
 import { PRIMARY_COLOR, WHITE } from '../../../../../global/theme';
@@ -9,9 +9,10 @@ import OTPTextView from 'react-native-otp-textinput';
 import { CustomButton } from '../../../../../global/components';
 import { useConfirmPasscode } from '../../../../../hooks/auth.hook';
 import Toast from 'react-native-toast-message';
-import { useTransfer } from '../../../../../hooks/virtual.hook';
+import { useTransfer, useGetVitualBalance } from '../../../../../hooks/virtual.hook';
 import { CommonActions } from '@react-navigation/native';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
+import useTransactionGuard from '../../../../../hooks/useTransactionGuard';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
 import Loader from '../../../../../components/modals/Loader';
 
@@ -22,101 +23,37 @@ const PaymentPin = props => {
   const { mutate: confirmPasscode, status } = useConfirmPasscode();
   const { mutate: transfer } = useTransfer();
   const [otp, setOtp] = useState();
-  const {isBiometricExist,keyFound, handleBiometricAuth} = useBiometricAuth();
+  const { isBiometricReady } = useBiometricAuth();
+  const { canSubmit, begin, end } = useTransactionGuard();
+  const { data: balanceData } = useGetVitualBalance();
+  const userBalance = balanceData?.data?.balance / 100;
+
   const unformatAmount = formattedValue => {
     return formattedValue.replace(/,/g, '');
   };
   const rawValue = unformatAmount(amount);
-  const handleVerify = () => {
-    if (otp?.length === 6) {
-      const userData = {
-        passcode: otp,
-      };
 
-      confirmPasscode(userData, {
-        onSuccess: data => {
-          if (data) {
-            const transferData = {
-              amount: rawValue,
-              accountNumber: accNum,
-              description:"Transfer"
-            };
-
-            transfer(transferData, {
-              onSuccess: transferResponse => {
-                console.log("uiuhiu",transferResponse);
-
-                if (transferResponse) {
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{ name: 'PaymentSucess' }],
-                    }),
-                  );
-                } else {
-                  Toast.show({
-                    type: 'error',
-                    text1:
-                      transferResponse?.message ||
-                      transferResponse?.data?.message ||
-                      'Transfer failed. Please try again.',
-                    text2: 'Please try again.',
-                  });
-                }
-              },
-              onError: transferError => {
-              
-                const errorMessage = 
-                transferError?.response?.data?.error ||
-                  transferError?.response?.data?.message ||
-                  'Transfer failed. Please try again.';
-                Toast.show({
-                  type: 'error',
-                  text1: 'Transfer failed',
-                  text2: errorMessage,
-                });
-              },
-            });
-          } else {
-            Toast.show({
-              type: 'error',
-              text1: 'Passcode confirmation failed',
-              text2: 'Please try again.',
-            });
-          }
-        },
-        onError: error => {
-          const errorMessage =
-          transferError?.response?.data?.error ||
-            error?.response?.data?.message ||
-            'An error occurred. Please try again.';
-          Toast.show({
-            type: 'error',
-            text1: 'Passcode confirmation failed',
-            text2: errorMessage,
-          });
-        },
-      });
-    } else {
+  // Core transfer call - shared by both the manual PIN path and the
+  // biometric path so they can never diverge in validation or behaviour.
+  // Callers are expected to have already run the submission guard.
+  const executeTransfer = () => {
+    if (userBalance < rawValue) {
+      end();
       Toast.show({
         type: 'error',
-        text1: 'Invalid OTP',
-        text2: 'Please enter a valid 6-digit passcode.',
+        text1: 'Insufficient funds. Please top up your account.',
       });
+      return;
     }
-  };
 
-  const makeTransfer = ()=>{
     const transferData = {
       amount: rawValue,
       accountNumber: accNum,
-      description:"Transfer"
+      description: 'Transfer',
     };
 
     transfer(transferData, {
       onSuccess: transferResponse => {
-        console.log("poiop",transferResponse);
-
         if (transferResponse) {
           navigation.dispatch(
             CommonActions.reset({
@@ -125,7 +62,7 @@ const PaymentPin = props => {
             }),
           );
         } else {
-
+          end();
           Toast.show({
             type: 'error',
             text1:
@@ -136,10 +73,9 @@ const PaymentPin = props => {
         }
       },
       onError: transferError => {
-       
-        
+        end();
         const errorMessage =
-        transferError?.response?.data?.error ||
+          transferError?.response?.data?.error ||
           transferError?.response?.data?.message ||
           'Transfer failed. Please try again.';
         Toast.show({
@@ -149,7 +85,61 @@ const PaymentPin = props => {
         });
       },
     });
-  }
+  };
+
+  // Biometric success is treated as equivalent to a correct manual PIN, per
+  // spec - but it still goes through the exact same balance-checked transfer.
+  const handleBiometricComplete = () => {
+    if (!canSubmit()) return;
+    begin();
+    executeTransfer();
+  };
+
+  const handleVerify = () => {
+    if (!canSubmit()) return;
+
+    if (otp?.length !== 6) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid OTP',
+        text2: 'Please enter a valid 6-digit passcode.',
+      });
+      return;
+    }
+
+    begin();
+    const userData = {
+      passcode: otp,
+    };
+
+    confirmPasscode(userData, {
+      onSuccess: data => {
+        if (data) {
+          executeTransfer();
+        } else {
+          end();
+          Toast.show({
+            type: 'error',
+            text1: 'Passcode confirmation failed',
+            text2: 'Please try again.',
+          });
+        }
+      },
+      onError: error => {
+        end();
+        const errorMessage =
+          error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          'An error occurred. Please try again.';
+        Toast.show({
+          type: 'error',
+          text1: 'Passcode confirmation failed',
+          text2: errorMessage,
+        });
+      },
+    });
+  };
+
   return (
     <ScreenView style={styles.container} light color={WHITE}>
       <ScrollView style={styles.viewContainer}>
@@ -158,7 +148,6 @@ const PaymentPin = props => {
             navigation={() => {
               navigation.goBack();
             }}
-            // 7245545428
             ImageSource={require('../../../../../../assets/icons/filter.png')}
             title=""
             showIcon={false}
@@ -175,7 +164,6 @@ const PaymentPin = props => {
           </View>
           <View style={styles.v2}>
             <OTPTextView
-              ref={e => (otpRef = e)}
               inputCellLength={1}
               containerStyle={styles.containerOtp}
               textInputStyle={styles.inputOtp}
@@ -186,11 +174,11 @@ const PaymentPin = props => {
               keyboardType={'number-pad'}
             />
           </View>
-          {isBiometricExist && (
+          {isBiometricReady && (
             <View
               style={tw`mt-3  flex flex-row items-center justify-center p-4  rounded-lg mt-[100]`}
               >
-              <BiometricComponent signin={true} onComplete={makeTransfer}  />
+              <BiometricComponent signin={true} onComplete={handleBiometricComplete}  />
             </View>
           )}
           <View style={tw`pb-5 w-full mt-10`}>

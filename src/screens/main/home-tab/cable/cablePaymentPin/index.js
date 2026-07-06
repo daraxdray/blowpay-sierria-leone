@@ -13,6 +13,7 @@ import Loader from '../../../../../components/modals/Loader';
 import {CommonActions, useNavigation} from '@react-navigation/native';
 import {useGetVitualBalance} from '../../../../../hooks/virtual.hook';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
+import useTransactionGuard from '../../../../../hooks/useTransactionGuard';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
 import {unformatAmount, getCurrencySymbol} from '../../../../../utils/format';
 
@@ -28,43 +29,9 @@ const CablePaymentPin = props => {
   const {mutate: cableBill, status: billStatus} = useCablePay();
   const {mutate: spBillPayment, status: spBillStatus} = useSpBillPayment();
   const [otp, setOtp] = useState('');
-  const {isBiometricExist} = useBiometricAuth();
+  const {isBiometricReady} = useBiometricAuth();
+  const {canSubmit, begin, end} = useTransactionGuard();
 
-  const handleVerify = () => {
-    // if (userBalance < rawValue) {
-    //   const screenError = 'Insufficient funds. Please top up your account.';
-    //   navigation.navigate('PaymentError', {screenError});
-    //   return;
-    // }
-    if (otp.length === 6) {
-      confirmPasscode(
-        {passcode: otp},
-        {
-          onSuccess: data => {
-            if (data) {
-              completeTransaction();
-            } else {
-              const screenError =
-                data?.error ||
-                data?.message ||
-                'Passcode confirmation failed. Please try again.';
-              navigation.navigate('PaymentError', {screenError});
-            }
-          },
-          onError: error => {
-            const errorMessage =
-              error?.response?.data?.error ||
-              error?.response?.data?.message ||
-              'An error occurred. Please try again.';
-            navigation.navigate('PaymentError', {screenError: errorMessage});
-          },
-        },
-      );
-    } else {
-      const screenError = 'Please enter a valid 6-digit passcode.';
-      navigation.navigate('PaymentError', {screenError});
-    }
-  };
   const processBillPayment = () => {
     if (country === 'Sierra Leone') {
       const payload = {
@@ -91,12 +58,14 @@ const CablePaymentPin = props => {
               }),
             );
           } else {
+            end();
             const screenError =
               DataResponse?.error || 'Cable payment failed. Please try again.';
             navigation.navigate('PaymentError', {screenError});
           }
         },
         onError: err => {
+          end();
           const errorMessage =
             err?.response?.data?.error ||
             err?.response?.data?.message ||
@@ -130,12 +99,14 @@ const CablePaymentPin = props => {
               }),
             );
           } else {
+            end();
             const screenError =
               DataResponse?.error || 'Cable payment failed. Please try again.';
             navigation.navigate('PaymentError', {screenError});
           }
         },
         onError: transferError => {
+          end();
           const errorMessage =
             transferError?.response?.data?.error ||
             transferError?.response?.data?.message ||
@@ -145,16 +116,60 @@ const CablePaymentPin = props => {
       });
     }
   };
+
+  // Balance check + provider routing shared by manual PIN entry and
+  // biometric success, so neither path can skip the funds check.
   const makeTransaction = () => {
     if (userBalance < rawValue) {
+      end();
       const screenError = 'Insufficient funds. Please top up your account.';
       navigation.navigate('PaymentError', {screenError});
       return;
     }
     processBillPayment();
   };
-  const completeTransaction = () => {
+
+  const handleBiometricComplete = () => {
+    if (!canSubmit()) return;
+    begin();
     makeTransaction();
+  };
+
+  const handleVerify = () => {
+    if (!canSubmit()) return;
+
+    if (otp.length !== 6) {
+      const screenError = 'Please enter a valid 6-digit passcode.';
+      navigation.navigate('PaymentError', {screenError});
+      return;
+    }
+
+    begin();
+    confirmPasscode(
+      {passcode: otp},
+      {
+        onSuccess: data => {
+          if (data) {
+            makeTransaction();
+          } else {
+            end();
+            const screenError =
+              data?.error ||
+              data?.message ||
+              'Passcode confirmation failed. Please try again.';
+            navigation.navigate('PaymentError', {screenError});
+          }
+        },
+        onError: error => {
+          end();
+          const errorMessage =
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            'An error occurred. Please try again.';
+          navigation.navigate('PaymentError', {screenError: errorMessage});
+        },
+      },
+    );
   };
 
   return (
@@ -187,10 +202,10 @@ const CablePaymentPin = props => {
               keyboardType={'number-pad'}
             />
           </View>
-          {isBiometricExist && (
+          {isBiometricReady && (
             <View
               style={tw`mt-[300] flex flex-row items-center justify-center p-4 rounded-lg`}>
-              <BiometricComponent signin={true} onComplete={makeTransaction} />
+              <BiometricComponent signin={true} onComplete={handleBiometricComplete} />
             </View>
           )}
           <View style={tw`pb-5 w-full mt-10`}>

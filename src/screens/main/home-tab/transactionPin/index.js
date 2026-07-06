@@ -13,19 +13,18 @@ import { ScreenView } from '../../../../global/wrappers';
 import { BLACK, WHITE } from '../../../../global/theme';
 import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import * as Keychain from 'react-native-keychain';
 import { useConfirmPasscode, useLoginPasscode } from '../../../../hooks/auth.hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Loader from '../../../../components/modals/Loader';
 import { CommonActions } from '@react-navigation/native';
 import OTPTextView from 'react-native-otp-textinput';
-import ReactNativeBiometrics from 'react-native-biometrics';
 import BiometricComponent from '../../../../components/biometric/biometric_component';
 import useBiometricAuth from '../../../../hooks/biometric.hook';
+import useTransactionGuard from '../../../../hooks/useTransactionGuard';
 import { useDispatch } from 'react-redux';
 import { loginSuccess, logout } from '../../../../contexts/actions/user';
 import { useGetVitualAcc } from '../../../../hooks/virtual.hook';
-import { getUserPincode, saveUserCredentials } from '../../../../utils/storage';
+import { getUserPincode, saveUserCredentials, deleteUserCredentials } from '../../../../utils/storage';
 import { useGetUser } from '../../../../hooks/user.hook';
 
 const TransactionPinScreen = props => {
@@ -37,7 +36,8 @@ const TransactionPinScreen = props => {
   const { mutate: loginPasscode, status:loggingInPasscode } = useLoginPasscode();
   const [userData, setUserData] = useState(null);
   const { data: virtualData, refetch, } = useGetVitualAcc();
-  const [useBio, setUseBio] = useState(false);
+  const { isBiometricReady } = useBiometricAuth();
+  const { canSubmit, begin, end } = useTransactionGuard();
   const {data:user} = useGetUser();
 
   const dispatch = useDispatch();
@@ -74,10 +74,18 @@ const TransactionPinScreen = props => {
     loadUserData();
   }, []);
 
+  // Biometric success just autofills the real PIN and drives it through the
+  // exact same handleOtpChange verification path as manual entry - it's a
+  // shortcut to the real auth, never a parallel one. Falls back silently to
+  // manual entry if the stored PIN is missing/corrupted.
   const handleBiometric = async () => {
-    const det = await getUserPincode();
-    if (det?.pincode) {
-      handleOtpChange(det.pincode);
+    try {
+      const det = await getUserPincode();
+      if (det?.pincode) {
+        handleOtpChange(det.pincode);
+      }
+    } catch (error) {
+      console.error('Failed to read stored PIN for biometric unlock', error);
     }
   }
   //approve login
@@ -116,11 +124,18 @@ const TransactionPinScreen = props => {
 
     }
   }
+  // Shared by manual OTP entry and biometric autofill - the submission guard
+  // ensures only one of them can ever reach confirmPasscode/loginPasscode at
+  // a time, so a manual submit racing a resolving Face ID prompt can't fire
+  // two verification requests.
   const handleOtpChange = async otpValue => {
     setOtp(otpValue);
-    const email = await AsyncStorage.getItem('authEmail');
-  
+
     if (otpValue.length === 6) {
+      if (!canSubmit()) return;
+      begin();
+
+      const email = await AsyncStorage.getItem('authEmail');
       const userData = { passcode: otpValue, emailAddress:email};
 
       if(Platform.OS == 'android'){
@@ -130,7 +145,7 @@ const TransactionPinScreen = props => {
             authorizeLogin(data);
           },
           onError: error => {
-
+            end();
             Toast.show({
               type: 'error',
               text1: 'Error',
@@ -147,7 +162,7 @@ const TransactionPinScreen = props => {
             authorizeLogin(data);
           },
           onError: error => {
-
+            end();
             Toast.show({
               type: 'error',
               text1: 'Error',
@@ -157,23 +172,9 @@ const TransactionPinScreen = props => {
           },
         });
       }
-      
+
     }
   };
-
-  useEffect(() => {
-    const checkUserPin = async () => {
-      return await getUserPincode();
-    }
-    checkUserPin().then((res) => {
-
-      
-      if (res) {
-        setUseBio(true);
-      }
-    })
-
-  }, [])
   return (
     <ScreenView style={styles.container} light color={WHITE}>
       <View style={tw`flex-1 justify-center items-center`}>
@@ -203,7 +204,7 @@ const TransactionPinScreen = props => {
                 />
 
 
-                {useBio && <View style={tw`mt-8  flex flex-row items-center justify-center p-4  rounded-lg mt-[300]`} >
+                {isBiometricReady && <View style={tw`mt-8  flex flex-row items-center justify-center p-4  rounded-lg mt-[300]`} >
                   <BiometricComponent signin={true} fromRoute={props?.params?.currentRoute ?? ''} onComplete={handleBiometric} />
                 </View>}
 
@@ -213,8 +214,10 @@ const TransactionPinScreen = props => {
                   <TouchableOpacity
                     style={tw`flex-row justify-center items-center  mt-5`}
                     onPress={async () => {
+                      const authEmail = await AsyncStorage.getItem('authEmail');
+                      await deleteUserCredentials(authEmail);
                       dispatch(logout())
-                      await AsyncStorage.removeItem('Login');
+                      await AsyncStorage.multiRemove(['Login', 'bmEnabled']);
                       navigation.dispatch(
                         CommonActions.reset({
                           index: 0,

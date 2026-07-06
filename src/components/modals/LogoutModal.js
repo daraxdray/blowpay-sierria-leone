@@ -12,7 +12,7 @@ import {logout} from '../../contexts/actions/user';
 import {useDispatch, useSelector} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useQueryClient} from '@tanstack/react-query';
-import * as Keychain from 'react-native-keychain';
+import {deleteUserCredentials} from '../../utils/storage';
 
 const LogoutModal = ({closeModal}) => {
   const {isAuthenticated} = useSelector(state => state.user);
@@ -28,9 +28,10 @@ const LogoutModal = ({closeModal}) => {
 
   const handleLogout = async () => {
     try {
+      const authEmail = await AsyncStorage.getItem('authEmail');
+      await deleteUserCredentials(authEmail);
       await AsyncStorage.clear();
-      
-      await Keychain.resetGenericPassword(); 
+
       queryClient.getQueryCache().clear();
       queryClient.getMutationCache().clear();
       

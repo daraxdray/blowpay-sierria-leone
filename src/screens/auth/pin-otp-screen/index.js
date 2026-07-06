@@ -12,6 +12,7 @@ import Loader from '../../../components/modals/Loader';
 import tw from 'twrnc';
 import { styles } from './style.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveUserCredentials } from '../../../utils/storage';
 
 const PinOtpScreen = ({ navigation }) => {
   let otpRef = useRef(null);
@@ -94,7 +95,13 @@ const PinOtpScreen = ({ navigation }) => {
       };
       
       verifyOtp(payload, {
-        onSuccess: () => {
+        onSuccess: async () => {
+          // Resync the biometric-stored PIN copy so Face ID/fingerprint keeps
+          // working with the new PIN instead of silently auto-submitting the
+          // old (now-invalid) one on the lock screen.
+          if (emailAddress) {
+            await saveUserCredentials(emailAddress, passcode);
+          }
           navigation.navigate('bottom-tab');
           Toast.show({
             type: 'success',

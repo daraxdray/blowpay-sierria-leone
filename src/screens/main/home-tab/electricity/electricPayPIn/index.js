@@ -18,6 +18,7 @@ import CustomToast from '../../../../../global/components/CustomToast';
 import {useGetVitualBalance} from '../../../../../hooks/virtual.hook';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
+import useTransactionGuard from '../../../../../hooks/useTransactionGuard';
 import {unformatAmount, getCurrencySymbol} from '../../../../../utils/format';
 
 const ElectricPaymentPin = ({navigation, route}) => {
@@ -34,63 +35,14 @@ const ElectricPaymentPin = ({navigation, route}) => {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('error');
-  const {isBiometricExist} = useBiometricAuth();
+  const {isBiometricReady} = useBiometricAuth();
+  const {canSubmit, begin, end} = useTransactionGuard();
 
   const showToast = (message, type = 'error') => {
     setToastMessage(message);
     setToastType(type);
     setToastVisible(true);
     setTimeout(() => setToastVisible(false), 3000);
-  };
-  console.log(
-    selectedProvider,
-    'selectedProvider',
-    selectedMeter,
-    'selectedMeter',
-    rawValue,
-    'selectedAmount',
-  );
-  const handleVerify = otpInput => {
-    if (userBalance < rawValue) {
-      const screenError = 'Insufficient funds. Please top up your account.';
-      showToast(screenError);
-      navigation.navigate('PaymentError', {screenError});
-      return;
-    }
-
-    if (otpInput.length !== 6) {
-      const screenError = 'Please enter a valid 6-digit passcode.';
-      showToast(screenError);
-      navigation.navigate('PaymentError', {screenError});
-      return;
-    }
-
-    confirmPasscode(
-      {passcode: otpInput},
-      {
-        onSuccess: data => {
-          if (data?.message) {
-            if (country === 'Sierra Leone') {
-              completeTransactionSL();
-            } else {
-              completeTransaction();
-            }
-          } else {
-            const screenError =
-              data?.error || 'Passcode confirmation failed. Please try again.';
-            showToast(screenError);
-            navigation.navigate('PaymentError', {screenError});
-          }
-        },
-        onError: error => {
-          const errorMessage =
-            error?.response?.data?.message ||
-            'An error occurred. Please try again.';
-          showToast(errorMessage);
-          navigation.navigate('PaymentError', {screenError: errorMessage});
-        },
-      },
-    );
   };
 
   const completeTransaction = () => {
@@ -102,8 +54,6 @@ const ElectricPaymentPin = ({navigation, route}) => {
 
     electricBill(userInfo, {
       onSuccess: DataResponse => {
-        console.log(DataResponse);
-
         if (DataResponse) {
           navigation.dispatch(
             CommonActions.reset({
@@ -121,17 +71,11 @@ const ElectricPaymentPin = ({navigation, route}) => {
             }),
           );
         } else {
+          end();
           const screenError =
             DataResponse?.error ||
             'Electricity purchase failed. Please try again.';
           showToast(screenError);
-          console.log(
-            DataResponse,
-            'DataResponse',
-            DataResponse?.error,
-            'error',
-          );
-
           navigation.navigate('PaymentError', {screenError});
         }
       },
@@ -158,12 +102,14 @@ const ElectricPaymentPin = ({navigation, route}) => {
             }),
           );
         } else {
+          end();
           showToast(errorMessage);
           navigation.navigate('PaymentError', {screenError: errorMessage});
         }
       },
     });
   };
+
   const completeTransactionSL = () => {
     const payload = {
       category: 'EDSA',
@@ -173,8 +119,6 @@ const ElectricPaymentPin = ({navigation, route}) => {
 
     buyAirtime(payload, {
       onSuccess: res => {
-        console.log(res, 'res in electricity payment pin');
-        
         if (res) {
           navigation.dispatch(
             CommonActions.reset({
@@ -191,12 +135,14 @@ const ElectricPaymentPin = ({navigation, route}) => {
             }),
           );
         } else {
+          end();
           const screenError = res?.error || 'Payment failed. Please try again.';
           showToast(screenError);
           navigation.navigate('PaymentError', {screenError});
         }
       },
       onError: error => {
+        end();
         const screenError =
           error?.response?.data?.message ||
           error?.response?.data?.error ||
@@ -205,6 +151,66 @@ const ElectricPaymentPin = ({navigation, route}) => {
         navigation.navigate('PaymentError', {screenError});
       },
     });
+  };
+
+  // Balance check + country routing lives here once, so both the manual PIN
+  // path and the biometric path always validate identically before charging.
+  const processPayment = () => {
+    if (userBalance < rawValue) {
+      end();
+      const screenError = 'Insufficient funds. Please top up your account.';
+      showToast(screenError);
+      navigation.navigate('PaymentError', {screenError});
+      return;
+    }
+    if (country === 'Sierra Leone') {
+      completeTransactionSL();
+    } else {
+      completeTransaction();
+    }
+  };
+
+  const handleBiometricComplete = () => {
+    if (!canSubmit()) return;
+    begin();
+    processPayment();
+  };
+
+  const handleVerify = otpInput => {
+    if (!canSubmit()) return;
+
+    if (otpInput.length !== 6) {
+      const screenError = 'Please enter a valid 6-digit passcode.';
+      showToast(screenError);
+      navigation.navigate('PaymentError', {screenError});
+      return;
+    }
+
+    begin();
+    confirmPasscode(
+      {passcode: otpInput},
+      {
+        onSuccess: data => {
+          if (data?.message) {
+            processPayment();
+          } else {
+            end();
+            const screenError =
+              data?.error || 'Passcode confirmation failed. Please try again.';
+            showToast(screenError);
+            navigation.navigate('PaymentError', {screenError});
+          }
+        },
+        onError: error => {
+          end();
+          const errorMessage =
+            error?.response?.data?.message ||
+            'An error occurred. Please try again.';
+          showToast(errorMessage);
+          navigation.navigate('PaymentError', {screenError: errorMessage});
+        },
+      },
+    );
   };
 
   const handleOtp = otpInput => {
@@ -245,18 +251,12 @@ const ElectricPaymentPin = ({navigation, route}) => {
             />
           </View>
 
-          {isBiometricExist && (
+          {isBiometricReady && (
             <View
               style={tw`mt-8 flex flex-row items-center justify-center p-4 rounded-lg mt-[300]`}>
               <BiometricComponent
                 signin={true}
-                onComplete={() => {
-                  if (country === 'Sierra Leone') {
-                    completeTransactionSL();
-                  } else {
-                    completeTransaction();
-                  }
-                }}
+                onComplete={handleBiometricComplete}
               />
             </View>
           )}

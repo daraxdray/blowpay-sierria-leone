@@ -20,6 +20,7 @@ import Loader from '../../../../../components/modals/Loader';
 import { useBettingFund } from '../../../../../hooks/billing.hook';
 import { useGetVitualBalance } from '../../../../../hooks/virtual.hook';
 import useBiometricAuth from '../../../../../hooks/biometric.hook';
+import useTransactionGuard from '../../../../../hooks/useTransactionGuard';
 import BiometricComponent from '../../../../../components/biometric/biometric_component';
 import { useConfirmPasscode } from '../../../../../hooks/auth.hook';
 import { CommonActions } from '@react-navigation/native';
@@ -32,25 +33,20 @@ const BettingPaymentPin = (props) => {
   const { customerId = '', bettingCompany = '', amount = 0 } = props.route.params || {};
   const [pin, setPin] = useState('');
   const { mutate: fundBetting, status: fundingStatus } = useBettingFund();
-  const { isBiometricExist, } = useBiometricAuth();
+  const { isBiometricReady } = useBiometricAuth();
+  const { canSubmit, begin, end } = useTransactionGuard();
   const { mutate: confirmPasscode, status: passcodeStatus } =
     useConfirmPasscode();
 
-
-  const { data: balanceData, refetch: refetchBalance } = useGetVitualBalance();
+  const { data: balanceData } = useGetVitualBalance();
   const userBalance = balanceData?.data?.balance / 100;
 
-  const handlePinChange = (value) => {
-    setPin(value);
-  };
-
-  const handlePayment = () => {
-
+  const executePayment = () => {
     const paymentData = {
       customerId,
       bettingCompany,
       amount,
-      pin
+      pin,
     };
 
     fundBetting(paymentData, {
@@ -68,15 +64,11 @@ const BettingPaymentPin = (props) => {
               name: 'PaymentSucess',
               params: { message: `You have successfully funded your ${bettingCompany} account`,}
             }],
-
           }),
         );
-
-        // Navigate to success page or home
-        
       },
       onError: (error) => {
-        console.log('Payment error:', error);
+        end();
         Toast.show({
           type: 'error',
           text1: 'Payment Failed',
@@ -86,64 +78,62 @@ const BettingPaymentPin = (props) => {
     });
   };
 
-
-  const handleVerify = () => {
+  // Balance check shared by manual PIN entry and biometric success, so
+  // biometric can never skip the funds check the manual path performs.
+  const processPayment = () => {
     if (userBalance < amount) {
+      end();
       const screenError = 'Insufficient funds. Please top up your account.';
-      // showToast(screenError);
       navigation.navigate('PaymentError', { screenError });
       return;
     }
+    executePayment();
+  };
+
+  const handleBiometricComplete = () => {
+    if (!canSubmit()) return;
+    begin();
+    processPayment();
+  };
+
+  const handleVerify = () => {
+    if (!canSubmit()) return;
 
     if (pin.length !== 6) {
       Toast.show({
         type: 'error',
         text1: 'Invalid PIN',
-        text2: 'Please enter a 4-digit PIN',
+        text2: 'Please enter a 6-digit PIN',
       });
       return;
     }
 
-    if (pin.length === 6) {
-      // const userInfo = {
-      //   billerCode: filteredData[0]?.biller_code,
-      //   amountEntered: rawValue,
-      //   customerId: selectedMeter,
-      //   itemCode: filteredData[0]?.item_code,
-      //   description: "Electricity"
-      // };
-
-      confirmPasscode(
-        { passcode: pin },
-        {
-          onSuccess: data => {
-            if (data) {
-              handlePayment()
-            } else {
-
-              const screenError =
-                data?.error ||
-                data?.message ||
-                'Passcode confirmation failed. Please try again.';
-              // showToast(screenError);
-              navigation.navigate('PaymentError', { screenError });
-            }
-          },
-          onError: error => {
-            const errorMessage =
-              error?.response?.data?.error ||
-              error?.response?.data?.message ||
-              'An error occurred. Please try again.';
-            // showToast(errorMessage);
-            navigation.navigate('PaymentError', { screenError: errorMessage });
-          },
+    begin();
+    confirmPasscode(
+      { passcode: pin },
+      {
+        onSuccess: data => {
+          if (data) {
+            processPayment();
+          } else {
+            end();
+            const screenError =
+              data?.error ||
+              data?.message ||
+              'Passcode confirmation failed. Please try again.';
+            navigation.navigate('PaymentError', { screenError });
+          }
         },
-      );
-    } else {
-      const screenError = 'Please enter a valid 6-digit passcode.';
-      // showToast(screenError);
-      navigation.navigate('PaymentError', { screenError });
-    }
+        onError: error => {
+          end();
+          const errorMessage =
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            'An error occurred. Please try again.';
+          navigation.navigate('PaymentError', { screenError: errorMessage });
+        },
+      },
+    );
   };
 
   return (
@@ -181,11 +171,11 @@ const BettingPaymentPin = (props) => {
             <Text style={tw`text-base text-[${PRIMARY_COLOR}] text-center mb-4`}>
               You're about to fund {bettingCompany} account with {getCurrencySymbol(country)}{amount}
             </Text>
-            {isBiometricExist && (
+            {isBiometricReady && (
               <View
                 style={tw`mt-8  flex flex-row items-center justify-center p-4  rounded-lg mt-[300]`}
               >
-                <BiometricComponent signin={true} onComplete={handlePayment} />
+                <BiometricComponent signin={true} onComplete={handleBiometricComplete} />
               </View>
             )}
 
@@ -201,7 +191,7 @@ const BettingPaymentPin = (props) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      {fundingStatus === 'pending' && <Loader />}
+      {(fundingStatus === 'pending' || passcodeStatus === 'pending') && <Loader />}
     </ScreenView>
   );
 };

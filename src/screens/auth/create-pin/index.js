@@ -31,7 +31,6 @@ const CreatePin = props => {
   // },[])
 
   const _setOtp = value => {
-    console.log('OTP Value:', value); // Check what's being logged here
     setOtp(value);
 
     if (value.length === 6) {
