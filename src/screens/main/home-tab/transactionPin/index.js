@@ -149,7 +149,7 @@ const TransactionPinScreen = props => {
             Toast.show({
               type: 'error',
               text1: 'Error',
-              text2: ('Error', error.response?.data?.error ?? "Unable to authorize pin"),
+              text2: error.response?.data?.message ?? error.response?.data?.error ?? "Unable to authorize pin",
             });
             setOtp('');
           },
@@ -166,7 +166,7 @@ const TransactionPinScreen = props => {
             Toast.show({
               type: 'error',
               text1: 'Error',
-              text2: ('Error', error.response?.data?.error ?? "Unable to authorize pin"),
+              text2: error.response?.data?.message ?? error.response?.data?.error ?? "Unable to authorize pin",
             });
             setOtp('');
           },

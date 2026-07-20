@@ -14,6 +14,7 @@ import {
   SetupAddressScreen,
   SetupBiometric,
   SetupID,
+  SetupIDSierraLeone,
   SetupPassword,
   Signin,
   Signup,
@@ -226,6 +227,11 @@ const RootNav = props => {
           <Screen
             name={'setup-id-screen'}
             component={SetupID}
+            options={screenOptions}
+          />
+          <Screen
+            name={'setup-id-sl-screen'}
+            component={SetupIDSierraLeone}
             options={screenOptions}
           />
           <Screen

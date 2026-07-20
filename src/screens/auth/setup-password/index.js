@@ -79,6 +79,7 @@ const SetupPassword = ({navigation, route}) => {
           type: 'error',
           text1: 'Registration Error',
           text2:
+            error?.response?.data?.message ||
             error?.response?.data?.error ||
             error?.message ||
             'An error occurred. Please try again.',
