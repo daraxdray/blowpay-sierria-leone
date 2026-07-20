@@ -23,7 +23,7 @@ export const useLogin = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -42,7 +42,7 @@ export const useVerifyOtp = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -61,7 +61,7 @@ export const useSendOtp = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -80,7 +80,7 @@ export const useCheckServerStatus = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
     // enabled: !!id,
   });
@@ -100,7 +100,7 @@ export const useSetPasscode = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -118,7 +118,7 @@ export const useConfirmPasscode = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -129,7 +129,7 @@ export const useLoginPasscode = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -147,7 +147,7 @@ export const useVerifyForgotPasswordOtp = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -159,7 +159,7 @@ export const useForgotPassword = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -177,7 +177,7 @@ export const useResetPassword = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -194,7 +194,7 @@ export const useLogout = () => {
       return d;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -212,7 +212,7 @@ export const useChangePassword = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -226,7 +226,7 @@ export const useKYC = () => {
     onError: error => {
       console.error('KYC Error:', error);
 
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -238,7 +238,7 @@ export const useUpdateUser = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };

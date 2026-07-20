@@ -26,7 +26,7 @@ export const useGetConstant = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };

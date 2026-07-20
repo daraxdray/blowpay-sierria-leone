@@ -135,7 +135,9 @@ export const getUserFriendlyErrorMessage = (error) => {
   if (status >= 500 || isGenericServerErrorMessage(messageToCheck)) {
     return 'Something went wrong. Please try again.';
   }
-  if (status === 429) return 'Too many requests. Please wait a moment and try again.';
+  if (status === 429) {
+    return backendMsg || 'Too many requests. Please wait a moment and try again.';
+  }
   if (status === 404) return 'The requested item was not found.';
   if (status === 403) return 'You don\'t have permission to do this.';
   if (status === 401) return 'Please log in again.';
