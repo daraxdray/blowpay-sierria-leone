@@ -24,7 +24,7 @@ export const useGetTransactions = description => {
     },
     onError: error => {
       console.log('ERRORORORORORO');
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -42,7 +42,7 @@ export const useGetTransaction = id => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -62,7 +62,7 @@ export const useGetNotificationById = id => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
     enabled: !!id,
   });
@@ -79,7 +79,7 @@ export const useGetTxToken = () => {
     onError: error => {
       // console.log(error, 'useGetTxToken error');
 
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };

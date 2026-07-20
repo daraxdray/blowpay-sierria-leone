@@ -57,7 +57,7 @@ export const useGetVitualBalance = () => {
       console.log('Account balance fetched:', data);
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -84,7 +84,7 @@ export const useGetReceiver = (recipient, fetchAuto = true) => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
     enabled: fetchAuto,
   });
@@ -103,7 +103,7 @@ export const useTransfer = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };

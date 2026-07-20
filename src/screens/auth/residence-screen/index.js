@@ -127,8 +127,14 @@ const ResidenceScreen = ({navigation, route}) => {
           text1: 'KYC submitted successfully',
         });
       },
-      onError: () => {
-        Toast.show({type: 'error', text1: 'Failed to submit KYC. Try again.'});
+      onError: error => {
+        Toast.show({
+          type: 'error',
+          text1:
+            error?.response?.data?.message ??
+            error?.response?.data?.error ??
+            'Failed to submit KYC. Try again.',
+        });
       },
     });
   };

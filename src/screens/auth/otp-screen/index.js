@@ -94,6 +94,7 @@ const OtpScreen = ({ navigation, route }) => {
           type: 'error',
           text1: 'Verification Error',
           text2:
+            error?.response?.data?.message ||
             error?.response?.data?.error ||
             error?.message ||
             'An error occurred. Please try again.',
@@ -128,6 +129,7 @@ const OtpScreen = ({ navigation, route }) => {
             type: 'error',
             text1: 'Resend Error',
             text2:
+              error?.response?.data?.message ||
               error?.response?.data?.error ||
               error?.message ||
               'Failed to resend OTP. Please try again.',
