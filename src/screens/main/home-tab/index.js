@@ -225,7 +225,7 @@ const HomeTab = props => {
       case 'recent':
         return (
           <View style={tw`px-3`}>
-            <Recent country={country} />
+            <Recent country={country} navigation={navigation} limit={5} />
           </View>
         );
       default:
@@ -241,49 +241,52 @@ const HomeTab = props => {
         source={require('../../../../assets/images/home_gradient.png')}
         style={{flex: 1}}
         resizeMode="cover">
+        <View style={[styles.view1, {flex: 0}]}>
+          <View style={styles.view2}>
+            <View style={styles.view3}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ProfileTab')}
+                style={styles.profile}>
+                <Image
+                  source={require('../../../../assets/icons/user.png')}
+                  style={{width: 30, height: 30}}
+                />
+              </TouchableOpacity>
+              <View>
+                <Text style={styles.text1}>Welcome,</Text>
+                <Text style={styles.text2}>{userData?.user?.firstName}</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.notify}
+              onPress={() => navigation.navigate('Notification')}>
+              <Image
+                source={require('../../../../assets/icons/notification.png')}
+                style={{width: 30, height: 30}}
+              />
+            </TouchableOpacity>
+          </View>
+          <WalletCard
+            handleAdd={openModal}
+            country={country}
+            accountData={userAcc}
+            balanceData={vtAcc}
+          />
+        </View>
         <FlatList
+          style={{flex: 1}}
           data={vi}
           keyExtractor={(item, index) => index.toString()}
           renderItem={renderSection}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          ListHeaderComponent={() => (
-            <View style={styles.view1}>
-              <View style={styles.view2}>
-                <View style={styles.view3}>
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('ProfileTab')}
-                    style={styles.profile}>
-                    <Image
-                      source={require('../../../../assets/icons/user.png')}
-                      style={{width: 30, height: 30}}
-                    />
-                  </TouchableOpacity>
-                  <View>
-                    <Text style={styles.text1}>Welcome,</Text>
-                    <Text style={styles.text2}>
-                      {userData?.user?.firstName}
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={styles.notify}
-                  onPress={() => navigation.navigate('Notification')}>
-                  <Image
-                    source={require('../../../../assets/icons/notification.png')}
-                    style={{width: 30, height: 30}}
-                  />
-                </TouchableOpacity>
-              </View>
-              <WalletCard
-                handleAdd={openModal}
-                country={country}
-                accountData={userAcc}
-                balanceData={vtAcc}
-              />
-            </View>
-          )}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{flexGrow: 1, paddingBottom: 24}}
+          initialNumToRender={3}
+          maxToRenderPerBatch={3}
+          windowSize={5}
+          removeClippedSubviews
         />
         <Modal
           animationType="slide"
