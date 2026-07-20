@@ -10,6 +10,7 @@ import StatusReminder from "./status-reminder";
 import Biometric from "./biometric-screen";
 import ResidenceScreen from "./residence-screen";
 import SetupID from "./setup-id";
+import SetupIDSierraLeone from "./setup-id-sierra-leone";
 import SetupBiometric from "./setup-biometric";
 import SetupAddressScreen from "./setup-address-screen";
 
@@ -27,5 +28,6 @@ export {
     ResidenceScreen,
     SetupBiometric,
     SetupID,
+    SetupIDSierraLeone,
     SetupAddressScreen
 }
