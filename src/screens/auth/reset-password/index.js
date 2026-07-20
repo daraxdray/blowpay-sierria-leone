@@ -76,6 +76,7 @@ const ResetPassword = ({ navigation, route }) => {
           type: 'error',
           text1: 'Reset Error',
           text2:
+           error?.response?.data?.message ||
            (Array.isArray(error?.response?.data?.error) ? error?.response?.data?.error[0]?.msg : error?.response?.data?.error) ||
             error?.message ||
             'An error occurred. Please try again.'

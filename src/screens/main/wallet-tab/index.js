@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useContext} from 'react';
-import {View, Text, TouchableOpacity, Modal} from 'react-native';
+import {View, Text, TouchableOpacity, Modal, ScrollView} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {styles} from './style';
 import tw from 'twrnc';
@@ -76,7 +76,10 @@ const WalletTab = props => {
   }
   return (
     <ScreenView style={styles.container} light color={WHITE}>
-      <View style={styles.view1}>
+      <ScrollView
+        style={tw`flex-1 w-full`}
+        contentContainerStyle={styles.view1}
+        showsVerticalScrollIndicator={false}>
         <View style={tw`mb-2`}>
           <Text style={tw`text-gray-800 font-medium text-[20px]`}>
             My Wallet
@@ -171,7 +174,7 @@ const WalletTab = props => {
             />
           </View>
         </Modal>
-      </View>
+      </ScrollView>
     </ScreenView>
   );
 };

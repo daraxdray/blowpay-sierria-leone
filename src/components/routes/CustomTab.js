@@ -1,14 +1,16 @@
 import React, {useContext} from "react";
 import {Text, TouchableOpacity, View} from "react-native";
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {satoshi_bold, satoshi_medium} from '../../constants/data/fonts';
 import {GREY, PRIMARY_COLOR, WHITE} from '../../global/theme';
 
 
 
 const CustomTab = ({ state, descriptors, navigation }) => {
+    const insets = useSafeAreaInsets();
 
     return (
-        <View style={{ flexDirection: 'row', paddingHorizontal: 20, backgroundColor: WHITE}}>
+        <View style={{ flexDirection: 'row', paddingHorizontal: 20, backgroundColor: WHITE, paddingBottom: Math.max(insets.bottom, 8) }}>
             {/*<ImageBackground*/}
             {/*    source={require('../../../assets/images/bottom_tab.png')}  // Replace with your image path*/}
             {/*    style={{ flexDirection: 'row', paddingHorizontal: 20, width: "100%" }}*/}

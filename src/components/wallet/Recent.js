@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
-import {Image, Text, View, FlatList, Modal} from 'react-native';
+import {Image, Text, View, FlatList, Modal, TouchableOpacity} from 'react-native';
 import tw from 'twrnc';
 import AddfundSVG from '../../../assets/svgs/Addfund.svg';
 import TransactionItem from './TransactionItem';
@@ -10,7 +10,7 @@ import {useGetTransactions} from '../../hooks/transactions.hook';
 import TransactionDetails from '../modals/TransactionDetails';
 import {getCurrencySymbol} from '../../utils/format';
 
-const Recent = ({description = '', country}) => {
+const Recent = ({description = '', country, navigation, limit}) => {
   const {data: transactionsData, refetch} = useGetTransactions(description);
   const [transactions, setTransactions] = useState([]);
   const [cachedTransactions] = useState([]);
@@ -68,16 +68,37 @@ const Recent = ({description = '', country}) => {
     }
   }, [transactions]);
 
+  const displayedTransactions =
+    limit && transactions ? transactions.slice(0, limit) : transactions;
+  const displayedCachedTransactions =
+    limit && cachedTransactions
+      ? cachedTransactions.slice(0, limit)
+      : cachedTransactions;
+
   return (
     <View style={tw`bg-[#FFFFFF] p-5 mt-5 pb-[100] rounded-[20px] gap-2 flex `}>
-      <Text style={tw`text-[14px] font-bold text-[#374151]`}>
-        Recent Activity
-      </Text>
+      <View style={tw`flex flex-row items-center justify-between`}>
+        <Text style={tw`text-[14px] font-bold text-[#374151]`}>
+          Recent Activity
+        </Text>
+        {transactions && transactions.length > 0 && navigation && (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('WalletTab')}
+            activeOpacity={0.65}>
+            <Text style={tw`text-[#3B82F6] font-bold text-[12px]`}>
+              See All
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {transactions && transactions.length > 0 ? (
         <FlatList
-          data={transactions}
+          data={displayedTransactions}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
+          removeClippedSubviews={true}
+          initialNumToRender={limit || 10}
           keyExtractor={item => item.id}
           renderItem={({item}) => (
             <TransactionItem
@@ -103,8 +124,11 @@ const Recent = ({description = '', country}) => {
         />
       ) : cachedTransactions && cachedTransactions.length > 0 ? (
         <FlatList
-          data={cachedTransactions}
+          data={displayedCachedTransactions}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
+          removeClippedSubviews={true}
+          initialNumToRender={limit || 10}
           keyExtractor={item => item.id}
           renderItem={({item}) => (
             <TransactionItem
