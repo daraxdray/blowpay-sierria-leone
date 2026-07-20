@@ -85,8 +85,22 @@ const Signin = props => {
               navigation.navigate('create-pin-screen');
               return;
             }
-            if (data?.data?.kyc?.isNinVerified === false) {
-              navigation.navigate('setup-id-screen');
+            const country = data?.data?.country;
+            const kycIncomplete =
+              data?.data?.kyc?.isNinVerified === false ||
+              data?.data?.kyc?.isKycVerified === false;
+
+            if (!country) {
+              navigation.navigate('selectCountry-screen');
+              return;
+            }
+
+            if (kycIncomplete) {
+              if (country.toLowerCase() === 'sierra leone') {
+                navigation.navigate('residence-screen');
+              } else {
+                navigation.navigate('setup-id-screen');
+              }
               return;
             }
             if (!keyFound && isBiometricExist) {
@@ -128,6 +142,7 @@ const Signin = props => {
           type: 'error',
           text1: 'Login Error',
           text2:
+            error?.response?.data?.message ||
             error?.response?.data?.error ||
             'An error occurred. Please try again.',
         });

@@ -139,7 +139,7 @@ const CustomOTP = ({setOtp, otp, viewStyle, inputStyle}) => {
             }
 
         } catch(error){
-            _errorPrompt(error.message);
+            _errorPrompt(error);
         }
 
     };

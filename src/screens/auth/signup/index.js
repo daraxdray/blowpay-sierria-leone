@@ -19,10 +19,8 @@ const Signup = props => {
   const navigation = props.navigation;
 
   const [countryCode, setCountryCode] = useState('NG'); // default to Nigeria
-  const [callingCode, setCallingCode] = useState('234');
   const [withCallingCode, setWithCallingCode] = useState(true);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [showCountryModal, setShowCountryModal] = useState(false);
 
   const _constructor = () => {
     if (Platform.OS === 'android') {
@@ -58,28 +56,21 @@ const Signup = props => {
           <View style={styles.inputContainer}>
             <Text style={styles.text}>Phone Number</Text>
             <View style={styles.phoneInputWrapper}>
-              <TouchableOpacity
-                onPress={() => setShowCountryModal(true)}
-                style={styles.countryPickerButton}>
-                <CountryPicker
-                  {...{
-                    countryCode,
-                    withFilter: true,
-                    withFlag: true,
-                    withCallingCode: true,
-                    withEmoji: true,
-                    withAlphaFilter: true,
-                    withCallingCodeButton: true,
-                    onSelect: country => {
-                      setCountryCode(country.cca2);
-                      setCallingCode(country.callingCode[0]);
-                    },
-                  }}
-                  visible={showCountryModal}
-                  onClose={() => setShowCountryModal(false)}
-                />
-                <Text style={styles.callingCode}>+{callingCode}</Text>
-              </TouchableOpacity>
+              <CountryPicker
+                {...{
+                  countryCode,
+                  withFilter: true,
+                  withFlag: true,
+                  withCallingCode: true,
+                  withEmoji: true,
+                  withAlphaFilter: true,
+                  withCallingCodeButton: true,
+                  containerButtonStyle: styles.countryPickerButton,
+                  onSelect: country => {
+                    setCountryCode(country.cca2);
+                  },
+                }}
+              />
 
               <TextInput
                 style={styles.phoneInput}

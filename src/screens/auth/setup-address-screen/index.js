@@ -143,7 +143,8 @@ const SetupAddressScreen = props => {
               Toast.show({
                 type: 'error',
                 text1: 'Update Error',
-                text2: error?.response?.data?.error ||
+                text2: error?.response?.data?.message ||
+                  error?.response?.data?.error ||
                   error?.message ||
                   'An error occurred while updating your information. Please try again.',
               });

@@ -15,7 +15,7 @@ const IdSelectorModal = ({closeModal}) => {
   };
 
   const handleNavigation = text => {
-    navigation.navigate('setup-id-screen', {documentType: text});
+    navigation.navigate('setup-id-sl-screen', {documentType: text});
     closeModal();
   };
 

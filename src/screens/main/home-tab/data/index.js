@@ -43,6 +43,7 @@ const Data = props => {
   ];
 
   useEffect(() => {
+    console.log(JSON.stringify(dataPlans, null, 2), 'dataPlans in Data screen');
     if (Array.isArray(dataPlans?.data?.data)) {
       const products = dataPlans.data.data;
       setAirtimeProducts(products);
