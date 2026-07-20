@@ -20,6 +20,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 20,
     gap: 20,
-    flex: 1,
+    paddingBottom: 40,
   },
 });

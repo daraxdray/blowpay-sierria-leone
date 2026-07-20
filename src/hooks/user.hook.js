@@ -22,7 +22,7 @@ export const useGetUser = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -34,7 +34,7 @@ export const usePingUser = () => {
     },
     onError: error => {
       console.error('❌ User ping failed:', error);
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -47,7 +47,7 @@ export const usePushNotify = () => {
     },
     onError: error => {
       console.error('❌ Push notify error:', error);
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -121,7 +121,7 @@ export const useEditUser = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -133,7 +133,7 @@ export const useSendOtp4Pin = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -146,7 +146,7 @@ export const useOtpReset = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };

@@ -113,7 +113,11 @@ const PinOtpScreen = ({ navigation }) => {
           Toast.show({
             type: 'error',
             text1: 'Verification Error',
-            text2: error?.response?.data?.error || error?.message || 'An error occurred.',
+            text2:
+              error?.response?.data?.message ||
+              error?.response?.data?.error ||
+              error?.message ||
+              'An error occurred.',
           });
         },
       });

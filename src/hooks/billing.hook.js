@@ -19,7 +19,7 @@ export const useBpBillerProvider = id => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
     enabled: !!id,
   });
@@ -70,7 +70,7 @@ export const useBpCheckMeter = () => {
       }
     },
     onError: error => {
-      // _errorPrompt(error.message);
+      // _errorPrompt(error);
     },
   });
 };
@@ -83,7 +83,7 @@ export const useBpCheckCable = () => {
       }
     },
     onError: error => {
-      // _errorPrompt(error.message);
+      // _errorPrompt(error);
     },
   });
 };
@@ -96,7 +96,7 @@ export const useBpAirtime = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -119,7 +119,7 @@ export const useBillerProducts = id => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
     enabled: !!id,
   });
@@ -166,7 +166,7 @@ export const useGetSLCablePlans = ({enabled = true} = {}) => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -184,7 +184,7 @@ export const useBillerByCategory = id => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
     enabled: !!id,
   });
@@ -203,7 +203,7 @@ export const useNbBillerProvider = id => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
     enabled: !!id,
   });
@@ -221,7 +221,7 @@ export const useBillerGetBetting = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -237,7 +237,7 @@ export const useFundWallet = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -287,7 +287,7 @@ export const useBillPay = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -301,7 +301,7 @@ export const useCablePay = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -315,7 +315,7 @@ export const useNbBillPay = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -328,7 +328,7 @@ export const useByPBillPay = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -348,7 +348,7 @@ export const useSpValidateBill = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -361,7 +361,7 @@ export const useCableValidate = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -375,7 +375,7 @@ export const useNbBillValidate = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -388,7 +388,7 @@ export const useBpBillValidate = () => {
       }
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };

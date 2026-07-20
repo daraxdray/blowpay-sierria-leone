@@ -21,7 +21,7 @@ export const useGetNotifications = () => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
   });
 };
@@ -41,7 +41,7 @@ export const useGetNotificationById = id => {
       return data;
     },
     onError: error => {
-      _errorPrompt(error.message);
+      _errorPrompt(error);
     },
     enabled: !!id, // Prevent the query from running if no ID is provided
   });
